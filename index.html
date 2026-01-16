@@ -18,6 +18,9 @@
       --pill-need: #1b9c5b;
       --pill-want: #cc7a1c;
       --disabled: #555c72;
+      --pill-blue: #2c7be5;
+      --pill-purple: #845ef7;
+      --pill-pink: #d63384;
     }
 
     * {
@@ -234,7 +237,7 @@
       background: transparent;
       border: none;
       color: var(--text);
-      font-size: 13px;
+      font-size: 14px;
       outline: none;
       text-align: right;
     }
@@ -367,7 +370,8 @@
     }
 
     .panel-totals span.amount.fortnightly,
-    .panel-totals span.amount.monthly {
+    .panel-totals span.amount.monthly,
+    .panel-totals span.amount.yearly {
       color: var(--muted);
     }
 
@@ -416,6 +420,18 @@
     .pill.disabled {
       opacity: 0.45;
       border-style: dashed;
+    }
+
+    .pill-color-blue {
+      box-shadow: 0 0 0 1px rgba(44, 123, 229, 0.6);
+    }
+
+    .pill-color-purple {
+      box-shadow: 0 0 0 1px rgba(132, 94, 247, 0.6);
+    }
+
+    .pill-color-pink {
+      box-shadow: 0 0 0 1px rgba(214, 51, 132, 0.6);
     }
 
     .pill-type-dot {
@@ -536,7 +552,7 @@
       border: 1px solid rgba(255, 255, 255, 0.18);
       padding: 7px 10px;
       color: var(--text);
-      font-size: 13px;
+      font-size: 14px;
       outline: none;
     }
 
@@ -564,6 +580,54 @@
     .toggle-row input[type="checkbox"] {
       width: 16px;
       height: 16px;
+    }
+
+    .color-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .color-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .color-dot[data-color="default"] {
+      background: linear-gradient(135deg, var(--pill-need), var(--pill-want));
+    }
+
+    .color-dot[data-color="blue"] {
+      background: var(--pill-blue);
+    }
+
+    .color-dot[data-color="purple"] {
+      background: var(--pill-purple);
+    }
+
+    .color-dot[data-color="pink"] {
+      background: var(--pill-pink);
+    }
+
+    .color-dot.active {
+      border-color: #ffffff;
+    }
+
+    .breakdown-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .breakdown-row span.value {
+      font-weight: 600;
+      color: var(--accent);
     }
 
     .modal-footer {
@@ -620,12 +684,12 @@
       min-height: 14px;
     }
 
-    /* iOS/Chrome-on-iOS zoom fix: ensure 16px+ on inputs on small screens */
+    /* iOS/Chrome-on-iOS zoom fix: ensure >16px on inputs on small screens */
     @media (max-width: 768px) {
       input[type="text"],
       input[type="number"],
       select {
-        font-size: 16px;
+        font-size: 17px;
       }
     }
   </style>
@@ -674,6 +738,7 @@
               <button class="type-option" data-freq="weekly">Weekly</button>
               <button class="type-option active" data-freq="fortnightly">Fortnightly</button>
               <button class="type-option" data-freq="monthly">Monthly</button>
+              <button class="type-option" data-freq="yearly">Yearly</button>
             </div>
           </div>
 
@@ -718,6 +783,10 @@
               <label>Monthly</label>
               <span class="amount monthly" id="needsMonthly">$0</span>
             </div>
+            <div class="panel-totals-row">
+              <label>Yearly</label>
+              <span class="amount yearly" id="needsYearly">$0</span>
+            </div>
           </div>
         </div>
         <div class="items-area" id="needsItems"></div>
@@ -744,6 +813,10 @@
             <div class="panel-totals-row">
               <label>Monthly</label>
               <span class="amount monthly" id="wantsMonthly">$0</span>
+            </div>
+            <div class="panel-totals-row">
+              <label>Yearly</label>
+              <span class="amount yearly" id="wantsYearly">$0</span>
             </div>
           </div>
         </div>
@@ -785,13 +858,34 @@
               <option value="weekly">Weekly</option>
               <option value="fortnightly">Fortnightly</option>
               <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
             </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label">Pill colour</div>
+          <div class="color-row" id="itemColorRow">
+            <div class="color-dot active" data-color="default" title="Default"></div>
+            <div class="color-dot" data-color="blue" title="Blue"></div>
+            <div class="color-dot" data-color="purple" title="Purple"></div>
+            <div class="color-dot" data-color="pink" title="Pink"></div>
           </div>
         </div>
 
         <div class="toggle-row">
           <input type="checkbox" id="itemEnabledInput" checked />
           <label for="itemEnabledInput">Include this in totals</label>
+        </div>
+
+        <div>
+          <div class="field-label">This expense in different periods</div>
+          <div class="breakdown-row" id="itemBreakdown">
+            <span>Weekly: <span class="value" id="bdWeekly">$0</span></span>
+            <span>Fortnightly: <span class="value" id="bdFortnightly">$0</span></span>
+            <span>Monthly: <span class="value" id="bdMonthly">$0</span></span>
+            <span>Yearly: <span class="value" id="bdYearly">$0</span></span>
+          </div>
         </div>
 
         <div class="error-text" id="itemError"></div>
@@ -808,10 +902,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_clean";
-    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_clean";
+    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_yearly";
+    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_yearly";
 
-    const items = [];
+    const items = []; // {id, type, label, amount, frequency, enabled, color}
     let nextId = 1;
     let editingId = null;
 
@@ -820,9 +914,11 @@
     const needsWeeklyEl = document.getElementById("needsWeekly");
     const needsFortnightlyEl = document.getElementById("needsFortnightly");
     const needsMonthlyEl = document.getElementById("needsMonthly");
+    const needsYearlyEl = document.getElementById("needsYearly");
     const wantsWeeklyEl = document.getElementById("wantsWeekly");
     const wantsFortnightlyEl = document.getElementById("wantsFortnightly");
     const wantsMonthlyEl = document.getElementById("wantsMonthly");
+    const wantsYearlyEl = document.getElementById("wantsYearly");
 
     const incomeAmountEl = document.getElementById("incomeAmount");
     const summaryTotalEl = document.getElementById("summaryTotal");
@@ -842,12 +938,19 @@
     const itemCancelBtn = document.getElementById("itemCancelBtn");
     const itemSaveBtn = document.getElementById("itemSaveBtn");
     const itemDeleteBtn = document.getElementById("itemDeleteBtn");
+    const itemColorRow = document.getElementById("itemColorRow");
+
+    const bdWeeklyEl = document.getElementById("bdWeekly");
+    const bdFortnightlyEl = document.getElementById("bdFortnightly");
+    const bdMonthlyEl = document.getElementById("bdMonthly");
+    const bdYearlyEl = document.getElementById("bdYearly");
 
     const summaryFrequencyToggle = document.getElementById("summaryFrequencyToggle");
     const summaryToggleBtn = document.getElementById("summaryToggleBtn");
     const summaryRow = document.getElementById("summaryRow");
 
     let currentType = "need";
+    let currentColor = "default";
     let summaryFrequency = "fortnightly";
     let summaryVisible = true;
 
@@ -859,12 +962,14 @@
     function toWeekly(amount, frequency) {
       if (frequency === "fortnightly") return amount / 2;
       if (frequency === "monthly") return amount * (12 / 52);
+      if (frequency === "yearly") return amount / 52;
       return amount;
     }
 
     function fromWeekly(weekly, target) {
       if (target === "fortnightly") return weekly * 2;
       if (target === "monthly") return weekly * (52 / 12);
+      if (target === "yearly") return weekly * 52;
       return weekly;
     }
 
@@ -893,7 +998,9 @@
             parsed.forEach((it) => {
               if (typeof it.amount === "number") {
                 const freq =
-                  it.frequency === "fortnightly" || it.frequency === "monthly"
+                  it.frequency === "fortnightly" ||
+                  it.frequency === "monthly" ||
+                  it.frequency === "yearly"
                     ? it.frequency
                     : "weekly";
                 const type = it.type === "want" ? "want" : "need";
@@ -905,6 +1012,7 @@
                   amount: it.amount,
                   frequency: freq,
                   enabled: it.enabled !== false,
+                  color: it.color || "default",
                 });
               }
             });
@@ -923,7 +1031,8 @@
             if (
               parsedIncome.frequency === "weekly" ||
               parsedIncome.frequency === "fortnightly" ||
-              parsedIncome.frequency === "monthly"
+              parsedIncome.frequency === "monthly" ||
+              parsedIncome.frequency === "yearly"
             ) {
               summaryFrequency = parsedIncome.frequency;
             }
@@ -956,6 +1065,35 @@
       }
     }
 
+    function updateColorDots() {
+      [...itemColorRow.querySelectorAll(".color-dot")].forEach((dot) => {
+        dot.classList.toggle("active", dot.dataset.color === currentColor);
+      });
+    }
+
+    function updateBreakdownPreview() {
+      const amount = parseFloat(itemAmountInput.value);
+      const freqRaw = itemFrequencyInput.value;
+      if (!amount || amount <= 0) {
+        bdWeeklyEl.textContent = "$0";
+        bdFortnightlyEl.textContent = "$0";
+        bdMonthlyEl.textContent = "$0";
+        bdYearlyEl.textContent = "$0";
+        return;
+      }
+      const frequency =
+        freqRaw === "fortnightly" ||
+        freqRaw === "monthly" ||
+        freqRaw === "yearly"
+          ? freqRaw
+          : "weekly";
+      const weekly = toWeekly(amount, frequency);
+      bdWeeklyEl.textContent = formatCurrency(weekly);
+      bdFortnightlyEl.textContent = formatCurrency(fromWeekly(weekly, "fortnightly"));
+      bdMonthlyEl.textContent = formatCurrency(fromWeekly(weekly, "monthly"));
+      bdYearlyEl.textContent = formatCurrency(fromWeekly(weekly, "yearly"));
+    }
+
     function openModal(mode, item) {
       editingId = mode === "edit" ? item.id : null;
       itemModalTitle.textContent = mode === "edit" ? "Edit item" : "Add item";
@@ -966,6 +1104,9 @@
       [...itemTypeToggle.querySelectorAll(".type-option")].forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.type === type);
       });
+
+      currentColor = mode === "edit" ? item.color || "default" : "default";
+      updateColorDots();
 
       if (mode === "edit") {
         itemLabelInput.value = item.label;
@@ -980,6 +1121,7 @@
       }
 
       itemError.textContent = "";
+      updateBreakdownPreview();
       itemModalBackdrop.classList.add("open");
       setTimeout(() => itemLabelInput.focus(), 10);
     }
@@ -1002,7 +1144,11 @@
       }
 
       const frequency =
-        freqRaw === "fortnightly" || freqRaw === "monthly" ? freqRaw : "weekly";
+        freqRaw === "fortnightly" ||
+        freqRaw === "monthly" ||
+        freqRaw === "yearly"
+          ? freqRaw
+          : "weekly";
 
       const payload = {
         label: label || "(untitled)",
@@ -1010,6 +1156,7 @@
         frequency,
         type: currentType,
         enabled,
+        color: currentColor,
       };
 
       if (editingId == null) {
@@ -1055,6 +1202,10 @@
           "pill " + (item.type === "need" ? "pill-need" : "pill-want");
         if (!item.enabled) pill.classList.add("disabled");
 
+        if (item.color === "blue") pill.classList.add("pill-color-blue");
+        else if (item.color === "purple") pill.classList.add("pill-color-purple");
+        else if (item.color === "pink") pill.classList.add("pill-color-pink");
+
         const dot = document.createElement("span");
         dot.className = "pill-type-dot " + item.type;
         pill.appendChild(dot);
@@ -1075,6 +1226,8 @@
           freqSpan.textContent = "/fortnight";
         } else if (item.frequency === "monthly") {
           freqSpan.textContent = "/month";
+        } else if (item.frequency === "yearly") {
+          freqSpan.textContent = "/year";
         } else {
           freqSpan.textContent = "/week";
         }
@@ -1095,15 +1248,19 @@
 
       const needsFortnightly = fromWeekly(needsWeekly, "fortnightly");
       const needsMonthly = fromWeekly(needsWeekly, "monthly");
+      const needsYearly = fromWeekly(needsWeekly, "yearly");
       const wantsFortnightly = fromWeekly(wantsWeekly, "fortnightly");
       const wantsMonthly = fromWeekly(wantsWeekly, "monthly");
+      const wantsYearly = fromWeekly(wantsWeekly, "yearly");
 
       needsWeeklyEl.textContent = formatCurrency(needsWeekly);
       needsFortnightlyEl.textContent = formatCurrency(needsFortnightly);
       needsMonthlyEl.textContent = formatCurrency(needsMonthly);
+      needsYearlyEl.textContent = formatCurrency(needsYearly);
       wantsWeeklyEl.textContent = formatCurrency(wantsWeekly);
       wantsFortnightlyEl.textContent = formatCurrency(wantsFortnightly);
       wantsMonthlyEl.textContent = formatCurrency(wantsMonthly);
+      wantsYearlyEl.textContent = formatCurrency(wantsYearly);
 
       const totalWeekly = needsWeekly + wantsWeekly;
 
@@ -1139,6 +1296,13 @@
       });
     });
 
+    itemColorRow.addEventListener("click", (e) => {
+      const dot = e.target.closest(".color-dot");
+      if (!dot) return;
+      currentColor = dot.dataset.color || "default";
+      updateColorDots();
+    });
+
     openCreateModalBtn.addEventListener("click", () => openModal("create"));
 
     itemModalClose.addEventListener("click", closeModal);
@@ -1161,6 +1325,9 @@
     itemAmountInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") saveItem();
     });
+
+    itemAmountInput.addEventListener("input", updateBreakdownPreview);
+    itemFrequencyInput.addEventListener("change", updateBreakdownPreview);
 
     incomeAmountEl.addEventListener("input", () => {
       persist();
