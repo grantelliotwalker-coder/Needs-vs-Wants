@@ -9,7 +9,1188 @@
       --bg: #050816;
       --bg-elevated: #0b1020;
       --bg-soft: #11152a;
+      --accent: #00c2ff;<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Budget · Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
       --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --pill-need: #1b9c5b;
+      --pill-want: #cc7a1c;
+      --disabled: #555c72;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .add-btn {
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .add-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .add-btn:hover {
+      background: #35d5ff;
+    }
+
+    .summary-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .summary-toggle-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .income-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .income-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .income-input-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #02040a;
+      border-radius: 999px;
+      padding: 3px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .income-input-wrap span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    #incomeAmount {
+      width: 90px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      text-align: right;
+    }
+
+    .type-toggle {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      gap: 3px;
+    }
+
+    .type-option {
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 4px 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .type-option.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.accent {
+      color: var(--accent);
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 8px;
+    }
+
+    .panel {
+      flex: 1;
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .panel-totals {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .panel-totals-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .panel-totals label {
+      color: var(--muted);
+    }
+
+    .panel-totals span.amount {
+      font-weight: 600;
+      margin-left: 2px;
+    }
+
+    .panel-totals span.amount.weekly {
+      color: var(--accent);
+    }
+
+    .panel-totals span.amount.fortnightly,
+    .panel-totals span.amount.monthly {
+      color: var(--muted);
+    }
+
+    .items-area {
+      margin-top: 4px;
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 2px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(10, 16, 30, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      font-size: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.45);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+    }
+
+    .pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 14px rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-need {
+      border-color: rgba(67, 181, 129, 0.9);
+      background: radial-gradient(circle at top left, rgba(67, 181, 129, 0.28), rgba(10, 16, 30, 0.98));
+    }
+
+    .pill-want {
+      border-color: rgba(246, 180, 67, 0.9);
+      background: radial-gradient(circle at top left, rgba(246, 180, 67, 0.28), rgba(10, 16, 30, 0.98));
+    }
+
+    .pill.disabled {
+      opacity: 0.45;
+      border-style: dashed;
+    }
+
+    .pill-type-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+    }
+
+    .pill-type-dot.need {
+      background: var(--pill-need);
+    }
+
+    .pill-type-dot.want {
+      background: var(--pill-want);
+    }
+
+    .pill-label {
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (min-width: 640px) {
+      .pill-label {
+        max-width: 150px;
+      }
+    }
+
+    .pill-amount {
+      font-weight: 600;
+    }
+
+    .pill-frequency {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .pill-status {
+      font-size: 11px;
+      color: var(--disabled);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      padding: 14px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-elevated);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      width: min(380px, 100%);
+      max-width: 420px;
+      padding: 14px 14px 12px;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .btn-secondary,
+    .btn-primary,
+    .btn-danger {
+      border-radius: 999px;
+      font-size: 13px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .btn-secondary:hover {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.55);
+    }
+
+    .btn-primary {
+      border: none;
+      background: var(--accent);
+      color: #02040a;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: #35d5ff;
+    }
+
+    .btn-danger {
+      border: none;
+      background: rgba(255, 77, 106, 0.15);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 77, 106, 0.3);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="top-row">
+        <div class="brand">
+          <div class="brand-title">Budget · Needs vs Wants</div>
+        </div>
+        <div class="header-actions">
+          <a href="#" class="pill-button donate" id="donateLink">
+            <span class="pill-button-icon">❤</span>
+            Donate
+          </a>
+          <button class="add-btn" id="openCreateModal">
+            <span class="icon">+</span>
+            Add
+          </button>
+        </div>
+      </div>
+
+      <div class="summary-toggle-row">
+        <div class="summary-toggle-label">Show income & summary</div>
+        <button class="summary-toggle-button active" id="summaryToggleBtn">
+          Hide
+        </button>
+      </div>
+
+      <div class="summary-row" id="summaryRow">
+        <div class="summary-card">
+          <div class="summary-card-title">Income & summary</div>
+
+          <div class="income-main-row">
+            <div class="income-label">Net income amount</div>
+            <div class="income-input-wrap">
+              <span>$</span>
+              <input id="incomeAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+            </div>
+          </div>
+
+          <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div class="income-label">Frequency for income & surplus</div>
+            <div class="type-toggle" id="summaryFrequencyToggle">
+              <button class="type-option" data-freq="weekly">Weekly</button>
+              <button class="type-option active" data-freq="fortnightly">Fortnightly</button>
+              <button class="type-option" data-freq="monthly">Monthly</button>
+            </div>
+          </div>
+
+          <div style="margin-top:6px;">
+            <div class="mini-row">
+              <span class="mini-label">Expenses</span>
+              <span id="summaryTotal" class="mini-value accent">$0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Surplus</span>
+              <span id="summarySurplus" class="mini-value surplus">$0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Status</span>
+              <span id="summaryStatus" class="mini-value surplus">Enter values</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="panel" id="needsPanel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Needs
+              <span class="panel-badge">Essentials</span>
+            </div>
+            <div class="panel-subtitle">Rent, groceries, utilities, transport.</div>
+          </div>
+          <div class="panel-totals">
+            <div class="panel-totals-row">
+              <label>Weekly</label>
+              <span class="amount weekly" id="needsWeekly">$0</span>
+            </div>
+            <div class="panel-totals-row">
+              <label>Fortnightly</label>
+              <span class="amount fortnightly" id="needsFortnightly">$0</span>
+            </div>
+            <div class="panel-totals-row">
+              <label>Monthly</label>
+              <span class="amount monthly" id="needsMonthly">$0</span>
+            </div>
+          </div>
+        </div>
+        <div class="items-area" id="needsItems"></div>
+      </section>
+
+      <section class="panel" id="wantsPanel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Wants
+              <span class="panel-badge">Optional</span>
+            </div>
+            <div class="panel-subtitle">Subscriptions, dining out, treats.</div>
+          </div>
+          <div class="panel-totals">
+            <div class="panel-totals-row">
+              <label>Weekly</label>
+              <span class="amount weekly" id="wantsWeekly">$0</span>
+            </div>
+            <div class="panel-totals-row">
+              <label>Fortnightly</label>
+              <span class="amount fortnightly" id="wantsFortnightly">$0</span>
+            </div>
+            <div class="panel-totals-row">
+              <label>Monthly</label>
+              <span class="amount monthly" id="wantsMonthly">$0</span>
+            </div>
+          </div>
+        </div>
+        <div class="items-area" id="wantsItems"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-backdrop" id="itemModalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="itemModalTitle">Add item</div>
+        <button class="modal-close" id="itemModalClose">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div>
+          <div class="field-label">Type</div>
+          <div class="type-toggle" id="itemTypeToggle">
+            <button class="type-option active" data-type="need">Need</button>
+            <button class="type-option" data-type="want">Want</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label">Label</div>
+          <input id="itemLabelInput" type="text" placeholder="e.g. Rent, Spotify, Groceries" />
+        </div>
+
+        <div class="field-row">
+          <div style="flex: 1;">
+            <div class="field-label">Amount</div>
+            <input id="itemAmountInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+          <div style="width: 50%;">
+            <div class="field-label">Frequency</div>
+            <select id="itemFrequencyInput">
+              <option value="weekly">Weekly</option>
+              <option value="fortnightly">Fortnightly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <input type="checkbox" id="itemEnabledInput" checked />
+          <label for="itemEnabledInput">Include this in totals</label>
+        </div>
+
+        <div class="error-text" id="itemError"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-danger" id="itemDeleteBtn" style="display:none;">Delete</button>
+        <div style="display:flex; gap:6px; margin-left:auto;">
+          <button class="btn-secondary" id="itemCancelBtn">Cancel</button>
+          <button class="btn-primary" id="itemSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_clean";
+    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_clean";
+
+    const items = [];
+    let nextId = 1;
+    let editingId = null;
+
+    const needsItemsEl = document.getElementById("needsItems");
+    const wantsItemsEl = document.getElementById("wantsItems");
+    const needsWeeklyEl = document.getElementById("needsWeekly");
+    const needsFortnightlyEl = document.getElementById("needsFortnightly");
+    const needsMonthlyEl = document.getElementById("needsMonthly");
+    const wantsWeeklyEl = document.getElementById("wantsWeekly");
+    const wantsFortnightlyEl = document.getElementById("wantsFortnightly");
+    const wantsMonthlyEl = document.getElementById("wantsMonthly");
+
+    const incomeAmountEl = document.getElementById("incomeAmount");
+    const summaryTotalEl = document.getElementById("summaryTotal");
+    const summarySurplusEl = document.getElementById("summarySurplus");
+    const summaryStatusEl = document.getElementById("summaryStatus");
+
+    const openCreateModalBtn = document.getElementById("openCreateModal");
+    const itemModalBackdrop = document.getElementById("itemModalBackdrop");
+    const itemModalClose = document.getElementById("itemModalClose");
+    const itemModalTitle = document.getElementById("itemModalTitle");
+    const itemTypeToggle = document.getElementById("itemTypeToggle");
+    const itemLabelInput = document.getElementById("itemLabelInput");
+    const itemAmountInput = document.getElementById("itemAmountInput");
+    const itemFrequencyInput = document.getElementById("itemFrequencyInput");
+    const itemEnabledInput = document.getElementById("itemEnabledInput");
+    const itemError = document.getElementById("itemError");
+    const itemCancelBtn = document.getElementById("itemCancelBtn");
+    const itemSaveBtn = document.getElementById("itemSaveBtn");
+    const itemDeleteBtn = document.getElementById("itemDeleteBtn");
+
+    const summaryFrequencyToggle = document.getElementById("summaryFrequencyToggle");
+    const summaryToggleBtn = document.getElementById("summaryToggleBtn");
+    const summaryRow = document.getElementById("summaryRow");
+
+    let currentType = "need";
+    let summaryFrequency = "fortnightly";
+    let summaryVisible = true;
+
+    function formatCurrency(amount) {
+      if (!isFinite(amount)) return "$0";
+      return "$" + amount.toFixed(2).replace(/\.00$/, "");
+    }
+
+    function toWeekly(amount, frequency) {
+      if (frequency === "fortnightly") return amount / 2;
+      if (frequency === "monthly") return amount * (12 / 52);
+      return amount;
+    }
+
+    function fromWeekly(weekly, target) {
+      if (target === "fortnightly") return weekly * 2;
+      if (target === "monthly") return weekly * (52 / 12);
+      return weekly;
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
+        const incomeState = {
+          amount: incomeAmountEl.value || "0",
+          frequency: summaryFrequency || "fortnightly",
+          visible: summaryVisible,
+        };
+        localStorage.setItem(STORAGE_KEY_INCOME, JSON.stringify(incomeState));
+      } catch (e) {
+        console.warn("Unable to persist to localStorage", e);
+      }
+    }
+
+    function restore() {
+      try {
+        const rawItems = localStorage.getItem(STORAGE_KEY_ITEMS);
+        const rawIncome = localStorage.getItem(STORAGE_KEY_INCOME);
+
+        if (rawItems) {
+          const parsed = JSON.parse(rawItems);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((it) => {
+              if (typeof it.amount === "number") {
+                const freq =
+                  it.frequency === "fortnightly" || it.frequency === "monthly"
+                    ? it.frequency
+                    : "weekly";
+                const type = it.type === "want" ? "want" : "need";
+                const id = typeof it.id === "number" ? it.id : nextId++;
+                items.push({
+                  id,
+                  type,
+                  label: typeof it.label === "string" ? it.label : "(untitled)",
+                  amount: it.amount,
+                  frequency: freq,
+                  enabled: it.enabled !== false,
+                });
+              }
+            });
+            items.forEach((it) => {
+              if (it.id >= nextId) nextId = it.id + 1;
+            });
+          }
+        }
+
+        if (rawIncome) {
+          const parsedIncome = JSON.parse(rawIncome);
+          if (parsedIncome && typeof parsedIncome === "object") {
+            if (parsedIncome.amount != null) {
+              incomeAmountEl.value = parsedIncome.amount;
+            }
+            if (
+              parsedIncome.frequency === "weekly" ||
+              parsedIncome.frequency === "fortnightly" ||
+              parsedIncome.frequency === "monthly"
+            ) {
+              summaryFrequency = parsedIncome.frequency;
+            }
+            if (typeof parsedIncome.visible === "boolean") {
+              summaryVisible = parsedIncome.visible;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Unable to restore from localStorage", e);
+      }
+      updateSummaryFrequencyButtons();
+      updateSummaryVisibility();
+    }
+
+    function updateSummaryFrequencyButtons() {
+      [...summaryFrequencyToggle.querySelectorAll(".type-option")].forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.freq === summaryFrequency);
+      });
+    }
+
+    function updateSummaryVisibility() {
+      if (summaryVisible) {
+        summaryRow.style.display = "";
+        summaryToggleBtn.textContent = "Hide";
+        summaryToggleBtn.classList.add("active");
+      } else {
+        summaryRow.style.display = "none";
+        summaryToggleBtn.textContent = "Show";
+        summaryToggleBtn.classList.remove("active");
+      }
+    }
+
+    function openModal(mode, item) {
+      editingId = mode === "edit" ? item.id : null;
+      itemModalTitle.textContent = mode === "edit" ? "Edit item" : "Add item";
+      itemDeleteBtn.style.display = mode === "edit" ? "inline-flex" : "none";
+
+      const type = mode === "edit" ? item.type : currentType;
+      currentType = type;
+      [...itemTypeToggle.querySelectorAll(".type-option")].forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.type === type);
+      });
+
+      if (mode === "edit") {
+        itemLabelInput.value = item.label;
+        itemAmountInput.value = item.amount;
+        itemFrequencyInput.value = item.frequency;
+        itemEnabledInput.checked = item.enabled;
+      } else {
+        itemLabelInput.value = "";
+        itemAmountInput.value = "";
+        itemFrequencyInput.value = "weekly";
+        itemEnabledInput.checked = true;
+      }
+
+      itemError.textContent = "";
+      itemModalBackdrop.classList.add("open");
+      setTimeout(() => itemLabelInput.focus(), 10);
+    }
+
+    function closeModal() {
+      itemModalBackdrop.classList.remove("open");
+      editingId = null;
+    }
+
+    function saveItem() {
+      const label = itemLabelInput.value.trim();
+      const amount = parseFloat(itemAmountInput.value);
+      const freqRaw = itemFrequencyInput.value;
+      const enabled = itemEnabledInput.checked;
+
+      if (isNaN(amount) || amount <= 0) {
+        itemError.textContent = "Enter a positive amount.";
+        itemAmountInput.focus();
+        return;
+      }
+
+      const frequency =
+        freqRaw === "fortnightly" || freqRaw === "monthly" ? freqRaw : "weekly";
+
+      const payload = {
+        label: label || "(untitled)",
+        amount,
+        frequency,
+        type: currentType,
+        enabled,
+      };
+
+      if (editingId == null) {
+        items.push({ id: nextId++, ...payload });
+      } else {
+        const index = items.findIndex((i) => i.id === editingId);
+        if (index !== -1) {
+          items[index] = { ...items[index], ...payload };
+        }
+      }
+
+      currentType = payload.type;
+      persist();
+      render();
+      closeModal();
+    }
+
+    function deleteItem() {
+      if (editingId == null) return;
+      const index = items.findIndex((i) => i.id === editingId);
+      if (index !== -1) items.splice(index, 1);
+      persist();
+      render();
+      closeModal();
+    }
+
+    function render() {
+      needsItemsEl.innerHTML = "";
+      wantsItemsEl.innerHTML = "";
+
+      let needsWeekly = 0;
+      let wantsWeekly = 0;
+
+      items.forEach((item) => {
+        const weekly = toWeekly(item.amount, item.frequency);
+        if (item.enabled) {
+          if (item.type === "need") needsWeekly += weekly;
+          else wantsWeekly += weekly;
+        }
+
+        const pill = document.createElement("div");
+        pill.className =
+          "pill " + (item.type === "need" ? "pill-need" : "pill-want");
+        if (!item.enabled) pill.classList.add("disabled");
+
+        const dot = document.createElement("span");
+        dot.className = "pill-type-dot " + item.type;
+        pill.appendChild(dot);
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "pill-label";
+        labelSpan.textContent = item.label;
+        pill.appendChild(labelSpan);
+
+        const amountSpan = document.createElement("span");
+        amountSpan.className = "pill-amount";
+        amountSpan.textContent = formatCurrency(item.amount);
+        pill.appendChild(amountSpan);
+
+        const freqSpan = document.createElement("span");
+        freqSpan.className = "pill-frequency";
+        if (item.frequency === "fortnightly") {
+          freqSpan.textContent = "/fortnight";
+        } else if (item.frequency === "monthly") {
+          freqSpan.textContent = "/month";
+        } else {
+          freqSpan.textContent = "/week";
+        }
+        pill.appendChild(freqSpan);
+
+        if (!item.enabled) {
+          const statusSpan = document.createElement("span");
+          statusSpan.className = "pill-status";
+          statusSpan.textContent = "off";
+          pill.appendChild(statusSpan);
+        }
+
+        pill.addEventListener("click", () => openModal("edit", item));
+
+        if (item.type === "need") needsItemsEl.appendChild(pill);
+        else wantsItemsEl.appendChild(pill);
+      });
+
+      const needsFortnightly = fromWeekly(needsWeekly, "fortnightly");
+      const needsMonthly = fromWeekly(needsWeekly, "monthly");
+      const wantsFortnightly = fromWeekly(wantsWeekly, "fortnightly");
+      const wantsMonthly = fromWeekly(wantsWeekly, "monthly");
+
+      needsWeeklyEl.textContent = formatCurrency(needsWeekly);
+      needsFortnightlyEl.textContent = formatCurrency(needsFortnightly);
+      needsMonthlyEl.textContent = formatCurrency(needsMonthly);
+      wantsWeeklyEl.textContent = formatCurrency(wantsWeekly);
+      wantsFortnightlyEl.textContent = formatCurrency(wantsFortnightly);
+      wantsMonthlyEl.textContent = formatCurrency(wantsMonthly);
+
+      const totalWeekly = needsWeekly + wantsWeekly;
+
+      const incomeAmount = parseFloat(incomeAmountEl.value) || 0;
+      const incomeWeekly = toWeekly(incomeAmount, summaryFrequency);
+      const totalDisplay = fromWeekly(totalWeekly, summaryFrequency);
+      const incomeDisplay = fromWeekly(incomeWeekly, summaryFrequency);
+      const surplusDisplay = incomeDisplay - totalDisplay;
+
+      summaryTotalEl.textContent = formatCurrency(totalDisplay);
+      summarySurplusEl.textContent = formatCurrency(Math.abs(surplusDisplay));
+
+      const isSurplus = surplusDisplay >= 0;
+      summarySurplusEl.classList.toggle("surplus", isSurplus);
+      summarySurplusEl.classList.toggle("deficit", !isSurplus);
+
+      summaryStatusEl.textContent =
+        incomeAmount === 0 && totalWeekly === 0
+          ? "Enter values"
+          : isSurplus
+          ? "Surplus"
+          : "Shortfall";
+      summaryStatusEl.classList.toggle("surplus", isSurplus);
+      summaryStatusEl.classList.toggle("deficit", !isSurplus);
+    }
+
+    itemTypeToggle.addEventListener("click", (e) => {
+      const btn = e.target.closest(".type-option");
+      if (!btn) return;
+      currentType = btn.dataset.type;
+      [...itemTypeToggle.querySelectorAll(".type-option")].forEach((b) => {
+        b.classList.toggle("active", b === btn);
+      });
+    });
+
+    openCreateModalBtn.addEventListener("click", () => openModal("create"));
+
+    itemModalClose.addEventListener("click", closeModal);
+    itemCancelBtn.addEventListener("click", closeModal);
+    itemSaveBtn.addEventListener("click", saveItem);
+    itemDeleteBtn.addEventListener("click", deleteItem);
+
+    itemModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === itemModalBackdrop) closeModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    itemLabelInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") itemAmountInput.focus();
+    });
+
+    itemAmountInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") saveItem();
+    });
+
+    incomeAmountEl.addEventListener("input", () => {
+      persist();
+      render();
+    });
+
+    summaryFrequencyToggle.addEventListener("click", (e) => {
+      const btn = e.target.closest(".type-option");
+      if (!btn) return;
+      summaryFrequency = btn.dataset.freq || "fortnightly";
+      updateSummaryFrequencyButtons();
+      persist();
+      render();
+    });
+
+    summaryToggleBtn.addEventListener("click", () => {
+      summaryVisible = !summaryVisible;
+      updateSummaryVisibility();
+      persist();
+    });
+
+    restore();
+    render();
+  </script>
+</body>
+</html>
+
       --accent-soft: rgba(0, 194, 255, 0.15);
       --text: #e5f4ff;
       --muted: #9aa6bd;
@@ -1179,3 +2360,4 @@
   </script>
 </body>
 </html>
+
