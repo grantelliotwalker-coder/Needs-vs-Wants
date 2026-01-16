@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Budget · Needs vs Wants</title>
+  <title>Budget · Needs vs Wants v3.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
     :root {
@@ -24,7 +24,8 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "SF Pro Text", "Segoe UI", sans-serif;
     }
 
     body {
@@ -156,19 +157,10 @@
 
     .summary-row {
       display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, 1.2fr);
+      grid-template-columns: minmax(0, 1fr);
       gap: 8px;
       align-items: center;
       padding-bottom: 4px;
-    }
-
-    @media (max-width: 820px) {
-      .summary-row {
-        grid-template-columns: 1fr;
-      }
-      .top-row {
-        align-items: flex-start;
-      }
     }
 
     .summary-card {
@@ -178,14 +170,13 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
       font-size: 11px;
     }
 
     .summary-card-title {
       color: var(--muted);
       font-size: 11px;
-      margin-bottom: 2px;
     }
 
     .income-main-row {
@@ -222,7 +213,7 @@
     }
 
     #incomeAmount {
-      width: 80px;
+      width: 90px;
       background: transparent;
       border: none;
       color: var(--text);
@@ -231,21 +222,40 @@
       text-align: right;
     }
 
-    #incomeFrequency {
-      background: transparent;
-      border: none;
-      color: var(--muted);
+    .helper-text {
       font-size: 11px;
-      outline: none;
+      color: var(--muted);
     }
 
-    #incomeFrequency option {
-      color: #000;
+    .type-toggle {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      gap: 3px;
+    }
+
+    .type-option {
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 4px 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .type-option.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
     }
 
     .mini-row {
       display: flex;
       justify-content: space-between;
+      align-items: baseline;
     }
 
     .mini-label {
@@ -266,11 +276,6 @@
 
     .mini-value.deficit {
       color: var(--danger);
-    }
-
-    .helper-text {
-      font-size: 11px;
-      color: var(--muted);
     }
 
     .app-main {
@@ -333,7 +338,7 @@
     .panel-totals-row {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
+      gap: 6px;
     }
 
     .panel-totals label {
@@ -349,10 +354,7 @@
       color: var(--accent);
     }
 
-    .panel-totals span.amount.fortnightly {
-      color: var(--muted);
-    }
-
+    .panel-totals span.amount.fortnightly,
     .panel-totals span.amount.monthly {
       color: var(--muted);
     }
@@ -444,7 +446,6 @@
       color: var(--disabled);
     }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -540,47 +541,8 @@
       margin: 0;
     }
 
-    .type-toggle {
-      display: inline-flex;
-      padding: 4px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      gap: 4px;
-    }
-
-    .type-option {
-      flex: 1;
-      border-radius: 999px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      padding: 5px 10px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .type-option span.dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-    }
-
-    .type-option.need span.dot {
-      background: var(--pill-need);
-    }
-
-    .type-option.want span.dot {
-      background: var(--pill-want);
-    }
-
-    .type-option.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text);
+    .type-toggle.small {
+      padding: 3px;
     }
 
     .toggle-row {
@@ -657,7 +619,7 @@
       <div class="top-row">
         <div class="brand">
           <div class="brand-title">Budget · Needs vs Wants</div>
-          <div class="brand-sub">Toggle items off and change frequencies to see the impact.</div>
+          <div class="brand-sub">Focus on essentials vs optional, then test your surplus.</div>
         </div>
         <div class="header-actions">
           <a href="#" class="pill-button donate" id="donateLink">
@@ -673,7 +635,8 @@
 
       <div class="summary-row">
         <div class="summary-card">
-          <div class="summary-card-title">Income</div>
+          <div class="summary-card-title">Income & summary</div>
+
           <div class="income-main-row">
             <div class="income-meta">
               <div class="income-label">Net income amount</div>
@@ -682,44 +645,34 @@
             <div class="income-input-wrap">
               <span>$</span>
               <input id="incomeAmount" type="number" min="0" step="0.01" placeholder="0.00" />
-              <select id="incomeFrequency" aria-label="Income frequency">
-                <option value="weekly">wk</option>
-                <option value="fortnightly">fn</option>
-                <option value="monthly">mo</option>
-              </select>
             </div>
           </div>
-        </div>
 
-        <div class="summary-card">
-          <div class="summary-card-title">Income view</div>
-          <div class="mini-row">
-            <span class="mini-label">Weekly</span>
-            <span id="incomeWeekly" class="mini-value accent">$0</span>
+          <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div>
+              <div class="helper-text">Frequency for income & surplus</div>
+              <div class="helper-text">Defaults to fortnightly.</div>
+            </div>
+            <div class="type-toggle small" id="summaryFrequencyToggle">
+              <button class="type-option" data-freq="weekly">Weekly</button>
+              <button class="type-option active" data-freq="fortnightly">Fortnightly</button>
+              <button class="type-option" data-freq="monthly">Monthly</button>
+            </div>
           </div>
-          <div class="mini-row">
-            <span class="mini-label">Fortnightly</span>
-            <span id="incomeFortnightly" class="mini-value">$0</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Monthly</span>
-            <span id="incomeMonthly" class="mini-value">$0</span>
-          </div>
-        </div>
 
-        <div class="summary-card">
-          <div class="summary-card-title">Weekly summary</div>
-          <div class="mini-row">
-            <span class="mini-label">Weekly expenses</span>
-            <span id="summaryTotal" class="mini-value accent">$0</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Surplus</span>
-            <span id="summarySurplus" class="mini-value surplus">$0</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Status</span>
-            <span id="summaryStatus" class="mini-value surplus">Enter values</span>
+          <div style="margin-top:6px;">
+            <div class="mini-row">
+              <span class="mini-label">Expenses</span>
+              <span id="summaryTotal" class="mini-value accent">$0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Surplus</span>
+              <span id="summarySurplus" class="mini-value surplus">$0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Status</span>
+              <span id="summaryStatus" class="mini-value surplus">Enter values</span>
+            </div>
           </div>
         </div>
       </div>
@@ -737,15 +690,15 @@
           </div>
           <div class="panel-totals">
             <div class="panel-totals-row">
-              <label>Wk</label>
+              <label>Weekly</label>
               <span class="amount weekly" id="needsWeekly">$0</span>
             </div>
             <div class="panel-totals-row">
-              <label>Fn</label>
+              <label>Fortnightly</label>
               <span class="amount fortnightly" id="needsFortnightly">$0</span>
             </div>
             <div class="panel-totals-row">
-              <label>Mo</label>
+              <label>Monthly</label>
               <span class="amount monthly" id="needsMonthly">$0</span>
             </div>
           </div>
@@ -764,15 +717,15 @@
           </div>
           <div class="panel-totals">
             <div class="panel-totals-row">
-              <label>Wk</label>
+              <label>Weekly</label>
               <span class="amount weekly" id="wantsWeekly">$0</span>
             </div>
             <div class="panel-totals-row">
-              <label>Fn</label>
+              <label>Fortnightly</label>
               <span class="amount fortnightly" id="wantsFortnightly">$0</span>
             </div>
             <div class="panel-totals-row">
-              <label>Mo</label>
+              <label>Monthly</label>
               <span class="amount monthly" id="wantsMonthly">$0</span>
             </div>
           </div>
@@ -794,12 +747,10 @@
         <div>
           <div class="field-label">Type</div>
           <div class="type-toggle" id="itemTypeToggle">
-            <button class="type-option need active" data-type="need">
-              <span class="dot"></span>
+            <button class="type-option active" data-type="need">
               Need
             </button>
-            <button class="type-option want" data-type="want">
-              <span class="dot"></span>
+            <button class="type-option" data-type="want">
               Want
             </button>
           </div>
@@ -844,8 +795,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_v2";
-    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_v2";
+    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_v3";
+    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_v3";
 
     const items = []; // {id, type, label, amount, frequency, enabled}
     let nextId = 1;
@@ -861,11 +812,6 @@
     const wantsMonthlyEl = document.getElementById("wantsMonthly");
 
     const incomeAmountEl = document.getElementById("incomeAmount");
-    const incomeFrequencyEl = document.getElementById("incomeFrequency");
-    const incomeWeeklyEl = document.getElementById("incomeWeekly");
-    const incomeFortnightlyEl = document.getElementById("incomeFortnightly");
-    const incomeMonthlyEl = document.getElementById("incomeMonthly");
-
     const summaryTotalEl = document.getElementById("summaryTotal");
     const summarySurplusEl = document.getElementById("summarySurplus");
     const summaryStatusEl = document.getElementById("summaryStatus");
@@ -884,21 +830,22 @@
     const itemSaveBtn = document.getElementById("itemSaveBtn");
     const itemDeleteBtn = document.getElementById("itemDeleteBtn");
 
+    const summaryFrequencyToggle = document.getElementById("summaryFrequencyToggle");
+
     let currentType = "need";
+    let summaryFrequency = "fortnightly"; // default
 
     function formatCurrency(amount) {
       if (!isFinite(amount)) return "$0";
       return "$" + amount.toFixed(2).replace(/\.00$/, "");
     }
 
-    // Convert a value in a given frequency to weekly
     function toWeekly(amount, frequency) {
       if (frequency === "fortnightly") return amount / 2;
       if (frequency === "monthly") return amount * (12 / 52);
       return amount;
     }
 
-    // Convert weekly baseline to other frequencies
     function fromWeekly(weekly, target) {
       if (target === "fortnightly") return weekly * 2;
       if (target === "monthly") return weekly * (52 / 12);
@@ -910,7 +857,7 @@
         localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
         const incomeState = {
           amount: incomeAmountEl.value || "0",
-          frequency: incomeFrequencyEl.value || "weekly",
+          frequency: summaryFrequency || "fortnightly",
         };
         localStorage.setItem(STORAGE_KEY_INCOME, JSON.stringify(incomeState));
       } catch (e) {
@@ -926,9 +873,12 @@
         if (rawItems) {
           const parsed = JSON.parse(rawItems);
           if (Array.isArray(parsed)) {
-            parsed.forEach(it => {
+            parsed.forEach((it) => {
               if (typeof it.amount === "number") {
-                const freq = (it.frequency === "fortnightly" || it.frequency === "monthly") ? it.frequency : "weekly";
+                const freq =
+                  it.frequency === "fortnightly" || it.frequency === "monthly"
+                    ? it.frequency
+                    : "weekly";
                 const type = it.type === "want" ? "want" : "need";
                 const id = typeof it.id === "number" ? it.id : nextId++;
                 items.push({
@@ -941,7 +891,7 @@
                 });
               }
             });
-            items.forEach(it => {
+            items.forEach((it) => {
               if (it.id >= nextId) nextId = it.id + 1;
             });
           }
@@ -953,16 +903,25 @@
             if (parsedIncome.amount != null) {
               incomeAmountEl.value = parsedIncome.amount;
             }
-            if (parsedIncome.frequency === "fortnightly" || parsedIncome.frequency === "monthly") {
-              incomeFrequencyEl.value = parsedIncome.frequency;
-            } else {
-              incomeFrequencyEl.value = "weekly";
+            if (
+              parsedIncome.frequency === "weekly" ||
+              parsedIncome.frequency === "fortnightly" ||
+              parsedIncome.frequency === "monthly"
+            ) {
+              summaryFrequency = parsedIncome.frequency;
             }
           }
         }
       } catch (e) {
         console.warn("Unable to restore from localStorage", e);
       }
+      updateSummaryFrequencyButtons();
+    }
+
+    function updateSummaryFrequencyButtons() {
+      [...summaryFrequencyToggle.querySelectorAll(".type-option")].forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.freq === summaryFrequency);
+      });
     }
 
     function openModal(mode, item) {
@@ -972,7 +931,7 @@
 
       const type = mode === "edit" ? item.type : currentType;
       currentType = type;
-      [...itemTypeToggle.querySelectorAll(".type-option")].forEach(btn => {
+      [...itemTypeToggle.querySelectorAll(".type-option")].forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.type === type);
       });
 
@@ -1001,7 +960,7 @@
     function saveItem() {
       const label = itemLabelInput.value.trim();
       const amount = parseFloat(itemAmountInput.value);
-      const frequency = itemFrequencyInput.value;
+      const freqRaw = itemFrequencyInput.value;
       const enabled = itemEnabledInput.checked;
 
       if (isNaN(amount) || amount <= 0) {
@@ -1010,23 +969,21 @@
         return;
       }
 
-      const freqNorm = (frequency === "fortnightly" || frequency === "monthly") ? frequency : "weekly";
+      const frequency =
+        freqRaw === "fortnightly" || freqRaw === "monthly" ? freqRaw : "weekly";
 
       const payload = {
         label: label || "(untitled)",
         amount,
-        frequency: freqNorm,
+        frequency,
         type: currentType,
         enabled,
       };
 
       if (editingId == null) {
-        items.push({
-          id: nextId++,
-          ...payload,
-        });
+        items.push({ id: nextId++, ...payload });
       } else {
-        const index = items.findIndex(i => i.id === editingId);
+        const index = items.findIndex((i) => i.id === editingId);
         if (index !== -1) {
           items[index] = { ...items[index], ...payload };
         }
@@ -1040,10 +997,8 @@
 
     function deleteItem() {
       if (editingId == null) return;
-      const index = items.findIndex(i => i.id === editingId);
-      if (index !== -1) {
-        items.splice(index, 1);
-      }
+      const index = items.findIndex((i) => i.id === editingId);
+      if (index !== -1) items.splice(index, 1);
       persist();
       render();
       closeModal();
@@ -1056,18 +1011,16 @@
       let needsWeekly = 0;
       let wantsWeekly = 0;
 
-      items.forEach(item => {
+      items.forEach((item) => {
         const weekly = toWeekly(item.amount, item.frequency);
         if (item.enabled) {
-          if (item.type === "need") {
-            needsWeekly += weekly;
-          } else {
-            wantsWeekly += weekly;
-          }
+          if (item.type === "need") needsWeekly += weekly;
+          else wantsWeekly += weekly;
         }
 
         const pill = document.createElement("div");
-        pill.className = "pill " + (item.type === "need" ? "pill-need" : "pill-want");
+        pill.className =
+          "pill " + (item.type === "need" ? "pill-need" : "pill-want");
         if (!item.enabled) pill.classList.add("disabled");
 
         const dot = document.createElement("span");
@@ -1087,11 +1040,11 @@
         const freqSpan = document.createElement("span");
         freqSpan.className = "pill-frequency";
         if (item.frequency === "fortnightly") {
-          freqSpan.textContent = "/fn";
+          freqSpan.textContent = "/fortnight";
         } else if (item.frequency === "monthly") {
-          freqSpan.textContent = "/mo";
+          freqSpan.textContent = "/month";
         } else {
-          freqSpan.textContent = "/wk";
+          freqSpan.textContent = "/week";
         }
         pill.appendChild(freqSpan);
 
@@ -1104,11 +1057,8 @@
 
         pill.addEventListener("click", () => openModal("edit", item));
 
-        if (item.type === "need") {
-          needsItemsEl.appendChild(pill);
-        } else {
-          wantsItemsEl.appendChild(pill);
-        }
+        if (item.type === "need") needsItemsEl.appendChild(pill);
+        else wantsItemsEl.appendChild(pill);
       });
 
       const needsFortnightly = fromWeekly(needsWeekly, "fortnightly");
@@ -1124,25 +1074,22 @@
       wantsMonthlyEl.textContent = formatCurrency(wantsMonthly);
 
       const totalWeekly = needsWeekly + wantsWeekly;
-      summaryTotalEl.textContent = formatCurrency(totalWeekly);
 
       const incomeAmount = parseFloat(incomeAmountEl.value) || 0;
-      const incomeWeekly = toWeekly(incomeAmount, incomeFrequencyEl.value || "weekly");
-      const incomeFortnightly = fromWeekly(incomeWeekly, "fortnightly");
-      const incomeMonthly = fromWeekly(incomeWeekly, "monthly");
+      const incomeWeekly = toWeekly(incomeAmount, summaryFrequency);
+      const totalDisplay = fromWeekly(totalWeekly, summaryFrequency);
+      const incomeDisplay = fromWeekly(incomeWeekly, summaryFrequency);
+      const surplusDisplay = incomeDisplay - totalDisplay;
 
-      incomeWeeklyEl.textContent = formatCurrency(incomeWeekly);
-      incomeFortnightlyEl.textContent = formatCurrency(incomeFortnightly);
-      incomeMonthlyEl.textContent = formatCurrency(incomeMonthly);
+      summaryTotalEl.textContent = formatCurrency(totalDisplay);
+      summarySurplusEl.textContent = formatCurrency(Math.abs(surplusDisplay));
 
-      const surplus = incomeWeekly - totalWeekly;
-      summarySurplusEl.textContent = formatCurrency(Math.abs(surplus));
-      const isSurplus = surplus >= 0;
+      const isSurplus = surplusDisplay >= 0;
       summarySurplusEl.classList.toggle("surplus", isSurplus);
       summarySurplusEl.classList.toggle("deficit", !isSurplus);
 
       summaryStatusEl.textContent =
-        incomeWeekly === 0 && totalWeekly === 0
+        incomeAmount === 0 && totalWeekly === 0
           ? "Enter values"
           : isSurplus
           ? "Surplus"
@@ -1155,7 +1102,7 @@
       const btn = e.target.closest(".type-option");
       if (!btn) return;
       currentType = btn.dataset.type;
-      [...itemTypeToggle.querySelectorAll(".type-option")].forEach(b => {
+      [...itemTypeToggle.querySelectorAll(".type-option")].forEach((b) => {
         b.classList.toggle("active", b === btn);
       });
     });
@@ -1188,7 +1135,11 @@
       render();
     });
 
-    incomeFrequencyEl.addEventListener("change", () => {
+    summaryFrequencyToggle.addEventListener("click", (e) => {
+      const btn = e.target.closest(".type-option");
+      if (!btn) return;
+      summaryFrequency = btn.dataset.freq || "fortnightly";
+      updateSummaryFrequencyButtons();
       persist();
       render();
     });
