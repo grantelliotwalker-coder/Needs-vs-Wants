@@ -408,13 +408,11 @@
     }
 
     .pill-need {
-      border-color: rgba(67, 181, 129, 0.9);
-      background: radial-gradient(circle at top left, rgba(67, 181, 129, 0.28), rgba(10, 16, 30, 0.98));
+      background: radial-gradient(circle at top left, rgba(67, 181, 129, 0.35), rgba(10, 16, 30, 0.98));
     }
 
     .pill-want {
-      border-color: rgba(246, 180, 67, 0.9);
-      background: radial-gradient(circle at top left, rgba(246, 180, 67, 0.28), rgba(10, 16, 30, 0.98));
+      background: radial-gradient(circle at top left, rgba(246, 180, 67, 0.35), rgba(10, 16, 30, 0.98));
     }
 
     .pill.disabled {
@@ -423,15 +421,18 @@
     }
 
     .pill-color-blue {
-      box-shadow: 0 0 0 1px rgba(44, 123, 229, 0.6);
+      border-color: rgba(44, 123, 229, 0.9);
+      box-shadow: 0 0 0 1px rgba(44, 123, 229, 0.7);
     }
 
     .pill-color-purple {
-      box-shadow: 0 0 0 1px rgba(132, 94, 247, 0.6);
+      border-color: rgba(132, 94, 247, 0.9);
+      box-shadow: 0 0 0 1px rgba(132, 94, 247, 0.7);
     }
 
     .pill-color-pink {
-      box-shadow: 0 0 0 1px rgba(214, 51, 132, 0.6);
+      border-color: rgba(214, 51, 132, 0.9);
+      box-shadow: 0 0 0 1px rgba(214, 51, 132, 0.7);
     }
 
     .pill-type-dot {
@@ -684,7 +685,7 @@
       min-height: 14px;
     }
 
-    /* iOS/Chrome-on-iOS zoom fix: ensure >16px on inputs on small screens */
+    /* iOS/Chrome-on-iOS zoom fix: ensure ≥16px on inputs on small screens */
     @media (max-width: 768px) {
       input[type="text"],
       input[type="number"],
@@ -902,10 +903,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_yearly";
-    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_yearly";
+    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
+    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
 
-    const items = []; // {id, type, label, amount, frequency, enabled, color}
+    const items = [];
     let nextId = 1;
     let editingId = null;
 
