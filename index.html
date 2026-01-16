@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Budget · Needs vs Wants v3.0</title>
+  <title>Budget · Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
     :root {
@@ -74,11 +74,6 @@
       font-size: 16px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .brand-sub {
-      font-size: 11px;
       color: var(--muted);
     }
 
@@ -155,6 +150,34 @@
       background: #35d5ff;
     }
 
+    .summary-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .summary-toggle-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
     .summary-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
@@ -186,12 +209,6 @@
       gap: 8px;
     }
 
-    .income-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
     .income-label {
       font-size: 11px;
       color: var(--muted);
@@ -220,11 +237,6 @@
       font-size: 13px;
       outline: none;
       text-align: right;
-    }
-
-    .helper-text {
-      font-size: 11px;
-      color: var(--muted);
     }
 
     .type-toggle {
@@ -541,10 +553,6 @@
       margin: 0;
     }
 
-    .type-toggle.small {
-      padding: 3px;
-    }
-
     .toggle-row {
       display: flex;
       align-items: center;
@@ -619,7 +627,6 @@
       <div class="top-row">
         <div class="brand">
           <div class="brand-title">Budget · Needs vs Wants</div>
-          <div class="brand-sub">Focus on essentials vs optional, then test your surplus.</div>
         </div>
         <div class="header-actions">
           <a href="#" class="pill-button donate" id="donateLink">
@@ -633,15 +640,19 @@
         </div>
       </div>
 
-      <div class="summary-row">
+      <div class="summary-toggle-row">
+        <div class="summary-toggle-label">Show income & summary</div>
+        <button class="summary-toggle-button active" id="summaryToggleBtn">
+          Hide
+        </button>
+      </div>
+
+      <div class="summary-row" id="summaryRow">
         <div class="summary-card">
           <div class="summary-card-title">Income & summary</div>
 
           <div class="income-main-row">
-            <div class="income-meta">
-              <div class="income-label">Net income amount</div>
-              <div class="helper-text">After tax, all sources.</div>
-            </div>
+            <div class="income-label">Net income amount</div>
             <div class="income-input-wrap">
               <span>$</span>
               <input id="incomeAmount" type="number" min="0" step="0.01" placeholder="0.00" />
@@ -649,11 +660,8 @@
           </div>
 
           <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-            <div>
-              <div class="helper-text">Frequency for income & surplus</div>
-              <div class="helper-text">Defaults to fortnightly.</div>
-            </div>
-            <div class="type-toggle small" id="summaryFrequencyToggle">
+            <div class="income-label">Frequency for income & surplus</div>
+            <div class="type-toggle" id="summaryFrequencyToggle">
               <button class="type-option" data-freq="weekly">Weekly</button>
               <button class="type-option active" data-freq="fortnightly">Fortnightly</button>
               <button class="type-option" data-freq="monthly">Monthly</button>
@@ -747,12 +755,8 @@
         <div>
           <div class="field-label">Type</div>
           <div class="type-toggle" id="itemTypeToggle">
-            <button class="type-option active" data-type="need">
-              Need
-            </button>
-            <button class="type-option" data-type="want">
-              Want
-            </button>
+            <button class="type-option active" data-type="need">Need</button>
+            <button class="type-option" data-type="want">Want</button>
           </div>
         </div>
 
@@ -795,10 +799,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_v3";
-    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_v3";
+    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems_clean";
+    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome_clean";
 
-    const items = []; // {id, type, label, amount, frequency, enabled}
+    const items = [];
     let nextId = 1;
     let editingId = null;
 
@@ -831,9 +835,12 @@
     const itemDeleteBtn = document.getElementById("itemDeleteBtn");
 
     const summaryFrequencyToggle = document.getElementById("summaryFrequencyToggle");
+    const summaryToggleBtn = document.getElementById("summaryToggleBtn");
+    const summaryRow = document.getElementById("summaryRow");
 
     let currentType = "need";
-    let summaryFrequency = "fortnightly"; // default
+    let summaryFrequency = "fortnightly";
+    let summaryVisible = true;
 
     function formatCurrency(amount) {
       if (!isFinite(amount)) return "$0";
@@ -858,6 +865,7 @@
         const incomeState = {
           amount: incomeAmountEl.value || "0",
           frequency: summaryFrequency || "fortnightly",
+          visible: summaryVisible,
         };
         localStorage.setItem(STORAGE_KEY_INCOME, JSON.stringify(incomeState));
       } catch (e) {
@@ -910,18 +918,34 @@
             ) {
               summaryFrequency = parsedIncome.frequency;
             }
+            if (typeof parsedIncome.visible === "boolean") {
+              summaryVisible = parsedIncome.visible;
+            }
           }
         }
       } catch (e) {
         console.warn("Unable to restore from localStorage", e);
       }
       updateSummaryFrequencyButtons();
+      updateSummaryVisibility();
     }
 
     function updateSummaryFrequencyButtons() {
       [...summaryFrequencyToggle.querySelectorAll(".type-option")].forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.freq === summaryFrequency);
       });
+    }
+
+    function updateSummaryVisibility() {
+      if (summaryVisible) {
+        summaryRow.style.display = "";
+        summaryToggleBtn.textContent = "Hide";
+        summaryToggleBtn.classList.add("active");
+      } else {
+        summaryRow.style.display = "none";
+        summaryToggleBtn.textContent = "Show";
+        summaryToggleBtn.classList.remove("active");
+      }
     }
 
     function openModal(mode, item) {
@@ -1142,6 +1166,12 @@
       updateSummaryFrequencyButtons();
       persist();
       render();
+    });
+
+    summaryToggleBtn.addEventListener("click", () => {
+      summaryVisible = !summaryVisible;
+      updateSummaryVisibility();
+      persist();
     });
 
     restore();
