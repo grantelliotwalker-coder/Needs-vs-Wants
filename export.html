@@ -40,6 +40,16 @@
       color: #02040a;
       font-weight: 600;
     }
+    #copyBtn {
+      background: transparent;
+      color: #e5f4ff;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    #backBtn {
+      background: transparent;
+      color: #e5f4ff;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
     #status {
       font-size: 12px;
       color: #9aa6bd;
@@ -73,7 +83,9 @@
   <p>This reads your saved budget in this browser and builds a table you can copy into Excel or Google Sheets.</p>
 
   <div class="row">
+    <button id="backBtn">Back to budget</button>
     <button id="refreshBtn">Build table from saved budget</button>
+    <button id="copyBtn">Copy table to clipboard</button>
     <span id="status"></span>
   </div>
 
@@ -95,7 +107,7 @@
     <tbody></tbody>
   </table>
 
-  <p><small>Select the table (or rows), copy, then paste into Excel or Google Sheets.</small></p>
+  <p><small>Copy button selects the whole table for you; you can also select rows manually.</small></p>
 
   <script>
     const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
@@ -187,11 +199,44 @@
         count++;
       });
 
-      statusEl.textContent = "Table built from " + count + " items. Select and copy to paste.";
+      statusEl.textContent = "Table built from " + count + " items. Copy and paste into Excel/Sheets.";
+    }
+
+    async function copyTable() {
+      const statusEl = document.getElementById("status");
+      const table = document.getElementById("dataTable");
+      const range = document.createRange();
+      range.selectNode(table);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      try {
+        // Most browsers: execCommand copy will use the selected HTML table
+        const ok = document.execCommand("copy");
+        if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+          // Fallback: plain-text copy (still pastes as cells in Sheets/Excel)
+          const text = selection.toString();
+          await navigator.clipboard.writeText(text);
+        }
+        statusEl.textContent = "Table copied. Paste into Excel or Google Sheets.";
+      } catch (e) {
+        statusEl.textContent = "Copy failed. Select the table manually and copy.";
+      } finally {
+        selection.removeAllRanges();
+      }
+    }
+
+    function goBack() {
+      // Back to main index on same origin
+      window.location.href = "index.html";
     }
 
     document.getElementById("refreshBtn").addEventListener("click", buildTable);
-    buildTable(); // auto-build on load
+    document.getElementById("copyBtn").addEventListener("click", copyTable);
+    document.getElementById("backBtn").addEventListener("click", goBack);
+
+    buildTable();
   </script>
 </body>
 </html>
