@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Budget · Export CSV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      background: #050816;
+      color: #e5f4ff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 13px;
+      color: #9aa6bd;
+      margin: 4px 0 10px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      background: #0b1020;
+      color: #e5f4ff;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      box-sizing: border-box;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    #refreshBtn {
+      background: #00c2ff;
+      color: #02040a;
+      font-weight: 600;
+    }
+    #copyBtn {
+      background: transparent;
+      color: #e5f4ff;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    #status {
+      font-size: 12px;
+      color: #9aa6bd;
+      min-height: 16px;
+      align-self: center;
+    }
+    small {
+      font-size: 11px;
+      color: #9aa6bd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Budget · Export CSV</h1>
+  <p>
+    This reads your saved budget from this browser and builds a CSV-style table you can paste directly into Excel.
+  </p>
+
+  <div class="row">
+    <button id="refreshBtn">Build CSV from saved budget</button>
+    <button id="copyBtn">Copy CSV to clipboard</button>
+    <span id="status"></span>
+  </div>
+
+  <textarea id="csvOutput" spellcheck="false" placeholder="Click &quot;Build CSV&quot; to generate..."></textarea>
+
+  <p><small>Columns: type, label, amount, frequency, enabled, color, weekly, fortnightly, monthly, yearly.</small></p>
+
+  <script>
+    const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
+    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
+
+    function formatNumber(n) {
+      if (!isFinite(n)) return "";
+      return n.toFixed(2).replace(/\.00$/, "");
+    }
+
+    function toWeekly(amount, frequency) {
+      if (frequency === "fortnightly") return amount / 2;
+      if (frequency === "monthly") return amount * (12 / 52);
+      if (frequency === "yearly") return amount / 52;
+      return amount;
+    }
+
+    function fromWeekly(weekly, target) {
+      if (target === "fortnightly") return weekly * 2;
+      if (target === "monthly") return weekly * (52 / 12);
+      if (target === "yearly") return weekly * 52;
+      return weekly;
+    }
+
+    function escapeCsv(value) {
+      const str = String(value ?? "");
+      if (/[",\n]/.test(str)) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    function buildCsv() {
+      const statusEl = document.getElementById("status");
+      const outEl = document.getElementById("csvOutput");
+      statusEl.textContent = "";
+
+      let raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      if (!raw) {
+        outEl.value = "";
+        statusEl.textContent = "No saved budget found in this browser.";
+        return;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        outEl.value = "";
+        statusEl.textContent = "Could not read saved data (JSON error).";
+        return;
+      }
+
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        outEl.value = "";
+        statusEl.textContent = "Saved budget is empty.";
+        return;
+      }
+
+      const header = [
+        "type",
+        "label",
+        "amount",
+        "frequency",
+        "enabled",
+        "color",
+        "weekly",
+        "fortnightly",
+        "monthly",
+        "yearly"
+      ];
+
+      const rows = [header];
+
+      parsed.forEach((it) => {
+        if (typeof it.amount !== "number") return;
+
+        const type = it.type === "want" ? "want" : "need";
+        const label = typeof it.label === "string" ? it.label : "";
+        const amount = it.amount;
+        const freq = ["weekly", "fortnightly", "monthly", "yearly"].includes(it.frequency)
+          ? it.frequency
+          : "weekly";
+        const enabled = it.enabled !== false;
+        const color = it.color || "default";
+
+        const weekly = toWeekly(amount, freq);
+        const fortnightly = fromWeekly(weekly, "fortnightly");
+        const monthly = fromWeekly(weekly, "monthly");
+        const yearly = fromWeekly(weekly, "yearly");
+
+        const row = [
+          type,
+          label,
+          formatNumber(amount),
+          freq,
+          enabled ? "1" : "0",
+          color,
+          formatNumber(weekly),
+          formatNumber(fortnightly),
+          formatNumber(monthly),
+          formatNumber(yearly)
+        ];
+
+        rows.push(row);
+      });
+
+      const csv = rows
+        .map((row) => row.map(escapeCsv).join(","))
+        .join("\n");
+
+      outEl.value = csv;
+      statusEl.textContent = "CSV built from " + (rows.length - 1) + " items.";
+    }
+
+    async function copyCsv() {
+      const statusEl = document.getElementById("status");
+      const outEl = document.getElementById("csvOutput");
+      const text = outEl.value;
+
+      if (!text) {
+        statusEl.textContent = "Nothing to copy. Build CSV first.";
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        statusEl.textContent = "Copied CSV to clipboard. Paste into Excel.";
+      } catch (e) {
+        statusEl.textContent = "Copy failed. Select the text and copy manually.";
+      }
+    }
+
+    document.getElementById("refreshBtn").addEventListener("click", buildCsv);
+    document.getElementById("copyBtn").addEventListener("click", copyCsv);
+
+    // Optional: build automatically on load
+    buildCsv();
+  </script>
+</body>
+</html>
