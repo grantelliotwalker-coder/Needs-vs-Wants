@@ -1,1 +1,720 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stamp Duty Calculator – Budget Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Stamp duty calculator tool for the Budget Needs vs Wants planner. Rough stamp duty estimate and upfront cost summary." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --disabled: #555c72;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 10px;
+    }
+
+    .panel {
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .app-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        font-size: 16px;
+      }
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+      margin-top: 2px;
+    }
+
+    .calculate-btn {
+      margin-top: 6px;
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .calculate-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .badge-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .badge-pill.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .badge-pill.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-title">Stamp Duty Calculator</div>
+        <div class="brand-tagline">
+          Rough NSW-style estimate and simple upfront cost summary.
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="tools.html"
+           class="summary-toggle-button active"
+           id="backToTools">
+          ← Tools
+        </a>
+
+        <a href="index.html"
+           class="summary-toggle-button"
+           id="backToMain">
+          Main planner
+        </a>
+
+        <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+           class="pill-button donate"
+           id="donateLink"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="pill-button-icon">💖</span>
+          Leave a tip
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Property details
+            <span class="panel-badge">Very rough guide</span>
+          </div>
+          <div class="panel-subtitle">
+            Uses a simplified NSW-style scale, not official rates. Always check with your state revenue office or conveyancer.
+          </div>
+        </div>
+      </div>
+
+      <div class="inputs-grid">
+        <div class="field-group">
+          <div class="field-label">Purchase price</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="priceInput" type="number" min="0" step="1000" placeholder="800000" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Property type</div>
+          <select id="propertyTypeInput">
+            <option value="owner">Owner-occupier</option>
+            <option value="investment">Investment</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Buyer type</div>
+          <select id="buyerTypeInput">
+            <option value="first">First home buyer</option>
+            <option value="other">Other buyer</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Deposit available</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="depositInput" type="number" min="0" step="1000" placeholder="120000" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Other upfront costs (legal, inspections, etc.)</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="otherCostsInput" type="number" min="0" step="100" placeholder="5000" />
+          </div>
+        </div>
+      </div>
+
+      <div class="error-text" id="inputError"></div>
+
+      <button class="calculate-btn" id="calcBtn">
+        <span class="icon">▶</span>
+        Estimate stamp duty
+      </button>
+
+      <div class="note">
+        This is an educational tool only, using a simplified scale loosely inspired by NSW. Not advice and not guaranteed accurate.
+      </div>
+    </section>
+
+    <div class="app-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Stamp duty estimate</div>
+            <div class="panel-subtitle">
+              Old upfront stamp duty vs a simple annual property tax style option.
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-card-title">Upfront stamp duty (old style)</div>
+            <div class="mini-row">
+              <span class="mini-label">Estimated duty</span>
+              <span id="dutyAmount" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">After first home adjustments</span>
+              <span id="dutyTag" class="mini-value surplus">—</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">Property tax style (simple)</div>
+            <div class="mini-row">
+              <span class="mini-label">Annual charge (example 0.3%)</span>
+              <span id="annualTax" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Total over 10 years</span>
+              <span id="tenYearTax" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Which is smaller at 10 years?</span>
+              <span id="compareTag" class="mini-value surplus">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Upfront cash needed</div>
+            <div class="panel-subtitle">
+              See how your deposit stacks up once duty and other costs are added.
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">Cash summary</div>
+          <div class="mini-row">
+            <span class="mini-label">Deposit</span>
+            <span id="sumDeposit" class="mini-value">—</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Stamp duty (upfront)</span>
+            <span id="sumDuty" class="mini-value">—</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Other costs</span>
+            <span id="sumOther" class="mini-value">—</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Total cash required</span>
+            <span id="sumTotal" class="mini-value">—</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Short / extra</span>
+            <span id="sumGap" class="mini-value surplus">—</span>
+          </div>
+        </div>
+
+        <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="note">Positive number means you have cash left after upfront costs.</span>
+          <span id="gapBadge" class="badge-pill">—</span>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const priceInput = document.getElementById("priceInput");
+  const propertyTypeInput = document.getElementById("propertyTypeInput");
+  const buyerTypeInput = document.getElementById("buyerTypeInput");
+  const depositInput = document.getElementById("depositInput");
+  const otherCostsInput = document.getElementById("otherCostsInput");
+  const inputError = document.getElementById("inputError");
+  const calcBtn = document.getElementById("calcBtn");
+
+  const dutyAmountEl = document.getElementById("dutyAmount");
+  const dutyTagEl = document.getElementById("dutyTag");
+  const annualTaxEl = document.getElementById("annualTax");
+  const tenYearTaxEl = document.getElementById("tenYearTax");
+  const compareTagEl = document.getElementById("compareTag");
+
+  const sumDepositEl = document.getElementById("sumDeposit");
+  const sumDutyEl = document.getElementById("sumDuty");
+  const sumOtherEl = document.getElementById("sumOther");
+  const sumTotalEl = document.getElementById("sumTotal");
+  const sumGapEl = document.getElementById("sumGap");
+  const gapBadgeEl = document.getElementById("gapBadge");
+
+  function formatCurrency(amount) {
+    if (!isFinite(amount)) return "—";
+    return "$" + amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  // Very rough NSW-style scale (approx, simplified)
+  function estimateStampDutyNSW(price) {
+    if (price <= 0) return 0;
+    let duty = 0;
+
+    if (price <= 14000) {
+      duty = price * 0.0125;
+    } else if (price <= 30000) {
+      duty = 175 + (price - 14000) * 0.015;
+    } else if (price <= 81000) {
+      duty = 415 + (price - 30000) * 0.0175;
+    } else if (price <= 304000) {
+      duty = 1340 + (price - 81000) * 0.035;
+    } else if (price <= 1013000) {
+      duty = 9112 + (price - 304000) * 0.045;
+    } else {
+      duty = 41462 + (price - 1013000) * 0.055;
+    }
+
+    return duty;
+  }
+
+  function applyFirstHomeReduction(price, baseDuty) {
+    // Very rough: simple threshold logic
+    if (price <= 650000) {
+      // Full exemption for first home buyers
+      return 0;
+    } else if (price <= 800000) {
+      // Partial discount: 50% off in this band
+      return baseDuty * 0.5;
+    }
+    return baseDuty;
+  }
+
+  function calculate() {
+    const price = parseFloat(priceInput.value || "0");
+    const deposit = parseFloat(depositInput.value || "0");
+    const otherCosts = parseFloat(otherCostsInput.value || "0");
+    const buyerType = buyerTypeInput.value;
+    const propertyType = propertyTypeInput.value;
+
+    if (!isFinite(price) || price <= 0) {
+      inputError.textContent = "Enter a purchase price above 0.";
+      priceInput.focus();
+      return;
+    }
+    if (!isFinite(deposit) || deposit < 0) {
+      inputError.textContent = "Deposit cannot be negative.";
+      depositInput.focus();
+      return;
+    }
+    if (!isFinite(otherCosts) || otherCosts < 0) {
+      inputError.textContent = "Other costs cannot be negative.";
+      otherCostsInput.focus();
+      return;
+    }
+
+    inputError.textContent = "";
+
+    let baseDuty = estimateStampDutyNSW(price);
+    let adjustedDuty = baseDuty;
+
+    if (buyerType === "first" && propertyType === "owner") {
+      adjustedDuty = applyFirstHomeReduction(price, baseDuty);
+    }
+
+    dutyAmountEl.textContent = formatCurrency(adjustedDuty);
+
+    if (buyerType === "first" && adjustedDuty === 0) {
+      dutyTagEl.textContent = "Estimated full exemption in this price band";
+      dutyTagEl.classList.remove("deficit");
+      dutyTagEl.classList.add("surplus");
+    } else if (buyerType === "first" && adjustedDuty < baseDuty) {
+      dutyTagEl.textContent = "Estimated discount applied (first home)";
+      dutyTagEl.classList.remove("deficit");
+      dutyTagEl.classList.add("surplus");
+    } else {
+      dutyTagEl.textContent = "No first home discount assumed";
+      dutyTagEl.classList.remove("surplus");
+      dutyTagEl.classList.add("deficit");
+    }
+
+    const annualRate = 0.003; // 0.3% simple example
+    const annualTax = price * annualRate;
+    const tenYearTax = annualTax * 10;
+
+    annualTaxEl.textContent = formatCurrency(annualTax);
+    tenYearTaxEl.textContent = formatCurrency(tenYearTax);
+
+    if (tenYearTax < adjustedDuty) {
+      compareTagEl.textContent = "Property tax cheaper at 10 years";
+      compareTagEl.classList.remove("deficit");
+      compareTagEl.classList.add("surplus");
+    } else if (tenYearTax > adjustedDuty) {
+      compareTagEl.textContent = "Upfront duty cheaper at 10 years";
+      compareTagEl.classList.remove("surplus");
+      compareTagEl.classList.add("deficit");
+    } else {
+      compareTagEl.textContent = "Roughly similar at 10 years";
+      compareTagEl.classList.remove("surplus", "deficit");
+    }
+
+    sumDepositEl.textContent = formatCurrency(deposit);
+    sumDutyEl.textContent = formatCurrency(adjustedDuty);
+    sumOtherEl.textContent = formatCurrency(otherCosts);
+
+    const totalRequired = adjustedDuty + otherCosts;
+    const gap = deposit - totalRequired;
+
+    sumTotalEl.textContent = formatCurrency(totalRequired);
+    sumGapEl.textContent = formatCurrency(gap);
+
+    if (gap >= 0) {
+      sumGapEl.classList.remove("deficit");
+      sumGapEl.classList.add("surplus");
+      gapBadgeEl.textContent = "You have roughly enough for upfronts";
+      gapBadgeEl.classList.remove("bad");
+      gapBadgeEl.classList.add("good");
+    } else {
+      sumGapEl.classList.remove("surplus");
+      sumGapEl.classList.add("deficit");
+      gapBadgeEl.textContent = "Short on upfront cash";
+      gapBadgeEl.classList.remove("good");
+      gapBadgeEl.classList.add("bad");
+    }
+  }
+
+  calcBtn.addEventListener("click", calculate);
+
+  [priceInput, depositInput, otherCostsInput].forEach((el) => {
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") calculate();
+    });
+  });
+</script>
+</body>
+</html>
