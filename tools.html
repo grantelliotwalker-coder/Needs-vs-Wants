@@ -147,36 +147,6 @@
       background: rgba(0, 194, 255, 0.18);
     }
 
-    .add-btn {
-      background: var(--accent);
-      border: none;
-      color: #02040a;
-      padding: 7px 14px;
-      border-radius: 999px;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      text-decoration: none;
-    }
-
-    .add-btn span.icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: #02040a;
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
     .app-main {
       flex: 1;
       display: flex;
@@ -197,7 +167,7 @@
 
     .panel-header {
       display: flex;
-      align-items: baseline;
+      align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 4px;
       gap: 8px;
@@ -237,6 +207,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 6px;
+      align-items: center;
     }
 
     .panel-totals span.amount {
@@ -334,11 +305,11 @@
 
     .type-toggle {
       display: inline-flex;
-      padding: 3px;
+      padding: 2px;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      gap: 3px;
+      gap: 2px;
     }
 
     .type-option {
@@ -346,8 +317,8 @@
       border: none;
       background: transparent;
       color: var(--muted);
-      font-size: 11px;
-      padding: 4px 9px;
+      font-size: 10px;
+      padding: 3px 7px;
       cursor: pointer;
       white-space: nowrap;
     }
@@ -433,12 +404,6 @@
           ← Main
         </a>
 
-        <a href="export.html"
-           class="summary-toggle-button"
-           id="exportLink">
-          Export
-        </a>
-
         <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
            class="pill-button donate"
            id="donateLink"
@@ -465,46 +430,53 @@
           </div>
         </div>
 
-        <div class="panel-totals">
-          <div class="panel-totals-row">
-            <label>Frequency:</label>
-            <div class="type-toggle" id="summaryFrequencyToggle">
-              <button class="type-option" data-freq="weekly">Weekly</button>
-              <button class="type-option active" data-freq="fortnightly">Fortnightly</button>
-              <button class="type-option" data-freq="monthly">Monthly</button>
-              <button class="type-option" data-freq="yearly">Yearly</button>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+          <button class="summary-toggle-button active" id="toolsSummaryToggle">
+            Hide
+          </button>
+          <div class="panel-totals">
+            <div class="panel-totals-row">
+              <label>Freq:</label>
+              <div class="type-toggle" id="summaryFrequencyToggle">
+                <button class="type-option" data-freq="weekly">W</button>
+                <button class="type-option active" data-freq="fortnightly">F</button>
+                <button class="type-option" data-freq="monthly">M</button>
+                <button class="type-option" data-freq="yearly">Y</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="summary-row">
-        <div class="summary-card">
-          <div class="summary-card-title">Net income</div>
-          <div class="income-main-row">
-            <div class="income-label">
-              Loaded from your main planner.
-            </div>
-            <div class="income-input-wrap">
-              <span>$</span>
-              <input id="incomeAmount" type="number" min="0" step="0.01" placeholder="0.00" disabled>
+      <div id="toolsSummaryBody">
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-card-title">Net income</div>
+            <div class="income-main-row">
+              <div class="income-label">
+                Loaded from your main planner.
+              </div>
+              <div class="income-input-wrap">
+                <span>$</span>
+                <input id="incomeAmount" type="number" min="0" step="0.01" placeholder="0.00" disabled>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="summary-card">
-          <div class="summary-card-title">Expenses & surplus</div>
-          <div class="mini-row">
-            <span class="mini-label">Expenses</span>
-            <span id="summaryTotal" class="mini-value accent">0</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Surplus</span>
-            <span id="summarySurplus" class="mini-value surplus">0</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Status</span>
-            <span id="summaryStatus" class="mini-value surplus">Enter values</span>
+          <div class="summary-card">
+            <div class="summary-card-title">Expenses & surplus</div>
+            <div class="mini-row">
+              <span class="mini-label">Expenses</span>
+              <span id="summaryTotal" class="mini-value accent">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Surplus</span>
+              <span id="summarySurplus" class="mini-value surplus">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Status</span>
+              <span id="summaryStatus" class="mini-value surplus">Enter values</span>
+            </div>
           </div>
         </div>
       </div>
@@ -524,29 +496,28 @@
       </div>
 
       <div class="tools-grid">
-        <!-- Example tools – update hrefs as you build new tools -->
-        <a href="sinking-funds.html" class="tool-card">
-          <div class="tool-icon">📦</div>
-          <div class="tool-name">Sinking funds</div>
-          <div class="tool-desc">Plan for regular big costs like rego, insurances, and school fees.</div>
-        </a>
-
-        <a href="debt-snowball.html" class="tool-card">
-          <div class="tool-icon">❄️</div>
-          <div class="tool-name">Debt snowball</div>
-          <div class="tool-desc">Order debts and build a payoff strategy that fits your budget.</div>
-        </a>
-
         <a href="savings-goals.html" class="tool-card">
           <div class="tool-icon">🎯</div>
-          <div class="tool-name">Savings goals</div>
-          <div class="tool-desc">Turn your surplus into specific goals and timelines.</div>
+          <div class="tool-name">Savings Goals</div>
+          <div class="tool-desc">Turn your surplus into specific savings targets with dates.</div>
         </a>
 
-        <a href="cashflow-calendar.html" class="tool-card">
-          <div class="tool-icon">📅</div>
-          <div class="tool-name">Cashflow calendar</div>
-          <div class="tool-desc">Map income and bills across the month or year.</div>
+        <a href="mortgage-calculator.html" class="tool-card">
+          <div class="tool-icon">🏡</div>
+          <div class="tool-name">Mortgage Calculator</div>
+          <div class="tool-desc">Estimate repayments and see how different rates change your budget.</div>
+        </a>
+
+        <a href="stamp-duty-calculator.html" class="tool-card">
+          <div class="tool-icon">📜</div>
+          <div class="tool-name">Stamp Duty Calculator</div>
+          <div class="tool-desc">Roughly estimate upfront costs when buying a property.</div>
+        </a>
+
+        <a href="tax-calculator.html" class="tool-card">
+          <div class="tool-icon">💼</div>
+          <div class="tool-name">Tax Calculator</div>
+          <div class="tool-desc">Get a simple view of income tax against your current income.</div>
         </a>
       </div>
     </section>
@@ -564,8 +535,12 @@
   const summaryStatusEl = document.getElementById("summaryStatus");
   const summaryFrequencyToggle = document.getElementById("summaryFrequencyToggle");
 
+  const toolsSummaryToggleBtn = document.getElementById("toolsSummaryToggle");
+  const toolsSummaryBody = document.getElementById("toolsSummaryBody");
+
   let items = [];
   let summaryFrequency = "fortnightly";
+  let toolsSummaryVisible = true;
 
   function formatCurrency(amount) {
     if (!isFinite(amount)) return "0";
@@ -690,9 +665,27 @@
     render();
   });
 
+  function updateToolsSummaryVisibility() {
+    if (toolsSummaryVisible) {
+      toolsSummaryBody.style.display = "";
+      toolsSummaryToggleBtn.textContent = "Hide";
+      toolsSummaryToggleBtn.classList.add("active");
+    } else {
+      toolsSummaryBody.style.display = "none";
+      toolsSummaryToggleBtn.textContent = "Show";
+      toolsSummaryToggleBtn.classList.remove("active");
+    }
+  }
+
+  toolsSummaryToggleBtn.addEventListener("click", () => {
+    toolsSummaryVisible = !toolsSummaryVisible;
+    updateToolsSummaryVisibility();
+  });
+
   restore();
   updateSummaryFrequencyButtons();
   render();
+  updateToolsSummaryVisibility();
 </script>
 </body>
 </html>
