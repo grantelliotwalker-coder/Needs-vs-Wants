@@ -1,1 +1,794 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tax Calculator – Budget Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Tax calculator tool for the Budget Needs vs Wants planner. Rough Australian-style tax estimate with net pay by frequency." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --disabled: #555c72;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 10px;
+    }
+
+    .panel {
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .app-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        font-size: 16px;
+      }
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+      margin-top: 2px;
+    }
+
+    .calculate-btn {
+      margin-top: 6px;
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .calculate-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .tag-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .tag-pill.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .tag-pill.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+
+    th,
+    td {
+      padding: 4px 6px;
+      text-align: right;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    thead tr {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-title">Tax Calculator</div>
+        <div class="brand-tagline">
+          Rough Australian-style income tax and net pay by pay cycle.
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="tools.html"
+           class="summary-toggle-button active"
+           id="backToTools">
+          ← Tools
+        </a>
+
+        <a href="index.html"
+           class="summary-toggle-button"
+           id="backToMain">
+          Main planner
+        </a>
+
+        <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+           class="pill-button donate"
+           id="donateLink"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="pill-button-icon">💖</span>
+          Leave a tip
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Income details
+            <span class="panel-badge">Very rough guide</span>
+          </div>
+          <div class="panel-subtitle">
+            Uses a simplified Australian resident tax scale only. No Medicare levy, offsets, or HECS/HELP.
+          </div>
+        </div>
+      </div>
+
+      <div class="inputs-grid">
+        <div class="field-group">
+          <div class="field-label">Income amount</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="incomeInput" type="number" min="0" step="0.01" placeholder="85000" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Income frequency</div>
+          <select id="incomeFreqInput">
+            <option value="yearly" selected>Per year</option>
+            <option value="monthly">Per month</option>
+            <option value="fortnightly">Per fortnight</option>
+            <option value="weekly">Per week</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Resident for tax purposes</div>
+          <select id="residentInput">
+            <option value="resident" selected>Yes (resident)</option>
+            <option value="nonresident">No (non-resident rough)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Include super?</div>
+          <select id="superInput">
+            <option value="excl" selected>No (just salary)</option>
+            <option value="incl">Yes (amount includes super)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Super rate (if included)</div>
+          <div class="field-inline">
+            <input id="superRateInput" type="number" min="0" step="0.1" placeholder="11" />
+            <span style="font-size:12px;color:var(--muted);">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-text" id="inputError"></div>
+
+      <button class="calculate-btn" id="calcBtn">
+        <span class="icon">▶</span>
+        Estimate tax
+      </button>
+
+      <div class="note">
+        Educational only. For real numbers, always cross-check with the ATO calculators or an accountant.
+      </div>
+    </section>
+
+    <div class="app-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Summary</div>
+            <div class="panel-subtitle">
+              See rough annual tax, average tax rate, and net pay by pay cycle.
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-card-title">Annual view</div>
+            <div class="mini-row">
+              <span class="mini-label">Taxable income</span>
+              <span id="taxableIncome" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Approx tax</span>
+              <span id="annualTax" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Net after tax</span>
+              <span id="annualNet" class="mini-value surplus">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Average rate</span>
+              <span id="avgRate" class="mini-value">—</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">Take-home per period</div>
+            <div class="mini-row">
+              <span class="mini-label">Per week</span>
+              <span id="netWeekly" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Per fortnight</span>
+              <span id="netFortnightly" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Per month</span>
+              <span id="netMonthly" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Quick read</span>
+              <span id="netTag" class="mini-value surplus">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Tax bands</div>
+            <div class="panel-subtitle">
+              Very rough breakdown of how much is taxed in each band.
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+          <tr>
+            <th>Band</th>
+            <th>Taxed at</th>
+            <th>Income in band</th>
+            <th>Tax from band</th>
+          </tr>
+          </thead>
+          <tbody id="bandsBody">
+          <tr>
+            <td colspan="4" style="text-align:center;color:var(--muted);padding:6px;">Run a calculation to see a breakdown.</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          Bands are approximate and assume resident Australian 2024–25 style brackets, simplified and without offsets.
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const incomeInput = document.getElementById("incomeInput");
+  const incomeFreqInput = document.getElementById("incomeFreqInput");
+  const residentInput = document.getElementById("residentInput");
+  const superInput = document.getElementById("superInput");
+  const superRateInput = document.getElementById("superRateInput");
+  const inputError = document.getElementById("inputError");
+  const calcBtn = document.getElementById("calcBtn");
+
+  const taxableIncomeEl = document.getElementById("taxableIncome");
+  const annualTaxEl = document.getElementById("annualTax");
+  const annualNetEl = document.getElementById("annualNet");
+  const avgRateEl = document.getElementById("avgRate");
+  const netWeeklyEl = document.getElementById("netWeekly");
+  const netFortnightlyEl = document.getElementById("netFortnightly");
+  const netMonthlyEl = document.getElementById("netMonthly");
+  const netTagEl = document.getElementById("netTag");
+  const bandsBody = document.getElementById("bandsBody");
+
+  function formatCurrency(amount) {
+    if (!isFinite(amount)) return "—";
+    return "$" + amount.toFixed(2).replace(/\.00$/, "");
+  }
+
+  function formatCurrency0(amount) {
+    if (!isFinite(amount)) return "—";
+    return "$" + amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function formatPercent(amount) {
+    if (!isFinite(amount)) return "—";
+    return amount.toFixed(1) + "%";
+  }
+
+  // Very rough resident tax bands (approx, not official)
+  const residentBands = [
+    { threshold: 0, rate: 0 },
+    { threshold: 18200, rate: 0.19 },
+    { threshold: 45000, rate: 0.325 },
+    { threshold: 135000, rate: 0.37 },
+    { threshold: 190000, rate: 0.45 }
+  ];
+
+  // Simple non-resident style bands (rough)
+  const nonResidentBands = [
+    { threshold: 0, rate: 0.32 },
+    { threshold: 135000, rate: 0.37 },
+    { threshold: 190000, rate: 0.45 }
+  ];
+
+  function computeTaxBands(taxable, residentStatus) {
+    const bands = residentStatus === "resident" ? residentBands : nonResidentBands;
+    const rows = [];
+    let remaining = taxable;
+    let totalTax = 0;
+
+    for (let i = 0; i < bands.length; i++) {
+      const band = bands[i];
+      const nextThreshold = i + 1 < bands.length ? bands[i + 1].threshold : Infinity;
+      const lower = band.threshold;
+      const upper = Math.min(nextThreshold, taxable);
+      if (upper <= lower) continue;
+
+      const incomeInBand = Math.max(Math.min(remaining, upper - lower), 0);
+      if (incomeInBand <= 0) continue;
+
+      const taxInBand = incomeInBand * band.rate;
+      totalTax += taxInBand;
+      remaining -= incomeInBand;
+
+      const label =
+        (band.rate * 100).toFixed(1) +
+        "% between " +
+        formatCurrency0(lower) +
+        " and " +
+        (nextThreshold === Infinity ? "∞" : formatCurrency0(nextThreshold));
+
+      rows.push({
+        label,
+        rate: band.rate,
+        incomeInBand,
+        taxInBand
+      });
+
+      if (remaining <= 0) break;
+    }
+
+    return { rows, totalTax };
+  }
+
+  function calculate() {
+    const incomeRaw = parseFloat(incomeInput.value || "0");
+    const freq = incomeFreqInput.value;
+    const residentStatus = residentInput.value;
+    const superMode = superInput.value;
+    const superRate = parseFloat(superRateInput.value || "0");
+
+    if (!isFinite(incomeRaw) || incomeRaw <= 0) {
+      inputError.textContent = "Enter an income amount above 0.";
+      incomeInput.focus();
+      return;
+    }
+    if (superMode === "incl" && (!isFinite(superRate) || superRate <= 0)) {
+      inputError.textContent = "Enter a positive super rate or switch to 'just salary'.";
+      superRateInput.focus();
+      return;
+    }
+
+    inputError.textContent = "";
+
+    let annualGross;
+    if (freq === "yearly") {
+      annualGross = incomeRaw;
+    } else if (freq === "monthly") {
+      annualGross = incomeRaw * 12;
+    } else if (freq === "fortnightly") {
+      annualGross = incomeRaw * 26;
+    } else {
+      annualGross = incomeRaw * 52;
+    }
+
+    let taxable = annualGross;
+    let impliedSalary = annualGross;
+
+    if (superMode === "incl" && superRate > 0) {
+      impliedSalary = annualGross / (1 + superRate / 100);
+      taxable = impliedSalary;
+    }
+
+    const { rows, totalTax } = computeTaxBands(taxable, residentStatus);
+    const netAnnual = taxable - totalTax;
+
+    taxableIncomeEl.textContent = formatCurrency0(taxable);
+    annualTaxEl.textContent = formatCurrency0(totalTax);
+    annualNetEl.textContent = formatCurrency0(netAnnual);
+
+    const avgRate = taxable > 0 ? (totalTax / taxable) * 100 : 0;
+    avgRateEl.textContent = formatPercent(avgRate);
+
+    const netWeekly = netAnnual / 52;
+    const netFortnightly = netAnnual / 26;
+    const netMonthly = netAnnual / 12;
+
+    netWeeklyEl.textContent = formatCurrency(netWeekly);
+    netFortnightlyEl.textContent = formatCurrency(netFortnightly);
+    netMonthlyEl.textContent = formatCurrency(netMonthly);
+
+    if (avgRate < 15) {
+      netTagEl.textContent = "Lower average tax rate";
+      netTagEl.classList.remove("deficit");
+      netTagEl.classList.add("surplus");
+    } else if (avgRate < 25) {
+      netTagEl.textContent = "Moderate average tax rate";
+      netTagEl.classList.remove("deficit");
+      netTagEl.classList.add("surplus");
+    } else {
+      netTagEl.textContent = "Higher average tax rate";
+      netTagEl.classList.remove("surplus");
+      netTagEl.classList.add("deficit");
+    }
+
+    bandsBody.innerHTML = "";
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.style.textAlign = "center";
+      td.style.color = "var(--muted)";
+      td.style.padding = "6px";
+      td.textContent = "No taxable income in these bands.";
+      tr.appendChild(td);
+      bandsBody.appendChild(tr);
+    } else {
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+
+        const bandTd = document.createElement("td");
+        bandTd.textContent = row.label;
+
+        const rateTd = document.createElement("td");
+        rateTd.textContent = formatPercent(row.rate * 100);
+
+        const incomeTd = document.createElement("td");
+        incomeTd.textContent = formatCurrency0(row.incomeInBand);
+
+        const taxTd = document.createElement("td");
+        taxTd.textContent = formatCurrency0(row.taxInBand);
+
+        tr.appendChild(bandTd);
+        tr.appendChild(rateTd);
+        tr.appendChild(incomeTd);
+        tr.appendChild(taxTd);
+        bandsBody.appendChild(tr);
+      });
+    }
+  }
+
+  calcBtn.addEventListener("click", calculate);
+
+  [incomeInput, superRateInput].forEach((el) => {
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") calculate();
+    });
+  });
+</script>
+</body>
+</html>
