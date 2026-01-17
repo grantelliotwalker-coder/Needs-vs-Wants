@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mortgage Calculator – Budget Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Mortgage calculator tool for the Budget Needs vs Wants planner. Calculate repayments, interest, and compare to your surplus." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --pill-need: #1b9c5b;
+      --pill-want: #cc7a1c;
+      --disabled: #555c72;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 10px;
+    }
+
+    .panel {
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .panel-totals {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .panel-totals-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .panel-totals span.amount {
+      font-weight: 600;
+      margin-left: 2px;
+    }
+
+    .type-toggle {
+      display: inline-flex;
+      padding: 2px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      gap: 2px;
+    }
+
+    .type-option {
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      padding: 3px 7px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .type-option.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .app-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        font-size: 16px;
+      }
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+      margin-top: 2px;
+    }
+
+    .calculate-btn {
+      margin-top: 6px;
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .calculate-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .result-big {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .result-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .result-tag.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .result-tag.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .progress-shell {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #35d5ff, #32d788);
+      width: 0%;
+      transition: width 0.2s ease-out;
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-title">Mortgage Calculator</div>
+        <div class="brand-tagline">
+          Estimate repayments and see how they sit against your surplus.
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="tools.html"
+           class="summary-toggle-button active"
+           id="backToTools">
+          ← Tools
+        </a>
+
+        <a href="index.html"
+           class="summary-toggle-button"
+           id="backToMain">
+          Main planner
+        </a>
+
+        <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+           class="pill-button donate"
+           id="donateLink"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="pill-button-icon">💖</span>
+          Leave a tip
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- Summary vs planner surplus -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Affordability snapshot
+            <span class="panel-badge">Linked to planner</span>
+          </div>
+          <div class="panel-subtitle">
+            Compare the mortgage payment to the surplus from your main budget.
+          </div>
+        </div>
+
+        <div class="panel-totals">
+          <div class="panel-totals-row">
+            <label>View as:</label>
+            <div class="type-toggle" id="viewToggle">
+              <button class="type-option active" data-view="monthly">M</button>
+              <button class="type-option" data-view="yearly">Y</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-card">
+          <div class="summary-card-title">Planner surplus (est)</div>
+          <div class="mini-row">
+            <span class="mini-label">From main planner</span>
+            <span id="plannerSurplus" class="mini-value surplus">0</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Basis</span>
+            <span id="plannerBasis" class="mini-value">—</span>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">Mortgage payment</div>
+          <div class="mini-row">
+            <span class="mini-label">Payment</span>
+            <span id="paymentDisplay" class="mini-value accent">0</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Coverage</span>
+            <span id="coverageLabel" class="mini-value surplus">Enter details</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Surplus after payment</span>
+            <span id="afterPayment" class="mini-value surplus">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="app-grid">
+      <!-- Inputs -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Loan details
+            </div>
+            <div class="panel-subtitle">
+              Tweak the loan amount, rate, and term to see how repayments move.
+            </div>
+          </div>
+        </div>
+
+        <div class="inputs-grid">
+          <div class="field-group">
+            <div class="field-label">Property price</div>
+            <div class="field-inline">
+              <span style="font-size:12px;color:var(--muted);">$</span>
+              <input id="priceInput" type="number" min="0" step="1000" placeholder="600000" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Deposit</div>
+            <div class="field-inline">
+              <span style="font-size:12px;color:var(--muted);">$</span>
+              <input id="depositInput" type="number" min="0" step="1000" placeholder="120000" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Interest rate (p.a.)</div>
+            <div class="field-inline">
+              <input id="rateInput" type="number" min="0" step="0.01" placeholder="5.50" />
+              <span style="font-size:12px;color:var(--muted);">%</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Loan term</div>
+            <div class="field-inline">
+              <input id="termInput" type="number" min="1" max="40" step="1" placeholder="30" />
+              <span style="font-size:12px;color:var(--muted);">years</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Repayment frequency</div>
+            <select id="freqInput">
+              <option value="monthly" selected>Monthly</option>
+              <option value="fortnightly">Fortnightly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Extra repayment (optional)</div>
+            <div class="field-inline">
+              <span style="font-size:12px;color:var(--muted);">$</span>
+              <input id="extraInput" type="number" min="0" step="1" placeholder="0" />
+            </div>
+          </div>
+        </div>
+
+        <div class="error-text" id="inputError"></div>
+
+        <button class="calculate-btn" id="calcBtn">
+          <span class="icon">▶</span>
+          Calculate repayments
+        </button>
+
+        <div class="note">
+          Rough guide only. Does not factor in fees, rate changes, or specific lender policies.
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Results</div>
+            <div class="panel-subtitle">
+              See repayment, total interest, and how much earlier extra repayments could finish the loan.
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div>
+            <div class="field-label">Repayment</div>
+            <div class="result-big" id="resultPayment">—</div>
+            <div class="field-label" id="resultPaymentLabel">Per month</div>
+          </div>
+
+          <div>
+            <div class="field-label">Total interest over life of loan</div>
+            <div class="mini-row">
+              <span class="mini-label">Base loan</span>
+              <span class="mini-value" id="resultInterestBase">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">With extra repayments</span>
+              <span class="mini-value" id="resultInterestExtra">—</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="field-label">Estimated time saved with extra</div>
+            <div class="mini-row">
+              <span class="mini-label">Base term</span>
+              <span class="mini-value" id="resultTermBase">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">With extra</span>
+              <span class="mini-value" id="resultTermExtra">—</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="field-label">Mortgage vs planner surplus</div>
+            <div class="progress-shell">
+              <div class="progress-fill" id="coverageBar"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+              <span class="note" id="coverageNote">Run a calculation to compare.</span>
+              <span class="result-tag" id="coverageTag">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
+
+  const viewToggle = document.getElementById("viewToggle");
+  const plannerSurplusEl = document.getElementById("plannerSurplus");
+  const plannerBasisEl = document.getElementById("plannerBasis");
+  const paymentDisplayEl = document.getElementById("paymentDisplay");
+  const coverageLabelEl = document.getElementById("coverageLabel");
+  const afterPaymentEl = document.getElementById("afterPayment");
+
+  const priceInput = document.getElementById("priceInput");
+  const depositInput = document.getElementById("depositInput");
+  const rateInput = document.getElementById("rateInput");
+  const termInput = document.getElementById("termInput");
+  const freqInput = document.getElementById("freqInput");
+  const extraInput = document.getElementById("extraInput");
+  const inputError = document.getElementById("inputError");
+  const calcBtn = document.getElementById("calcBtn");
+
+  const resultPaymentEl = document.getElementById("resultPayment");
+  const resultPaymentLabelEl = document.getElementById("resultPaymentLabel");
+  const resultInterestBaseEl = document.getElementById("resultInterestBase");
+  const resultInterestExtraEl = document.getElementById("resultInterestExtra");
+  const resultTermBaseEl = document.getElementById("resultTermBase");
+  const resultTermExtraEl = document.getElementById("resultTermExtra");
+  const coverageBarEl = document.getElementById("coverageBar");
+  const coverageNoteEl = document.getElementById("coverageNote");
+  const coverageTagEl = document.getElementById("coverageTag");
+
+  let plannerSurplusMonthly = 0;
+  let viewMode = "monthly"; // or "yearly";
+  let lastPaymentMonthly = 0;
+
+  function formatCurrency(amount) {
+    if (!isFinite(amount)) return "—";
+    return "$" + amount.toFixed(2).replace(/\.00$/, "");
+  }
+
+  function fromMonthly(amount, view) {
+    if (view === "yearly") return amount * 12;
+    return amount;
+  }
+
+  function loadPlannerSurplus() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_INCOME);
+      if (!raw) {
+        plannerSurplusMonthly = 0;
+        plannerSurplusEl.textContent = "0";
+        plannerBasisEl.textContent = "No surplus saved yet";
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return;
+
+      const amount = parseFloat(parsed.amount || "0") || 0;
+      const freq =
+        parsed.frequency === "weekly" ||
+        parsed.frequency === "fortnightly" ||
+        parsed.frequency === "monthly" ||
+        parsed.frequency === "yearly"
+          ? parsed.frequency
+          : "fortnightly";
+
+      let weekly = amount;
+      if (freq === "fortnightly") weekly = amount / 2;
+      if (freq === "monthly") weekly = amount * 12 / 52;
+      if (freq === "yearly") weekly = amount / 52;
+
+      const monthly = (weekly * 52) / 12;
+      plannerSurplusMonthly = monthly;
+
+      const display = fromMonthly(monthly, viewMode);
+      plannerSurplusEl.textContent = formatCurrency(display).replace("$", "");
+      plannerBasisEl.textContent = viewMode === "monthly" ? "Per month" : "Per year";
+    } catch (e) {
+      plannerSurplusMonthly = 0;
+      plannerSurplusEl.textContent = "0";
+      plannerBasisEl.textContent = "No surplus saved yet";
+    }
+  }
+
+  function annuityPayment(principal, annualRate, years, paymentsPerYear) {
+    const n = years * paymentsPerYear;
+    if (n <= 0) return 0;
+    const r = annualRate / 100 / paymentsPerYear;
+    if (r === 0) return principal / n;
+    const factor = Math.pow(1 + r, n);
+    return (principal * r * factor) / (factor - 1);
+  }
+
+  function calculate() {
+    const price = parseFloat(priceInput.value || "0");
+    const deposit = parseFloat(depositInput.value || "0");
+    const rate = parseFloat(rateInput.value || "0");
+    const termYears = parseFloat(termInput.value || "0");
+    const freq = freqInput.value;
+    const extra = parseFloat(extraInput.value || "0");
+
+    if (!isFinite(price) || price <= 0) {
+      inputError.textContent = "Enter a property price above 0.";
+      priceInput.focus();
+      return;
+    }
+    if (!isFinite(deposit) || deposit < 0) {
+      inputError.textContent = "Deposit cannot be negative.";
+      depositInput.focus();
+      return;
+    }
+    if (deposit >= price) {
+      inputError.textContent = "Deposit must be less than the property price.";
+      depositInput.focus();
+      return;
+    }
+    if (!isFinite(rate) || rate <= 0) {
+      inputError.textContent = "Enter a positive interest rate.";
+      rateInput.focus();
+      return;
+    }
+    if (!isFinite(termYears) || termYears <= 0) {
+      inputError.textContent = "Enter a term greater than 0 years.";
+      termInput.focus();
+      return;
+    }
+    if (!isFinite(extra) || extra < 0) {
+      inputError.textContent = "Extra repayment cannot be negative.";
+      extraInput.focus();
+      return;
+    }
+
+    inputError.textContent = "";
+
+    const principal = price - deposit;
+    const paymentsPerYear =
+      freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
+
+    const basePayment = annuityPayment(principal, rate, termYears, paymentsPerYear);
+    const paymentWithExtra = basePayment + extra;
+
+    const n = termYears * paymentsPerYear;
+    const r = rate / 100 / paymentsPerYear;
+
+    let totalInterestBase;
+    if (r === 0) {
+      totalInterestBase = 0;
+    } else {
+      totalInterestBase = basePayment * n - principal;
+    }
+
+    let remaining = principal;
+    let periodsExtra = 0;
+    if (r === 0) {
+      periodsExtra = paymentWithExtra > 0 ? Math.ceil(principal / paymentWithExtra) : n;
+    } else if (paymentWithExtra <= basePayment) {
+      periodsExtra = n;
+    } else {
+      while (remaining > 0 && periodsExtra < 2000 * n) {
+        const interest = remaining * r;
+        const principalPaid = paymentWithExtra - interest;
+        if (principalPaid <= 0) {
+          periodsExtra = n;
+          break;
+        }
+        remaining -= principalPaid;
+        periodsExtra++;
+      }
+    }
+
+    const totalPaidExtra = paymentWithExtra * periodsExtra;
+    const totalInterestExtra =
+      r === 0 ? 0 : Math.max(totalPaidExtra - principal, 0);
+
+    const baseYears = n / paymentsPerYear;
+    const extraYears = periodsExtra / paymentsPerYear;
+
+    resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
+    resultPaymentLabelEl.textContent =
+      "Per " + (freq === "weekly" ? "week" : freq === "fortnightly" ? "fortnight" : "month");
+
+    resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
+    resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
+
+    resultTermBaseEl.textContent = baseYears.toFixed(1) + " years";
+    resultTermExtraEl.textContent = extraYears.toFixed(1) + " years";
+
+    const monthlyFromFreq =
+      freq === "weekly"
+        ? paymentWithExtra * 52 / 12
+        : freq === "fortnightly"
+        ? paymentWithExtra * 26 / 12
+        : paymentWithExtra;
+
+    lastPaymentMonthly = monthlyFromFreq;
+
+    updateAffordability();
+  }
+
+  function updateAffordability() {
+    const paymentView = fromMonthly(lastPaymentMonthly, viewMode);
+    const surplusView = fromMonthly(plannerSurplusMonthly, viewMode);
+
+    if (!isFinite(paymentView) || paymentView <= 0) {
+      paymentDisplayEl.textContent = "0";
+      coverageLabelEl.textContent = "Run a calculation";
+      coverageLabelEl.classList.remove("deficit");
+      coverageLabelEl.classList.add("surplus");
+      afterPaymentEl.textContent = "0";
+      coverageBarEl.style.width = "0%";
+      coverageNoteEl.textContent = "Run a calculation to compare.";
+      coverageTagEl.textContent = "—";
+      coverageTagEl.classList.remove("good", "bad");
+      return;
+    }
+
+    paymentDisplayEl.textContent = paymentView.toFixed(2);
+
+    if (surplusView <= 0) {
+      coverageLabelEl.textContent = "Set a surplus in the main planner";
+      coverageLabelEl.classList.remove("deficit");
+      coverageLabelEl.classList.add("surplus");
+      afterPaymentEl.textContent = "0";
+      coverageBarEl.style.width = "100%";
+      coverageNoteEl.textContent = "No surplus recorded yet.";
+      coverageTagEl.textContent = "Info";
+      coverageTagEl.classList.remove("good", "bad");
+      return;
+    }
+
+    const remaining = surplusView - paymentView;
+    const ratio = paymentView / surplusView;
+    afterPaymentEl.textContent = remaining <= 0 ? "0" : remaining.toFixed(2);
+
+    let label;
+    if (ratio <= 0.25) {
+      label = "Comfortable (≤ 25% of surplus)";
+    } else if (ratio <= 0.5) {
+      label = "OK (25–50% of surplus)";
+    } else if (ratio <= 0.75) {
+      label = "Tight (50–75% of surplus)";
+    } else {
+      label = "Very tight (≥ 75% of surplus)";
+    }
+
+    coverageLabelEl.textContent = label;
+    coverageLabelEl.classList.toggle("surplus", ratio <= 0.75);
+    coverageLabelEl.classList.toggle("deficit", ratio > 0.75);
+
+    const barPct = Math.max(0, Math.min(ratio * 100, 120));
+    coverageBarEl.style.width = barPct + "%";
+
+    coverageNoteEl.textContent =
+      "Payment is " + Math.round(ratio * 100) + "% of your surplus in this view.";
+    coverageTagEl.textContent = ratio <= 0.75 ? "Within surplus" : "Over surplus";
+    coverageTagEl.classList.toggle("good", ratio <= 0.75);
+    coverageTagEl.classList.toggle("bad", ratio > 0.75);
+  }
+
+  viewToggle.addEventListener("click", (e) => {
+    const btn = e.target.closest(".type-option");
+    if (!btn) return;
+    viewMode = btn.dataset.view || "monthly";
+    viewToggle
+      .querySelectorAll(".type-option")
+      .forEach((b) => b.classList.toggle("active", b === btn));
+    loadPlannerSurplus();
+    updateAffordability();
+  });
+
+  calcBtn.addEventListener("click", calculate);
+
+  [priceInput, depositInput, rateInput, termInput, extraInput].forEach((el) => {
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") calculate();
+    });
+  });
+
+  loadPlannerSurplus();
+  updateAffordability();
+</script>
+</body>
+</html>
