@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Savings Goals – Budget Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Savings goals tool for the Budget Needs vs Wants planner. Create goal buckets, track progress, and see how long they will take." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --pill-need: #1b9c5b;
+      --pill-want: #cc7a1c;
+      --disabled: #555c72;
+      --pill-blue: #2c7be5;
+      --pill-purple: #845ef7;
+      --pill-pink: #d63384;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 10px;
+    }
+
+    .panel {
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .panel-totals {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .panel-totals-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .panel-totals span.amount {
+      font-weight: 600;
+      margin-left: 2px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .type-toggle {
+      display: inline-flex;
+      padding: 2px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      gap: 2px;
+    }
+
+    .type-option {
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      padding: 3px 7px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .type-option.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .goals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .goal-card {
+      background: rgba(10, 16, 30, 0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 10px 10px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .goal-name {
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .goal-meta {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .progress-bar-shell {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #35d5ff, #32d788);
+      width: 0%;
+      transition: width 0.2s ease-out;
+    }
+
+    .goal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      color: var(--muted);
+      gap: 6px;
+    }
+
+    .goal-footer strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .goal-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .chip {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .chip.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .chip.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .icon-button {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+
+    .icon-button.danger {
+      border-color: rgba(255, 77, 106, 0.6);
+      color: var(--danger);
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .add-btn {
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .add-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .inputs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+      margin-top: 2px;
+    }
+
+    @media (max-width: 768px) {
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      select {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-title">Savings Goals</div>
+        <div class="brand-tagline">
+          Turn your surplus into named goals with dates and progress.
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="tools.html"
+           class="summary-toggle-button active"
+           id="backToTools">
+          ← Tools
+        </a>
+
+        <a href="index.html"
+           class="summary-toggle-button"
+           id="backToMain">
+          Main planner
+        </a>
+
+        <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+           class="pill-button donate"
+           id="donateLink"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="pill-button-icon">💖</span>
+          Leave a tip
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- High-level summary using planner surplus if available -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Goal summary
+            <span class="panel-badge">Linked to planner</span>
+          </div>
+          <div class="panel-subtitle">
+            See how your total monthly contributions compare with your surplus.
+          </div>
+        </div>
+
+        <div class="panel-totals">
+          <div class="panel-totals-row">
+            <label>View as:</label>
+            <div class="type-toggle" id="summaryViewToggle">
+              <button class="type-option active" data-view="monthly">M</button>
+              <button class="type-option" data-view="yearly">Y</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-card">
+          <div class="summary-card-title">Planner surplus (est)</div>
+          <div class="mini-row">
+            <span class="mini-label">From main planner</span>
+            <span id="plannerSurplus" class="mini-value surplus">0</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Basis</span>
+            <span id="plannerBasis" class="mini-value">—</span>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">Savings plan</div>
+          <div class="mini-row">
+            <span class="mini-label">Total contributions</span>
+            <span id="totalContrib" class="mini-value accent">0</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-label">Coverage</span>
+            <span id="coverageLabel" class="mini-value surplus">Set a surplus</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Goals panel -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Your goals
+          </div>
+          <div class="panel-subtitle">
+            Create buckets, add target amounts and dates, and track progress.
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <button class="add-btn" id="addGoalBtn">
+            <span class="icon">＋</span>
+            Add goal
+          </button>
+        </div>
+      </div>
+
+      <div class="inputs-row">
+        <div class="field-group" style="flex: 1.4;">
+          <div class="field-label">Name</div>
+          <input id="goalNameInput" type="text" placeholder="e.g. Emergency fund, Holiday, New car" />
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Target amount</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="goalTargetInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Already saved</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="goalSavedInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Regular contribution</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="goalContribInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="field-group" style="max-width:150px;">
+          <div class="field-label">Per</div>
+          <select id="goalFrequencyInput">
+            <option value="weekly">Week</option>
+            <option value="fortnightly">Fortnight</option>
+            <option value="monthly" selected>Month</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Target date (optional)</div>
+          <input id="goalDateInput" type="date" />
+        </div>
+      </div>
+
+      <div class="error-text" id="goalError"></div>
+
+      <div class="goals-grid" id="goalsGrid"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+  const STORAGE_KEY_GOALS = "budgetSavingsGoals";
+  const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
+
+  const summaryViewToggle = document.getElementById("summaryViewToggle");
+  const plannerSurplusEl = document.getElementById("plannerSurplus");
+  const plannerBasisEl = document.getElementById("plannerBasis");
+  const totalContribEl = document.getElementById("totalContrib");
+  const coverageLabelEl = document.getElementById("coverageLabel");
+
+  const goalsGrid = document.getElementById("goalsGrid");
+  const addGoalBtn = document.getElementById("addGoalBtn");
+
+  const goalNameInput = document.getElementById("goalNameInput");
+  const goalTargetInput = document.getElementById("goalTargetInput");
+  const goalSavedInput = document.getElementById("goalSavedInput");
+  const goalContribInput = document.getElementById("goalContribInput");
+  const goalFrequencyInput = document.getElementById("goalFrequencyInput");
+  const goalDateInput = document.getElementById("goalDateInput");
+  const goalError = document.getElementById("goalError");
+
+  let goals = [];
+  let summaryView = "monthly"; // or "yearly"
+  let plannerSurplusMonthly = 0;
+
+  function formatCurrency(amount) {
+    if (!isFinite(amount)) return "0";
+    return amount.toFixed(2).replace(/\.00$/, "");
+  }
+
+  function toMonthly(amount, frequency) {
+    if (frequency === "weekly") return amount * 52 / 12;
+    if (frequency === "fortnightly") return amount * 26 / 12;
+    if (frequency === "monthly") return amount;
+    return amount;
+  }
+
+  function fromMonthly(amount, view) {
+    if (view === "yearly") return amount * 12;
+    return amount;
+  }
+
+  function loadPlannerSurplus() {
+    try {
+      const rawIncome = localStorage.getItem(STORAGE_KEY_INCOME);
+      if (!rawIncome) {
+        plannerSurplusEl.textContent = "0";
+        plannerBasisEl.textContent = "No surplus saved yet";
+        return;
+      }
+
+      const parsed = JSON.parse(rawIncome);
+      if (!parsed || typeof parsed !== "object") return;
+
+      const amount = parseFloat(parsed.amount || 0) || 0;
+      const freq =
+        parsed.frequency === "weekly" ||
+        parsed.frequency === "fortnightly" ||
+        parsed.frequency === "yearly"
+          ? parsed.frequency
+          : "fortnightly";
+
+      // Interpret the stored income state as net surplus for this view
+      let weekly = amount;
+      if (freq === "fortnightly") weekly = amount / 2;
+      if (freq === "monthly") weekly = amount * 12 / 52;
+      if (freq === "yearly") weekly = amount / 52;
+
+      const monthly = weekly * 52 / 12;
+      plannerSurplusMonthly = monthly;
+
+      const display = fromMonthly(monthly, summaryView);
+      plannerSurplusEl.textContent = formatCurrency(display);
+      plannerBasisEl.textContent = summaryView === "monthly" ? "Per month" : "Per year";
+    } catch (e) {
+      plannerSurplusEl.textContent = "0";
+      plannerBasisEl.textContent = "No surplus saved yet";
+    }
+  }
+
+  function persistGoals() {
+    try {
+      localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(goals));
+    } catch (e) {}
+  }
+
+  function restoreGoals() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_GOALS);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+      goals = parsed.map((g, idx) => ({
+        id: typeof g.id === "number" ? g.id : idx + 1,
+        name: typeof g.name === "string" ? g.name : "Untitled goal",
+        target: typeof g.target === "number" ? g.target : 0,
+        saved: typeof g.saved === "number" ? g.saved : 0,
+        contribution: typeof g.contribution === "number" ? g.contribution : 0,
+        frequency:
+          g.frequency === "weekly" ||
+          g.frequency === "fortnightly" ||
+          g.frequency === "monthly"
+            ? g.frequency
+            : "monthly",
+        targetDate: g.targetDate || ""
+      }));
+    } catch (e) {}
+  }
+
+  function deleteGoal(id) {
+    goals = goals.filter((g) => g.id !== id);
+    persistGoals();
+    render();
+  }
+
+  function addGoal() {
+    const name = goalNameInput.value.trim();
+    const target = parseFloat(goalTargetInput.value || "0");
+    const saved = parseFloat(goalSavedInput.value || "0");
+    const contrib = parseFloat(goalContribInput.value || "0");
+    const frequency = goalFrequencyInput.value;
+    const targetDate = goalDateInput.value;
+
+    if (!name) {
+      goalError.textContent = "Please give your goal a name.";
+      goalNameInput.focus();
+      return;
+    }
+    if (!isFinite(target) || target <= 0) {
+      goalError.textContent = "Enter a target amount greater than 0.";
+      goalTargetInput.focus();
+      return;
+    }
+    if (!isFinite(saved) || saved < 0) {
+      goalError.textContent = "Already saved cannot be negative.";
+      goalSavedInput.focus();
+      return;
+    }
+    if (saved > target) {
+      goalError.textContent = "Already saved cannot exceed target.";
+      goalSavedInput.focus();
+      return;
+    }
+    if (!isFinite(contrib) || contrib < 0) {
+      goalError.textContent = "Contribution cannot be negative.";
+      goalContribInput.focus();
+      return;
+    }
+
+    const id = goals.length ? Math.max(...goals.map((g) => g.id)) + 1 : 1;
+    goals.push({
+      id,
+      name,
+      target,
+      saved,
+      contribution: contrib,
+      frequency,
+      targetDate
+    });
+
+    goalNameInput.value = "";
+    goalTargetInput.value = "";
+    goalSavedInput.value = "";
+    goalContribInput.value = "";
+    goalDateInput.value = "";
+    goalError.textContent = "";
+
+    persistGoals();
+    render();
+  }
+
+  function render() {
+    goalsGrid.innerHTML = "";
+
+    let totalMonthlyContrib = 0;
+
+    goals.forEach((g) => {
+      const remaining = Math.max(g.target - g.saved, 0);
+      const pct = g.target > 0 ? Math.min((g.saved / g.target) * 100, 100) : 0;
+      const contribMonthly = toMonthly(g.contribution, g.frequency);
+      totalMonthlyContrib += contribMonthly;
+
+      let monthsToTarget = null;
+      if (contribMonthly > 0 && remaining > 0) {
+        monthsToTarget = remaining / contribMonthly;
+      }
+
+      let meetsDate = null;
+      if (monthsToTarget != null && g.targetDate) {
+        const now = new Date();
+        const targetDate = new Date(g.targetDate + "T00:00:00");
+        if (!isNaN(targetDate.getTime())) {
+          const diffMonths =
+            (targetDate.getFullYear() - now.getFullYear()) * 12 +
+            (targetDate.getMonth() - now.getMonth());
+          meetsDate = diffMonths >= monthsToTarget;
+        }
+      }
+
+      const card = document.createElement("div");
+      card.className = "goal-card";
+
+      const header = document.createElement("div");
+      header.className = "goal-header";
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "goal-name";
+      nameEl.textContent = g.name;
+
+      const meta = document.createElement("div");
+      meta.className = "goal-meta";
+      meta.innerHTML =
+        "$" +
+        formatCurrency(g.saved) +
+        " / $" +
+        formatCurrency(g.target) +
+        (g.targetDate ? "<br>" + g.targetDate : "");
+
+      header.appendChild(nameEl);
+      header.appendChild(meta);
+
+      const barShell = document.createElement("div");
+      barShell.className = "progress-bar-shell";
+      const barFill = document.createElement("div");
+      barFill.className = "progress-bar-fill";
+      barFill.style.width = pct + "%";
+      barShell.appendChild(barFill);
+
+      const footer = document.createElement("div");
+      footer.className = "goal-footer";
+
+      const left = document.createElement("div");
+      const contribLabel = g.contribution > 0
+        ? "$" +
+          formatCurrency(g.contribution) +
+          " / " +
+          (g.frequency === "weekly"
+            ? "week"
+            : g.frequency === "fortnightly"
+            ? "fortnight"
+            : "month")
+        : "No regular contribution set";
+      left.innerHTML =
+        "<span style='color:var(--muted);'>Contribution</span><br><strong>" +
+        contribLabel +
+        "</strong>";
+
+      const right = document.createElement("div");
+      right.style.textAlign = "right";
+
+      const chips = document.createElement("div");
+      chips.className = "goal-actions";
+
+      if (monthsToTarget != null) {
+        const monthsRounded = Math.ceil(monthsToTarget);
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent =
+          monthsRounded <= 1
+            ? "≈ 1 month remaining"
+            : "≈ " + monthsRounded + " months remaining";
+        chips.appendChild(chip);
+      }
+
+      if (meetsDate === true) {
+        const chip = document.createElement("span");
+        chip.className = "chip good";
+        chip.textContent = "On track for date";
+        chips.appendChild(chip);
+      } else if (meetsDate === false) {
+        const chip = document.createElement("span");
+        chip.className = "chip bad";
+        chip.textContent = "Short of target date";
+        chips.appendChild(chip);
+      }
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "icon-button danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener("click", () => deleteGoal(g.id));
+
+      right.appendChild(chips);
+      right.appendChild(deleteBtn);
+
+      footer.appendChild(left);
+      footer.appendChild(right);
+
+      card.appendChild(header);
+      card.appendChild(barShell);
+      card.appendChild(footer);
+
+      goalsGrid.appendChild(card);
+    });
+
+    const displayContrib = fromMonthly(totalMonthlyContrib, summaryView);
+    totalContribEl.textContent = formatCurrency(displayContrib);
+
+    if (plannerSurplusMonthly <= 0) {
+      coverageLabelEl.textContent = "Set a surplus in the main planner";
+      coverageLabelEl.classList.remove("deficit");
+      coverageLabelEl.classList.add("surplus");
+    } else {
+      const surplusView = fromMonthly(plannerSurplusMonthly, summaryView);
+      if (displayContrib === 0) {
+        coverageLabelEl.textContent = "No contributions planned yet";
+        coverageLabelEl.classList.remove("deficit");
+        coverageLabelEl.classList.add("surplus");
+      } else {
+        const ratio = displayContrib / surplusView;
+        if (ratio <= 1) {
+          coverageLabelEl.textContent = "Within surplus (" + Math.round(ratio * 100) + "% used)";
+          coverageLabelEl.classList.remove("deficit");
+          coverageLabelEl.classList.add("surplus");
+        } else {
+          coverageLabelEl.textContent = "Over surplus (" + Math.round(ratio * 100) + "% used)";
+          coverageLabelEl.classList.remove("surplus");
+          coverageLabelEl.classList.add("deficit");
+        }
+      }
+    }
+
+    const plannerDisplay = fromMonthly(plannerSurplusMonthly, summaryView);
+    plannerSurplusEl.textContent = formatCurrency(plannerDisplay);
+    plannerBasisEl.textContent = summaryView === "monthly" ? "Per month" : "Per year";
+  }
+
+  addGoalBtn.addEventListener("click", addGoal);
+
+  goalNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") goalTargetInput.focus();
+  });
+  goalTargetInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") goalSavedInput.focus();
+  });
+  goalSavedInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") goalContribInput.focus();
+  });
+  goalContribInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addGoal();
+  });
+
+  summaryViewToggle.addEventListener("click", (e) => {
+    const btn = e.target.closest(".type-option");
+    if (!btn) return;
+    summaryView = btn.dataset.view || "monthly";
+    summaryViewToggle
+      .querySelectorAll(".type-option")
+      .forEach((b) => b.classList.toggle("active", b === btn));
+    loadPlannerSurplus();
+    render();
+  });
+
+  restoreGoals();
+  loadPlannerSurplus();
+  render();
+</script>
+</body>
+</html>
