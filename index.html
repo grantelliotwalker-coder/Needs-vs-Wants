@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Budget · Needs vs Wants</title>
+  <title>Budget Needs vs Wants Calculator | Simple Spending Planner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description"
+        content="Free budget Needs vs Wants calculator. Enter your income and expenses, separate essential needs from optional wants, and see your surplus instantly." />
+
   <style>
     :root {
       --bg: #050816;
@@ -71,12 +74,18 @@
     .brand {
       display: flex;
       flex-direction: column;
+      gap: 4px;
     }
 
     .brand-title {
       font-size: 16px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
       color: var(--muted);
     }
 
@@ -165,6 +174,12 @@
       color: var(--muted);
     }
 
+    .summary-toggle-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .summary-toggle-button {
       border-radius: 999px;
       padding: 4px 10px;
@@ -173,6 +188,7 @@
       background: rgba(0, 0, 0, 0.4);
       color: var(--muted);
       cursor: pointer;
+      text-decoration: none;
     }
 
     .summary-toggle-button.active {
@@ -701,36 +717,39 @@
       <div class="top-row">
         <div class="brand">
           <div class="brand-title">Budget · Needs vs Wants</div>
+          <div class="brand-tagline">
+            Quickly separate needs from wants and see your budget surplus at a glance.
+          </div>
         </div>
-<div class="header-actions">
-<a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
-   class="pill-button donate"
-   id="donateLink"
-   target="_blank"
-   rel="noopener noreferrer">
-  <span class="pill-button-icon">❤</span>
-  Leave a tip
-</a>
 
-  <button class="add-btn" id="openCreateModal">
-    <span class="icon">+</span>
-    Add
-  </button>
-</div>
+        <div class="header-actions">
+          <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+             class="pill-button donate"
+             id="donateLink"
+             target="_blank"
+             rel="noopener noreferrer">
+            <span class="pill-button-icon">❤</span>
+            Leave a tip
+          </a>
 
-
+          <button class="add-btn" id="openCreateModal">
+            <span class="icon">+</span>
+            Add
+          </button>
+        </div>
       </div>
 
-<div class="summary-toggle-row">
-  <a href="export.html" class="summary-toggle-button" id="exportLink">
-    Export
-  </a>
-  <div class="summary-toggle-label">Show income & summary</div>
-  <button class="summary-toggle-button active" id="summaryToggleBtn">
-    Hide
-  </button>
-</div>
-
+      <div class="summary-toggle-row">
+        <div class="summary-toggle-label">Show income & summary</div>
+        <div class="summary-toggle-actions">
+          <a href="export.html" class="summary-toggle-button" id="exportLink">
+            Export
+          </a>
+          <button class="summary-toggle-button active" id="summaryToggleBtn">
+            Hide
+          </button>
+        </div>
+      </div>
 
       <div class="summary-row" id="summaryRow">
         <div class="summary-card">
