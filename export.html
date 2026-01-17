@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Budget · Export CSV</title>
+  <title>Budget · Export</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -14,30 +14,19 @@
     }
     h1 {
       font-size: 18px;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     p {
       font-size: 13px;
       color: #9aa6bd;
       margin: 4px 0 10px;
     }
-    textarea {
-      width: 100%;
-      min-height: 260px;
-      background: #0b1020;
-      color: #e5f4ff;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      box-sizing: border-box;
-    }
     .row {
       display: flex;
       gap: 8px;
       margin-bottom: 10px;
       flex-wrap: wrap;
+      align-items: center;
     }
     button {
       border-radius: 999px;
@@ -51,16 +40,27 @@
       color: #02040a;
       font-weight: 600;
     }
-    #copyBtn {
-      background: transparent;
-      color: #e5f4ff;
-      border: 1px solid rgba(255,255,255,0.4);
-    }
     #status {
       font-size: 12px;
       color: #9aa6bd;
       min-height: 16px;
-      align-self: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    th, td {
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 4px 6px;
+      text-align: left;
+    }
+    th {
+      background: #11152a;
+    }
+    tbody tr:nth-child(even) {
+      background: #080c1a;
     }
     small {
       font-size: 11px;
@@ -69,24 +69,36 @@
   </style>
 </head>
 <body>
-  <h1>Budget · Export CSV</h1>
-  <p>
-    This reads your saved budget from this browser and builds a CSV-style table you can paste directly into Excel.
-  </p>
+  <h1>Budget · Export</h1>
+  <p>This reads your saved budget in this browser and builds a table you can copy into Excel or Google Sheets.</p>
 
   <div class="row">
-    <button id="refreshBtn">Build CSV from saved budget</button>
-    <button id="copyBtn">Copy CSV to clipboard</button>
+    <button id="refreshBtn">Build table from saved budget</button>
     <span id="status"></span>
   </div>
 
-  <textarea id="csvOutput" spellcheck="false" placeholder="Click &quot;Build CSV&quot; to generate..."></textarea>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Label</th>
+        <th>Amount</th>
+        <th>Frequency</th>
+        <th>Enabled</th>
+        <th>Color</th>
+        <th>Weekly</th>
+        <th>Fortnightly</th>
+        <th>Monthly</th>
+        <th>Yearly</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <p><small>Columns: type, label, amount, frequency, enabled, color, weekly, fortnightly, monthly, yearly.</small></p>
+  <p><small>Select the table (or rows), copy, then paste into Excel or Google Sheets.</small></p>
 
   <script>
     const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
-    const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
 
     function formatNumber(n) {
       if (!isFinite(n)) return "";
@@ -107,22 +119,14 @@
       return weekly;
     }
 
-    function escapeCsv(value) {
-      const str = String(value ?? "");
-      if (/[",\n]/.test(str)) {
-        return '"' + str.replace(/"/g, '""') + '"';
-      }
-      return str;
-    }
-
-    function buildCsv() {
+    function buildTable() {
       const statusEl = document.getElementById("status");
-      const outEl = document.getElementById("csvOutput");
+      const tbody = document.querySelector("#dataTable tbody");
       statusEl.textContent = "";
+      tbody.innerHTML = "";
 
       let raw = localStorage.getItem(STORAGE_KEY_ITEMS);
       if (!raw) {
-        outEl.value = "";
         statusEl.textContent = "No saved budget found in this browser.";
         return;
       }
@@ -131,31 +135,16 @@
       try {
         parsed = JSON.parse(raw);
       } catch (e) {
-        outEl.value = "";
         statusEl.textContent = "Could not read saved data (JSON error).";
         return;
       }
 
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        outEl.value = "";
         statusEl.textContent = "Saved budget is empty.";
         return;
       }
 
-      const header = [
-        "type",
-        "label",
-        "amount",
-        "frequency",
-        "enabled",
-        "color",
-        "weekly",
-        "fortnightly",
-        "monthly",
-        "yearly"
-      ];
-
-      const rows = [header];
+      let count = 0;
 
       parsed.forEach((it) => {
         if (typeof it.amount !== "number") return;
@@ -174,7 +163,8 @@
         const monthly = fromWeekly(weekly, "monthly");
         const yearly = fromWeekly(weekly, "yearly");
 
-        const row = [
+        const tr = document.createElement("tr");
+        const cells = [
           type,
           label,
           formatNumber(amount),
@@ -187,51 +177,21 @@
           formatNumber(yearly)
         ];
 
-        rows.push(row);
+        cells.forEach((val) => {
+          const td = document.createElement("td");
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+        count++;
       });
 
-      const csv = rows
-        .map((row) => row.map(escapeCsv).join(","))
-        .join("\n");
-
-      outEl.value = csv;
-      statusEl.textContent = "CSV built from " + (rows.length - 1) + " items.";
+      statusEl.textContent = "Table built from " + count + " items. Select and copy to paste.";
     }
 
-    async function copyCsv() {
-      const statusEl = document.getElementById("status");
-      const outEl = document.getElementById("csvOutput");
-      const text = outEl.value;
-
-      if (!text) {
-        statusEl.textContent = "Nothing to copy. Build CSV first.";
-        return;
-      }
-
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          const ta = document.createElement("textarea");
-          ta.value = text;
-          ta.style.position = "fixed";
-          ta.style.opacity = "0";
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
-        }
-        statusEl.textContent = "Copied CSV to clipboard. Paste into Excel.";
-      } catch (e) {
-        statusEl.textContent = "Copy failed. Select the text and copy manually.";
-      }
-    }
-
-    document.getElementById("refreshBtn").addEventListener("click", buildCsv);
-    document.getElementById("copyBtn").addEventListener("click", copyCsv);
-
-    // Optional: build automatically on load
-    buildCsv();
+    document.getElementById("refreshBtn").addEventListener("click", buildTable);
+    buildTable(); // auto-build on load
   </script>
 </body>
 </html>
