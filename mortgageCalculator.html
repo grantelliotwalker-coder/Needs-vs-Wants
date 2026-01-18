@@ -566,18 +566,46 @@
       margin-top: 6px;
       font-size: 11px;
       color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .saved-loans-item {
       display: flex;
       justify-content: space-between;
       gap: 4px;
-      padding: 3px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(5, 8, 22, 0.9);
+      cursor: pointer;
+      font-size: 11px;
     }
 
-    .saved-loans-item:last-child {
-      border-bottom: none;
+    .saved-loans-item.selected {
+      border-color: var(--accent);
+    }
+
+    .saved-loans-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .saved-loans-label {
+      font-weight: 600;
+    }
+
+    .saved-loans-sub {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .saved-loans-amount {
+      font-weight: 600;
+      font-size: 11px;
+      text-align: right;
     }
   </style>
 </head>
@@ -627,7 +655,7 @@
             <span class="panel-badge">Linked to planner</span>
           </div>
           <div class="panel-subtitle" id="affordSubtitle">
-            Compare the mortgage payment to the surplus stored in your main budget.
+            Compare your share of the mortgage payment to the surplus stored in your main budget.
           </div>
         </div>
 
@@ -664,9 +692,9 @@
           </div>
 
           <div class="summary-card">
-            <div class="summary-card-title">Mortgage payment</div>
+            <div class="summary-card-title">Your mortgage share</div>
             <div class="mini-row">
-              <span class="mini-label">Payment</span>
+              <span class="mini-label">Payment used here</span>
               <span id="paymentDisplay" class="mini-value">0</span>
             </div>
             <div class="mini-row">
@@ -738,32 +766,31 @@
           </div>
 
           <div class="field-group">
-  <div class="field-label">Repayment frequency</div>
-  <select id="freqInput">
-    <option value="monthly" selected>Monthly</option>
-    <option value="fortnightly">Fortnightly</option>
-    <option value="weekly">Weekly</option>
-  </select>
-</div>
+            <div class="field-label">Repayment frequency</div>
+            <select id="freqInput">
+              <option value="monthly" selected>Monthly</option>
+              <option value="fortnightly">Fortnightly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
 
-<div class="field-group">
-  <div class="field-label">Extra repayment (optional)</div>
-  <div class="field-inline">
-    <span style="font-size:12px;color:var(--muted);">$</span>
-    <input id="extraInput" type="number" min="0" step="1" placeholder="" />
-  </div>
-</div>
+          <div class="field-group">
+            <div class="field-label">Extra repayment (optional)</div>
+            <div class="field-inline">
+              <span style="font-size:12px;color:var(--muted);">$</span>
+              <input id="extraInput" type="number" min="0" step="1" placeholder="" />
+            </div>
+          </div>
 
-<!-- NEW: split for affordability / calculator -->
-<div class="field-group">
-  <div class="field-inline">
-    <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
-    <span class="field-label" style="margin-left:2px;">
-      Split with partner for this calc (use half in affordability)
-    </span>
-  </div>
-</div>
-
+          <!-- Split for calculator / affordability -->
+          <div class="field-group">
+            <div class="field-inline">
+              <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
+              <span class="field-label" style="margin-left:2px;">
+                Split with partner for this calc (use half in affordability)
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="error-text" id="inputError"></div>
@@ -774,17 +801,24 @@
         </button>
 
         <button class="secondary-btn" id="addToPlannerBtn">
-          Add / update mortgage in planner
+          Save / update mortgage in planner
         </button>
 
         <button class="secondary-btn" id="toggleSavedLoansBtn" style="margin-left:4px;">
-          Manage saved loans
+          Show saved mortgages
+        </button>
+
+        <button class="secondary-btn" id="deleteMortgageBtn" style="margin-left:4px;">
+          Delete selected mortgage
         </button>
 
         <div class="hidden-box" id="savedLoansBox">
-          <div class="field-label">Loans saved into your planner from this tool</div>
+          <div class="field-label">Mortgages saved into your planner from this tool</div>
           <div id="savedLoansList" class="saved-loans-list">
-            <span>No loans saved yet.</span>
+            <span>No mortgages found yet.</span>
+          </div>
+          <div class="note">
+            Tap a line to select, edit with the calculator, then press “Save / update mortgage in planner”.
           </div>
         </div>
 
@@ -799,16 +833,28 @@
           <div>
             <div class="panel-title">Results</div>
             <div class="panel-subtitle">
-              Repayments, total interest, time saved with extra, and a simple future-rate comparison.
+              Whole-loan repayments, your share if split, total interest, and a future-rate comparison.
             </div>
           </div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div>
-            <div class="field-label">Repayment (including extra)</div>
+            <div class="field-label">Whole loan repayment (including extra)</div>
             <div class="result-big" id="resultPayment">—</div>
             <div class="field-label" id="resultPaymentLabel">Per month</div>
+          </div>
+
+          <div>
+            <div class="field-label">Your share used in affordability</div>
+            <div class="mini-row">
+              <span class="mini-label">Amount</span>
+              <span class="mini-value" id="resultYourShare">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Status</span>
+              <span class="mini-value" id="resultShareLabel">Not split</span>
+            </div>
           </div>
 
           <div>
@@ -876,8 +922,9 @@
               <ul>
                 <li>Loan amount = property price minus your deposit.</li>
                 <li>Repayments use a standard amortising loan formula based on your rate, term, and chosen frequency.</li>
-                <li>Extra repayments are simply added on top of the base repayment and then used to simulate an earlier payoff.</li>
-                <li>“Mortgage vs planner surplus” compares the repayment to the surplus stored in your main planner for W/F/M/Y.</li>
+                <li>Extra repayments are added on top of the base repayment and then used to simulate an earlier payoff.</li>
+                <li>“Your mortgage share” uses half the repayment if the split box is ticked.</li>
+                <li>“Mortgage vs planner surplus” compares your share to the surplus stored in your main planner for W/F/M/Y.</li>
                 <li>The future rate view re-runs the same formula at the alternative rate so you can see how sensitive the loan is to rate changes.</li>
               </ul>
             </div>
@@ -913,7 +960,7 @@
     </div>
 
     <div class="note" id="saveModalNote">
-      The current repayment amount and frequency will be saved into your main planner.
+      The current repayment share and frequency will be saved into your main planner.
     </div>
 
     <div class="modal-actions">
@@ -950,6 +997,8 @@
 
   const resultPaymentEl = document.getElementById("resultPayment");
   const resultPaymentLabelEl = document.getElementById("resultPaymentLabel");
+  const resultYourShareEl = document.getElementById("resultYourShare");
+  const resultShareLabelEl = document.getElementById("resultShareLabel");
   const resultInterestBaseEl = document.getElementById("resultInterestBase");
   const resultInterestExtraEl = document.getElementById("resultInterestExtra");
   const resultTermBaseEl = document.getElementById("resultTermBase");
@@ -972,6 +1021,7 @@
   const affordViewWrapper = document.getElementById("affordViewWrapper");
 
   const toggleSavedLoansBtn = document.getElementById("toggleSavedLoansBtn");
+  const deleteMortgageBtn = document.getElementById("deleteMortgageBtn");
   const savedLoansBox = document.getElementById("savedLoansBox");
   const savedLoansList = document.getElementById("savedLoansList");
 
@@ -986,13 +1036,15 @@
 
   let plannerSurplusWeekly = 0;
   let viewMode = "monthly";
-  let lastPaymentPerFreq = 0;
+  let lastPaymentPerFreq = 0;       // your share (used in affordability + save default)
+  let lastWholePaymentPerFreq = 0;  // whole loan payment
   let lastFreq = "monthly";
   let lastPrincipal = 0;
   let lastTermYears = 0;
   let lastRate = 0;
 
   let savedLoansVisible = false;
+  let selectedLoanId = null;
 
   function formatCurrency(amount) {
     if (!isFinite(amount)) return "—";
@@ -1070,123 +1122,128 @@
   }
 
   function calculate() {
-  const price = parseFloat(priceInput.value || "0");
-  const deposit = parseFloat(depositInput.value || "0");
-  const rate = parseFloat(rateInput.value || "0");
-  const termYears = parseFloat(termInput.value || "0");
-  const freq = freqInput.value;
-  const extra = parseFloat(extraInput.value || "0");
+    const price = parseFloat(priceInput.value || "0");
+    const deposit = parseFloat(depositInput.value || "0");
+    const rate = parseFloat(rateInput.value || "0");
+    const termYears = parseFloat(termInput.value || "0");
+    const freq = freqInput.value;
+    const extra = parseFloat(extraInput.value || "0");
 
-  if (!isFinite(price) || price <= 0) {
-    inputError.textContent = "Enter a property price above 0.";
-    priceInput.focus();
-    return;
-  }
-  if (!isFinite(deposit) || deposit < 0) {
-    inputError.textContent = "Deposit cannot be negative.";
-    depositInput.focus();
-    return;
-  }
-  if (deposit >= price) {
-    inputError.textContent = "Deposit must be less than the property price.";
-    depositInput.focus();
-    return;
-  }
-  if (!isFinite(rate) || rate <= 0) {
-    inputError.textContent = "Enter a positive interest rate.";
-    rateInput.focus();
-    return;
-  }
-  if (!isFinite(termYears) || termYears <= 0) {
-    inputError.textContent = "Enter a term greater than 0 years.";
-    termInput.focus();
-    return;
-  }
-  if (!isFinite(extra) || extra < 0) {
-    inputError.textContent = "Extra repayment cannot be negative.";
-    extraInput.focus();
-    return;
-  }
-
-  inputError.textContent = "";
-
-  const principal = price - deposit;
-  const paymentsPerYear =
-    freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
-
-  // --- repayment base + extra ---
-  const basePayment = annuityPayment(principal, rate, termYears, paymentsPerYear);
-  const paymentWithExtra = basePayment + extra;
-
-  // Use split for all downstream calcs that look at "your share"
-  const splitForCalc = !!calcSplitCheckbox.checked;
-  const effectivePayment = splitForCalc ? paymentWithExtra / 2 : paymentWithExtra;
-
-  // display: still show the full payment (or your choice)
-  resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
-  resultPaymentLabelEl.textContent =
-    "Per " +
-    (freq === "weekly"
-      ? "week"
-      : freq === "fortnightly"
-      ? "fortnight"
-      : "month");
-
-  // --- interest and term calcs (whole loan, not halved) ---
-  const n = termYears * paymentsPerYear;
-  const r = rate / 100 / paymentsPerYear;
-
-  let totalInterestBase;
-  if (r === 0) {
-    totalInterestBase = 0;
-  } else {
-    totalInterestBase = basePayment * n - principal;
-  }
-
-  let remaining = principal;
-  let periodsExtra = 0;
-  if (r === 0) {
-    periodsExtra = paymentWithExtra > 0 ? Math.ceil(principal / paymentWithExtra) : n;
-  } else if (paymentWithExtra <= basePayment) {
-    periodsExtra = n;
-  } else {
-    while (remaining > 0 && periodsExtra < n * 2) {
-      const interest = remaining * r;
-      const principalPaid = paymentWithExtra - interest;
-      if (principalPaid <= 0) {
-        periodsExtra = n;
-        break;
-      }
-      remaining -= principalPaid;
-      periodsExtra++;
+    if (!isFinite(price) || price <= 0) {
+      inputError.textContent = "Enter a property price above 0.";
+      priceInput.focus();
+      return;
     }
+    if (!isFinite(deposit) || deposit < 0) {
+      inputError.textContent = "Deposit cannot be negative.";
+      depositInput.focus();
+      return;
+    }
+    if (deposit >= price) {
+      inputError.textContent = "Deposit must be less than the property price.";
+      depositInput.focus();
+      return;
+    }
+    if (!isFinite(rate) || rate <= 0) {
+      inputError.textContent = "Enter a positive interest rate.";
+      rateInput.focus();
+      return;
+    }
+    if (!isFinite(termYears) || termYears <= 0) {
+      inputError.textContent = "Enter a term greater than 0 years.";
+      termInput.focus();
+      return;
+    }
+    if (!isFinite(extra) || extra < 0) {
+      inputError.textContent = "Extra repayment cannot be negative.";
+      extraInput.focus();
+      return;
+    }
+
+    inputError.textContent = "";
+
+    const principal = price - deposit;
+    const paymentsPerYear =
+      freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
+
+    // base + extra
+    const basePayment = annuityPayment(principal, rate, termYears, paymentsPerYear);
+    const paymentWithExtra = basePayment + extra;
+
+    // split behaviour for your share
+    const splitForCalc = !!calcSplitCheckbox.checked;
+    const effectivePayment = splitForCalc ? paymentWithExtra / 2 : paymentWithExtra;
+
+    // results: whole loan
+    resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
+    resultPaymentLabelEl.textContent =
+      "Per " +
+      (freq === "weekly"
+        ? "week"
+        : freq === "fortnightly"
+        ? "fortnight"
+        : "month");
+
+    // results: your share
+    resultYourShareEl.textContent = formatCurrency(effectivePayment);
+    resultShareLabelEl.textContent = splitForCalc
+      ? "Split with partner – this is your half"
+      : "Not split – you are covering the full repayment";
+
+    // interest / term based on whole loan
+    const n = termYears * paymentsPerYear;
+    const r = rate / 100 / paymentsPerYear;
+
+    let totalInterestBase;
+    if (r === 0) {
+      totalInterestBase = 0;
+    } else {
+      totalInterestBase = basePayment * n - principal;
+    }
+
+    let remaining = principal;
+    let periodsExtra = 0;
+    if (r === 0) {
+      periodsExtra = paymentWithExtra > 0 ? Math.ceil(principal / paymentWithExtra) : n;
+    } else if (paymentWithExtra <= basePayment) {
+      periodsExtra = n;
+    } else {
+      while (remaining > 0 && periodsExtra < n * 2) {
+        const interest = remaining * r;
+        const principalPaid = paymentWithExtra - interest;
+        if (principalPaid <= 0) {
+          periodsExtra = n;
+          break;
+        }
+        remaining -= principalPaid;
+        periodsExtra++;
+      }
+    }
+
+    const totalPaidExtra = paymentWithExtra * periodsExtra;
+    const totalInterestExtra =
+      r === 0 ? 0 : Math.max(totalPaidExtra - principal, 0);
+
+    const baseYears = n / paymentsPerYear;
+    const extraYears = periodsExtra / paymentsPerYear;
+
+    resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
+    resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
+
+    resultTermBaseEl.textContent = baseYears.toFixed(1) + " years";
+    resultTermExtraEl.textContent = extraYears.toFixed(1) + " years";
+
+    lastFreq = freq;
+    lastWholePaymentPerFreq = paymentWithExtra;
+    lastPaymentPerFreq = effectivePayment;
+    lastPrincipal = principal;
+    lastTermYears = termYears;
+    lastRate = rate;
+
+    updateAffordability();
+    updateFutureRateView();
+    persistMortgageState();
   }
-
-  const totalPaidExtra = paymentWithExtra * periodsExtra;
-  const totalInterestExtra =
-    r === 0 ? 0 : Math.max(totalPaidExtra - principal, 0);
-
-  const baseYears = n / paymentsPerYear;
-  const extraYears = periodsExtra / paymentsPerYear;
-
-  resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
-  resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
-
-  resultTermBaseEl.textContent = baseYears.toFixed(1) + " years";
-  resultTermExtraEl.textContent = extraYears.toFixed(1) + " years";
-
-  // --- values used by affordability + future rate + save-to-planner ---
-  lastFreq = freq;
-  lastPaymentPerFreq = effectivePayment;  // this is now your share
-  lastPrincipal = principal;
-  lastTermYears = termYears;
-  lastRate = rate;
-
-  updateAffordability();
-  updateFutureRateView();
-  persistMortgageState();
-}
-
 
   function updateAffordability() {
     const weeklyPayment = toWeekly(lastPaymentPerFreq, lastFreq);
@@ -1301,24 +1358,23 @@
   }
 
   function persistMortgageState() {
-  const state = {
-    price: priceInput.value || "",
-    deposit: depositInput.value || "",
-    rate: rateInput.value || "",
-    futureRate: futureRateInput.value || "",
-    term: termInput.value || "",
-    freq: freqInput.value || "monthly",
-    extra: extraInput.value || "",
-    calcSplit: !!calcSplitCheckbox.checked,  // NEW
-    viewMode
-  };
-  try {
-    localStorage.setItem(STORAGE_KEY_MORTGAGE, JSON.stringify(state));
-  } catch (e) {
-    // ignore
+    const state = {
+      price: priceInput.value || "",
+      deposit: depositInput.value || "",
+      rate: rateInput.value || "",
+      futureRate: futureRateInput.value || "",
+      term: termInput.value || "",
+      freq: freqInput.value || "monthly",
+      extra: extraInput.value || "",
+      calcSplit: !!calcSplitCheckbox.checked,
+      viewMode
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY_MORTGAGE, JSON.stringify(state));
+    } catch (e) {
+      // ignore
+    }
   }
-}
-
 
   function restoreMortgageState() {
     try {
@@ -1335,7 +1391,7 @@
       if (typeof state.term === "string") termInput.value = state.term;
       if (typeof state.extra === "string") extraInput.value = state.extra;
       if (typeof state.freq === "string") freqInput.value = state.freq;
-      if (typeof state.calcSplit === "boolean") calcSplitCheckbox.checked = state.calcSplit; 
+      if (typeof state.calcSplit === "boolean") calcSplitCheckbox.checked = state.calcSplit;
 
       if (
         state.viewMode === "weekly" ||
@@ -1430,16 +1486,15 @@
   calcBtn.addEventListener("click", calculate);
 
   [priceInput, depositInput, rateInput, futureRateInput, termInput, extraInput, freqInput, calcSplitCheckbox].forEach(
-  (el) => {
-    el.addEventListener("change", persistMortgageState);
-    if (el !== calcSplitCheckbox) {
-      el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") calculate();
-      });
+    (el) => {
+      el.addEventListener("change", persistMortgageState);
+      if (el !== calcSplitCheckbox) {
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") calculate();
+        });
+      }
     }
-  }
-);
-
+  );
 
   futureRateInput.addEventListener("input", () => {
     updateFutureRateView();
@@ -1462,13 +1517,40 @@
       return;
     }
     inputError.textContent = "";
-    saveNameInput.value = "";
-    saveSplitCheckbox.checked = false;
+    // If editing an existing loan, prefill its label/type/split if we know them
+    let defaultLabel = "Mortgage repayment";
+    let defaultType = "need";
+    let defaultSplit = false;
+
+    if (selectedLoanId != null) {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+        const items = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(items)) {
+          const existing = items.find((i) => i && i.id === selectedLoanId);
+          if (existing) {
+            defaultLabel = typeof existing.label === "string" && existing.label.trim()
+              ? existing.label.trim()
+              : defaultLabel;
+            defaultType = existing.type === "want" ? "want" : "need";
+            // infer split if stored amount is exactly half of current share
+            const approxHalf = Math.abs(existing.amount * 2 - lastPaymentPerFreq) < 0.01;
+            defaultSplit = approxHalf;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      defaultSplit = !!calcSplitCheckbox.checked;
+    }
+
+    saveNameInput.value = defaultLabel;
+    saveSplitCheckbox.checked = defaultSplit;
     saveModalNote.textContent =
-      "The current repayment amount and frequency will be saved into your main planner.";
-    // default type = need
+      "The current repayment share and frequency will be saved into your main planner.";
     saveTypeToggle.querySelectorAll(".pill-option").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.type === "need");
+      btn.classList.toggle("active", btn.dataset.type === defaultType);
     });
     saveModalBackdrop.style.display = "flex";
     saveNameInput.focus();
@@ -1514,6 +1596,9 @@
       lastFreq === "yearly"
         ? lastFreq
         : "monthly";
+
+    // lastPaymentPerFreq is already "your share" based on calcSplitCheckbox
+    // Split checkbox here optionally halves again before saving to planner
     const amountToSave = split ? lastPaymentPerFreq / 2 : lastPaymentPerFreq;
 
     try {
@@ -1523,28 +1608,42 @@
         throw new Error("Items not an array");
       }
 
-      // Create new entry every time (allow multiple loans)
-      const maxId = items.reduce(
-        (max, i) => (i && typeof i.id === "number" ? Math.max(max, i.id) : max),
-        0
-      );
-      items.push({
-        id: maxId + 1,
-        type: type === "want" ? "want" : "need",
-        label,
-        amount: amountToSave,
-        frequency: freq,
-        enabled: true,
-        color: "blue"
-      });
+      let targetItem = null;
+      if (selectedLoanId != null) {
+        targetItem = items.find((i) => i && i.id === selectedLoanId);
+      }
+
+      if (targetItem) {
+        targetItem.label = label;
+        targetItem.type = type === "want" ? "want" : "need";
+        targetItem.amount = amountToSave;
+        targetItem.frequency = freq;
+        targetItem.enabled = true;
+        targetItem.color = targetItem.color || "blue";
+      } else {
+        const maxId = items.reduce(
+          (max, i) => (i && typeof i.id === "number" ? Math.max(max, i.id) : max),
+          0
+        );
+        items.push({
+          id: maxId + 1,
+          type: type === "want" ? "want" : "need",
+          label,
+          amount: amountToSave,
+          frequency: freq,
+          enabled: true,
+          color: "blue"
+        });
+        selectedLoanId = maxId + 1;
+      }
 
       localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
       addToPlannerBtn.classList.remove("bad");
       addToPlannerBtn.classList.add("good");
-      addToPlannerBtn.textContent = "Saved to planner";
+      addToPlannerBtn.textContent = "Saved / updated in planner";
       setTimeout(() => {
         addToPlannerBtn.classList.remove("good");
-        addToPlannerBtn.textContent = "Add / update mortgage in planner";
+        addToPlannerBtn.textContent = "Save / update mortgage in planner";
       }, 2000);
 
       closeSaveModal();
@@ -1555,24 +1654,23 @@
       addToPlannerBtn.textContent = "Could not save to planner";
       setTimeout(() => {
         addToPlannerBtn.classList.remove("bad");
-        addToPlannerBtn.textContent = "Add / update mortgage in planner";
+        addToPlannerBtn.textContent = "Save / update mortgage in planner";
       }, 2500);
     }
   });
 
   addToPlannerBtn.addEventListener("click", openSaveModal);
 
-  // Saved loans list (purely UI helper)
   function renderSavedLoansList() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
       if (!raw) {
-        savedLoansList.innerHTML = "<span>No loans saved yet.</span>";
+        savedLoansList.innerHTML = "<span>No mortgages found yet.</span>";
         return;
       }
       const items = JSON.parse(raw);
       if (!Array.isArray(items)) {
-        savedLoansList.innerHTML = "<span>No loans saved yet.</span>";
+        savedLoansList.innerHTML = "<span>No mortgages found yet.</span>";
         return;
       }
 
@@ -1584,7 +1682,7 @@
             i.label.toLowerCase().includes("loan"))
       );
       if (!loans.length) {
-        savedLoansList.innerHTML = "<span>No loans saved yet.</span>";
+        savedLoansList.innerHTML = "<span>No mortgages found yet.</span>";
         return;
       }
 
@@ -1592,10 +1690,16 @@
       loans.forEach((loan) => {
         const div = document.createElement("div");
         div.className = "saved-loans-item";
-        const left = document.createElement("span");
-        left.textContent = loan.label || "Loan";
-        const right = document.createElement("span");
-        const amt = typeof loan.amount === "number" ? loan.amount : 0;
+        if (loan.id === selectedLoanId) {
+          div.classList.add("selected");
+        }
+        const left = document.createElement("div");
+        left.className = "saved-loans-left";
+        const labelEl = document.createElement("div");
+        labelEl.className = "saved-loans-label";
+        labelEl.textContent = loan.label || "Loan";
+        const sub = document.createElement("div");
+        sub.className = "saved-loans-sub";
         const freq =
           loan.frequency === "weekly" ||
           loan.frequency === "fortnightly" ||
@@ -1603,9 +1707,8 @@
           loan.frequency === "yearly"
             ? loan.frequency
             : "weekly";
-        right.textContent =
-          formatCurrency(amt) +
-          " " +
+        sub.textContent =
+          (loan.type === "want" ? "Want · " : "Need · ") +
           (freq === "weekly"
             ? "per week"
             : freq === "fortnightly"
@@ -1613,20 +1716,78 @@
             : freq === "monthly"
             ? "per month"
             : "per year");
+        left.appendChild(labelEl);
+        left.appendChild(sub);
+
+        const right = document.createElement("div");
+        right.className = "saved-loans-amount";
+        const amt = typeof loan.amount === "number" ? loan.amount : 0;
+        right.textContent = formatCurrency(amt);
+
         div.appendChild(left);
         div.appendChild(right);
+
+        div.addEventListener("click", () => {
+          selectedLoanId = loan.id;
+          // Load this loan into the calculator inputs
+          loadLoanIntoCalculator(loan);
+          renderSavedLoansList();
+        });
+
         savedLoansList.appendChild(div);
       });
     } catch (e) {
-      savedLoansList.innerHTML = "<span>Could not read saved loans.</span>";
+      savedLoansList.innerHTML = "<span>Could not read saved mortgages.</span>";
     }
+  }
+
+  function loadLoanIntoCalculator(loan) {
+    // Only frequency and amount can be brought back exactly;
+    // the user can then choose price/deposit/rate to match if they want.
+    const freq =
+      loan.frequency === "weekly" ||
+      loan.frequency === "fortnightly" ||
+      loan.frequency === "monthly" ||
+      loan.frequency === "yearly"
+        ? loan.frequency
+        : "monthly";
+    freqInput.value = freq;
+
+    // Set extra to 0 and force rate/term to something sensible; user will refine.
+    extraInput.value = "";
+    inputError.textContent = "Loaded saved amount. Re-enter loan details to recalc breakdown.";
+    // Do not overwrite price/deposit/rate/term because they may not match.
   }
 
   toggleSavedLoansBtn.addEventListener("click", () => {
     savedLoansVisible = !savedLoansVisible;
     savedLoansBox.style.display = savedLoansVisible ? "block" : "none";
+    toggleSavedLoansBtn.textContent = savedLoansVisible
+      ? "Hide saved mortgages"
+      : "Show saved mortgages";
     if (savedLoansVisible) {
       renderSavedLoansList();
+    }
+  });
+
+  deleteMortgageBtn.addEventListener("click", () => {
+    if (selectedLoanId == null) {
+      inputError.textContent = "Tap a saved mortgage line first, then press delete.";
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      const items = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(items)) {
+        throw new Error("Items not an array");
+      }
+      const filtered = items.filter((i) => !i || i.id !== selectedLoanId);
+      localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(filtered));
+      selectedLoanId = null;
+      renderSavedLoansList();
+      inputError.textContent = "";
+    } catch (e) {
+      inputError.textContent = "Could not delete saved mortgage.";
     }
   });
 
