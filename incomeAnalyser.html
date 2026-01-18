@@ -438,6 +438,11 @@
       border-color: rgba(50, 215, 136, 0.7);
       color: var(--success);
     }
+
+    .tag-pill.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
   </style>
 </head>
 <body>
@@ -485,19 +490,34 @@
             Use simple percentages to estimate net income for one or more jobs or sources.
           </div>
         </div>
+
+        <div class="panel-totals">
+          <div class="panel-totals-row">
+            <label>Currency</label>
+            <select id="currencyLabel" style="width:auto;">
+              <option value="AUD" selected>AUD</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="NZD">NZD</option>
+              <option value="CAD">CAD</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div class="inputs-grid">
         <div class="field-group">
           <div class="field-label">Label for this income</div>
-          <input id="labelInput" type="text" placeholder="e.g. Main job, Side gig" />
+          <input id="labelInput" type="text" />
         </div>
 
         <div class="field-group">
           <div class="field-label">Gross amount</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="grossInput" type="number" min="0" step="0.01" placeholder="" />
+            <input id="grossInput" type="number" min="0" step="0.01" />
           </div>
         </div>
 
@@ -514,7 +534,7 @@
         <div class="field-group">
           <div class="field-label">Tax rate (rough %)</div>
           <div class="field-inline">
-            <input id="taxRateInput" type="number" min="0" max="60" step="0.1" placeholder="23" />
+            <input id="taxRateInput" type="number" min="0" max="60" step="0.1" />
             <span style="font-size:12px;color:var(--muted);">%</span>
           </div>
         </div>
@@ -522,7 +542,7 @@
         <div class="field-group">
           <div class="field-label">Other deductions % (optional)</div>
           <div class="field-inline">
-            <input id="deductRateInput" type="number" min="0" max="40" step="0.1" placeholder="6" />
+            <input id="deductRateInput" type="number" min="0" max="40" step="0.1" />
             <span style="font-size:12px;color:var(--muted);">%</span>
           </div>
           <div class="note">
@@ -593,7 +613,7 @@
             </div>
             <div class="mini-row">
               <span class="mini-label">Total net income</span>
-              <span class="mini-value surplus" id="summaryNetTotal">$0</span>
+              <span class="mini-value surplus" id="summaryNetTotal">0</span>
             </div>
           </div>
 
@@ -601,11 +621,11 @@
             <div class="summary-card-title">Main planner income (current)</div>
             <div class="mini-row">
               <span class="mini-label">Amount</span>
-              <span class="mini-value" id="plannerIncomeAmount">$0</span>
+              <span class="mini-value" id="plannerIncomeAmount">—</span>
             </div>
             <div class="mini-row">
               <span class="mini-label">Frequency</span>
-              <span class="mini-value" id="plannerIncomeFreq">—</span>
+              <span class="mini-value" id="plannerIncomeFreq">Not set</span>
             </div>
           </div>
         </div>
@@ -636,6 +656,7 @@
   const taxRateInput = document.getElementById("taxRateInput");
   const deductRateInput = document.getElementById("deductRateInput");
   const netFreqOutputInput = document.getElementById("netFreqOutputInput");
+  const currencyLabelSelect = document.getElementById("currencyLabel");
   const inputError = document.getElementById("inputError");
   const addIncomeBtn = document.getElementById("addIncomeBtn");
 
@@ -650,18 +671,20 @@
 
   let incomes = [];
   let editingIndex = null;
+  let analyserCurrency = "AUD";
 
   function formatCurrency(amount, currencyCode) {
-    if (!isFinite(amount)) return "$0";
+    if (!isFinite(amount)) return "—";
+    const code = currencyCode === "Other" ? "AUD" : (currencyCode || "AUD");
     try {
-      return amount.toLocaleString(undefined, {
+      return amount.toLocaleString("en-AU", {
         style: "currency",
-        currency: currencyCode || "USD",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
+        currency: code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       });
     } catch (e) {
-      return "$" + amount.toFixed(0);
+      return "$" + amount.toFixed(2);
     }
   }
 
@@ -682,7 +705,15 @@
   function persistState() {
     const state = {
       incomes,
-      netFrequency: netFreqOutputInput.value || "monthly"
+      netFrequency: netFreqOutputInput.value || "monthly",
+      currency: analyserCurrency,
+      currentInputs: {
+        label: labelInput.value || "",
+        gross: grossInput.value || "",
+        grossFreq: grossFreqInput.value || "monthly",
+        taxRate: taxRateInput.value || "",
+        deductRate: deductRateInput.value || ""
+      }
     };
     try {
       localStorage.setItem(STORAGE_KEY_INCOME_ANALYSER, JSON.stringify(state));
@@ -716,6 +747,20 @@
       ) {
         netFreqOutputInput.value = state.netFrequency;
       }
+
+      if (typeof state.currency === "string") {
+        analyserCurrency = state.currency;
+        currencyLabelSelect.value = state.currency;
+      }
+
+      if (state.currentInputs && typeof state.currentInputs === "object") {
+        const ci = state.currentInputs;
+        if (typeof ci.label === "string") labelInput.value = ci.label;
+        if (typeof ci.gross === "string") grossInput.value = ci.gross;
+        if (typeof ci.grossFreq === "string") grossFreqInput.value = ci.grossFreq;
+        if (typeof ci.taxRate === "string") taxRateInput.value = ci.taxRate;
+        if (typeof ci.deductRate === "string") deductRateInput.value = ci.deductRate;
+      }
     } catch (e) {
       // ignore
     }
@@ -726,7 +771,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY_INCOME);
       if (!raw) {
-        plannerIncomeAmountEl.textContent = "$0";
+        plannerIncomeAmountEl.textContent = "—";
         plannerIncomeFreqEl.textContent = "Not set";
         return;
       }
@@ -736,7 +781,7 @@
       const amount = parseFloat(parsed.amount || "0") || 0;
       const freq = parsed.frequency || "fortnightly";
 
-      plannerIncomeAmountEl.textContent = formatCurrency(amount, "USD");
+      plannerIncomeAmountEl.textContent = formatCurrency(amount, analyserCurrency);
       plannerIncomeFreqEl.textContent =
         freq === "weekly"
           ? "Weekly"
@@ -746,7 +791,7 @@
           ? "Monthly"
           : "Yearly";
     } catch (e) {
-      plannerIncomeAmountEl.textContent = "$0";
+      plannerIncomeAmountEl.textContent = "—";
       plannerIncomeFreqEl.textContent = "Not set";
     }
   }
@@ -805,9 +850,8 @@
           ? "monthly"
           : "yearly";
       subEl.textContent =
-        formatCurrency(inc.gross, "USD") +
-        " " +
-        "/" +
+        formatCurrency(inc.gross, analyserCurrency) +
+        " /" +
         freqText +
         " · tax " +
         (inc.taxRate || 0) +
@@ -820,7 +864,7 @@
 
       const netEl = document.createElement("div");
       netEl.className = "income-pill-net";
-      netEl.textContent = formatCurrency(netAmount, "USD");
+      netEl.textContent = formatCurrency(netAmount, analyserCurrency);
       pill.appendChild(netEl);
 
       pill.addEventListener("click", () => {
@@ -833,12 +877,13 @@
         deductRateInput.value = edited.deductRate;
         inputError.textContent = "";
         addIncomeBtn.textContent = "Update income line";
+        persistState();
       });
 
       incomeListEl.appendChild(pill);
     });
 
-    summaryNetTotalEl.textContent = formatCurrency(totalNet, "USD");
+    summaryNetTotalEl.textContent = formatCurrency(totalNet, analyserCurrency);
   }
 
   addIncomeBtn.addEventListener("click", () => {
@@ -889,11 +934,6 @@
     editingIndex = null;
     addIncomeBtn.textContent = "Add / update income line";
 
-    labelInput.value = "";
-    grossInput.value = "";
-    taxRateInput.value = "";
-    deductRateInput.value = "";
-
     persistState();
     render();
   });
@@ -902,6 +942,19 @@
     persistState();
     render();
   });
+
+  currencyLabelSelect.addEventListener("change", () => {
+    analyserCurrency = currencyLabelSelect.value || "AUD";
+    persistState();
+    render();
+    loadPlannerIncome();
+  });
+
+  [labelInput, grossInput, grossFreqInput, taxRateInput, deductRateInput].forEach(
+    (el) => {
+      el.addEventListener("change", persistState);
+    }
+  );
 
   updatePlannerBtn.addEventListener("click", () => {
     const netFreq = netFreqOutputInput.value || "monthly";
@@ -933,9 +986,11 @@
       localStorage.setItem(STORAGE_KEY_INCOME, JSON.stringify(incomeState));
       statusTagEl.textContent = "Updated main planner income";
       statusTagEl.classList.add("good");
+      statusTagEl.classList.remove("bad");
     } catch (e) {
       statusTagEl.textContent = "Could not update planner income";
       statusTagEl.classList.remove("good");
+      statusTagEl.classList.add("bad");
     }
 
     loadPlannerIncome();
@@ -946,4 +1001,3 @@
 </script>
 </body>
 </html>
-
