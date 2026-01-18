@@ -718,6 +718,39 @@
 <body>
   <div class="app-shell">
     <header class="app-header">
+      <!-- New tiny top-right favicon row -->
+  <div style="
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:8px;
+    margin-bottom:2px;
+    font-size:16px;
+    color:var(--muted);
+  ">
+    <!-- Visual '...' to the left -->
+    <span style="letter-spacing:2px;">…</span>
+
+    <!-- Bigger favicon that opens the info modal -->
+    <button
+      onclick="openInfoModal()"
+      style="
+        border:none;
+        background:transparent;
+        padding:0;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+      "
+      aria-label="About these tools"
+    >
+      <img
+        src="/favicon.png"
+        alt=""
+        style="width:24px; height:24px; border-radius:6px;"
+      />
+    </button>
+  </div>
       <div class="top-row">
         <div class="brand" onclick="openInfoModal()" style="cursor:pointer;">
   <div class="brand-title">
