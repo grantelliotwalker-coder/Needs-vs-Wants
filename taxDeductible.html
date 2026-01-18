@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tax‑Deductible Rental Calculator – Budget Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Simple tax‑deductible rental calculator: rent income minus deductible expenses to show an estimated tax base before local tax rules." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --disabled: #555c72;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 10px;
+    }
+
+    .panel {
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .app-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        font-size: 16px;
+      }
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      font-size: 10px;
+      padding: 3px 7px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .preset-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+      margin-top: 2px;
+    }
+
+    .calculate-btn {
+      margin-top: 6px;
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .calculate-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .tag-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .tag-pill.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .tag-pill.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .toggle-link {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .hidden-box {
+      margin-top: 6px;
+      padding: 8px 8px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      font-size: 11px;
+      display: none;
+    }
+
+    ul {
+      padding-left: 16px;
+      margin-top: 4px;
+    }
+
+    ul li {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-title">Tax‑Deductible Rental</div>
+        <div class="brand-tagline">
+          Turn rent income and deductible expenses into a simple tax base estimate.
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="tools.html"
+           class="summary-toggle-button active"
+           id="backToTools">
+          ← Tools
+        </a>
+
+        <a href="index.html"
+           class="summary-toggle-button"
+           id="backToMain">
+          Main planner
+        </a>
+
+        <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+           class="pill-button donate"
+           id="donateLink"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="pill-button-icon">💖</span>
+          Leave a tip
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Rental inputs
+            <span class="panel-badge">Global maths only</span>
+          </div>
+          <div class="panel-subtitle">
+            Enter rent and deductible expenses in yearly terms, or use the quick weekly/monthly presets to convert.
+          </div>
+        </div>
+
+        <div class="panel-totals">
+          <div class="panel-totals-row">
+            <label>Currency label</label>
+            <select id="currencyLabel" style="width:auto;">
+              <option value="AUD" selected>AUD</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="NZD">NZD</option>
+              <option value="CAD">CAD</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="inputs-grid">
+        <div class="field-group">
+          <div class="field-label">Rent income amount</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="rentInput" type="number" min="0" step="0.01" placeholder="550" />
+          </div>
+          <div class="preset-row" id="rentPresets">
+            <button class="preset-btn active" data-freq="weekly">Weekly</button>
+            <button class="preset-btn" data-freq="monthly">Monthly</button>
+            <button class="preset-btn" data-freq="yearly">Yearly</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Deductible expenses amount</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="expenseInput" type="number" min="0" step="0.01" placeholder="3000" />
+          </div>
+          <div class="preset-row" id="expensePresets">
+            <button class="preset-btn" data-freq="weekly">Weekly</button>
+            <button class="preset-btn" data-freq="monthly">Monthly</button>
+            <button class="preset-btn active" data-freq="yearly">Yearly</button>
+          </div>
+          <div class="note">
+            Enter only what your local rules treat as deductible for this property (for example, interest, rates, repairs in some systems).[web:1][web:2][web:3][web:4][web:5]
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Estimated tax rate (optional)</div>
+          <div class="field-inline">
+            <input id="rateInput" type="number" min="0" step="0.1" placeholder="0" />
+            <span style="font-size:12px;color:var(--muted);">%</span>
+          </div>
+          <div class="note">
+            Used only to show a rough tax payable or tax saving for this property.
+          </div>
+        </div>
+      </div>
+
+      <div class="error-text" id="inputError"></div>
+
+      <button class="calculate-btn" id="calcBtn">
+        <span class="icon">▶</span>
+        Calculate tax base
+      </button>
+
+      <div class="note">
+        How to use this:
+        <ul>
+          <li>Step 1: Work out your yearly rent from this property.</li>
+          <li>Step 2: Add up expenses you believe are deductible under your local rules.</li>
+          <li>Step 3: Enter both and check the estimated tax base before local tax calculations.</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="app-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Tax base summary</div>
+            <div class="panel-subtitle">
+              Rent minus deductible expenses, plus an optional rough tax estimate using your chosen rate.
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-card-title">Yearly amounts</div>
+            <div class="mini-row">
+              <span class="mini-label">Rent (per year)</span>
+              <span id="rentYearly" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Deductible expenses (per year)</span>
+              <span id="expenseYearly" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Estimated tax base</span>
+              <span id="taxBase" class="mini-value surplus">—</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">Rough tax view (optional)</div>
+            <div class="mini-row">
+              <span class="mini-label">Tax rate applied</span>
+              <span id="rateApplied" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Tax on positive base</span>
+              <span id="taxPayable" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Saving from negative base</span>
+              <span id="taxSaving" class="mini-value surplus">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Quick read</span>
+              <span id="baseTag" class="mini-value surplus">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Explanation & disclaimer</div>
+            <div class="panel-subtitle">
+              One‑line reminder: This tool does maths only and does not decide what is deductible.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="toggle-link" id="detailsToggle">Show calculation details & disclaimer</span>
+          <div class="hidden-box" id="detailsBox">
+            <strong>How the calculation works</strong>
+            <ul>
+              <li>Convert rent to a yearly amount based on the weekly/monthly/yearly toggle you chose.</li>
+              <li>Convert deductible expenses to a yearly amount using the same idea.</li>
+              <li>Estimated tax base = Yearly rent − Yearly deductible expenses.</li>
+              <li>If the base is positive, it represents net taxable rent before your local tax rules.</li>
+              <li>If the base is negative, it represents a net loss that may or may not be deductible depending on your system.</li>
+              <li>If you enter a tax rate, the tool multiplies the base by that rate to show a rough tax payable (positive base) or a rough tax saving (negative base).</li>
+            </ul>
+
+            <strong>Important disclaimer</strong>
+            <ul>
+              <li>This tool never decides what is deductible; it only does the arithmetic you tell it to do.[web:1][web:2][web:3][web:4][web:5]</li>
+              <li>Deductibility rules vary widely across countries and even between types of property.</li>
+              <li>Always check official guidance in your country or speak to a qualified tax professional before relying on numbers.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const rentInput = document.getElementById("rentInput");
+  const expenseInput = document.getElementById("expenseInput");
+  const rateInput = document.getElementById("rateInput");
+  const currencyLabelSelect = document.getElementById("currencyLabel");
+  const inputError = document.getElementById("inputError");
+  const calcBtn = document.getElementById("calcBtn");
+
+  const rentPresetsRow = document.getElementById("rentPresets");
+  const expensePresetsRow = document.getElementById("expensePresets");
+
+  const rentYearlyEl = document.getElementById("rentYearly");
+  const expenseYearlyEl = document.getElementById("expenseYearly");
+  const taxBaseEl = document.getElementById("taxBase");
+  const rateAppliedEl = document.getElementById("rateApplied");
+  const taxPayableEl = document.getElementById("taxPayable");
+  const taxSavingEl = document.getElementById("taxSaving");
+  const baseTagEl = document.getElementById("baseTag");
+
+  const detailsToggle = document.getElementById("detailsToggle");
+  const detailsBox = document.getElementById("detailsBox");
+
+  let rentFreq = "weekly";
+  let expenseFreq = "yearly";
+
+  function formatCurrency(amount, label) {
+    if (!isFinite(amount)) return "—";
+    const rounded = amount.toFixed(2).replace(/\.00$/, "");
+    return (label ? label + " " : "") + rounded.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function formatPercent(v) {
+    if (!isFinite(v)) return "—";
+    return v.toFixed(1).replace(/\.0$/, "") + "%";
+  }
+
+  function toYearly(amount, freq) {
+    if (freq === "weekly") return amount * 52;
+    if (freq === "monthly") return amount * 12;
+    return amount;
+  }
+
+  function handlePresetClick(rowEl, isRent, freq) {
+    [...rowEl.querySelectorAll(".preset-btn")].forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.freq === freq);
+    });
+    if (isRent) rentFreq = freq;
+    else expenseFreq = freq;
+  }
+
+  rentPresetsRow.addEventListener("click", (e) => {
+    const btn = e.target.closest(".preset-btn");
+    if (!btn) return;
+    handlePresetClick(rentPresetsRow, true, btn.dataset.freq);
+  });
+
+  expensePresetsRow.addEventListener("click", (e) => {
+    const btn = e.target.closest(".preset-btn");
+    if (!btn) return;
+    handlePresetClick(expensePresetsRow, false, btn.dataset.freq);
+  });
+
+  function calculate() {
+    const rentVal = parseFloat(rentInput.value || "0");
+    const expenseVal = parseFloat(expenseInput.value || "0");
+    const rateVal = parseFloat(rateInput.value || "0");
+    const label = currencyLabelSelect.value;
+
+    if (!isFinite(rentVal) || rentVal < 0) {
+      inputError.textContent = "Rent income cannot be negative.";
+      rentInput.focus();
+      return;
+    }
+    if (!isFinite(expenseVal) || expenseVal < 0) {
+      inputError.textContent = "Deductible expenses cannot be negative.";
+      expenseInput.focus();
+      return;
+    }
+    if (!isFinite(rateVal) || rateVal < 0) {
+      inputError.textContent = "Tax rate cannot be negative.";
+      rateInput.focus();
+      return;
+    }
+
+    inputError.textContent = "";
+
+    const rentYearly = toYearly(rentVal, rentFreq);
+    const expenseYearly = toYearly(expenseVal, expenseFreq);
+    const taxBase = rentYearly - expenseYearly;
+
+    rentYearlyEl.textContent = formatCurrency(rentYearly, label);
+    expenseYearlyEl.textContent = formatCurrency(expenseYearly, label);
+    taxBaseEl.textContent = formatCurrency(taxBase, label);
+    taxBaseEl.classList.toggle("surplus", taxBase >= 0);
+    taxBaseEl.classList.toggle("deficit", taxBase < 0);
+
+    if (rateVal > 0 && taxBase !== 0) {
+      rateAppliedEl.textContent = formatPercent(rateVal);
+      const rateDecimal = rateVal / 100;
+      if (taxBase > 0) {
+        const tax = taxBase * rateDecimal;
+        taxPayableEl.textContent = formatCurrency(tax, label);
+        taxSavingEl.textContent = formatCurrency(0, label);
+      } else {
+        const saving = Math.abs(taxBase) * rateDecimal;
+        taxSavingEl.textContent = formatCurrency(saving, label);
+        taxPayableEl.textContent = formatCurrency(0, label);
+      }
+    } else {
+      rateAppliedEl.textContent = "No rate used";
+      taxPayableEl.textContent = formatCurrency(0, label);
+      taxSavingEl.textContent = formatCurrency(0, label);
+    }
+
+    if (taxBase > 0) {
+      baseTagEl.textContent = "Positive base – property is taxable on this rough view (before local rules).";
+      baseTagEl.classList.remove("deficit");
+      baseTagEl.classList.add("surplus");
+    } else if (taxBase < 0) {
+      baseTagEl.textContent = "Negative base – property makes a loss on this view (local rules decide what happens).";
+      baseTagEl.classList.remove("surplus");
+      baseTagEl.classList.add("deficit");
+    } else {
+      baseTagEl.textContent = "Zero base – rent and deductible expenses match.";
+      baseTagEl.classList.remove("deficit");
+      baseTagEl.classList.add("surplus");
+    }
+  }
+
+  calcBtn.addEventListener("click", calculate);
+  [rentInput, expenseInput, rateInput].forEach((el) => {
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") calculate();
+    });
+  });
+
+  let detailsOpen = false;
+  detailsToggle.addEventListener("click", () => {
+    detailsOpen = !detailsOpen;
+    detailsBox.style.display = detailsOpen ? "block" : "none";
+    detailsToggle.textContent = detailsOpen
+      ? "Hide calculation details & disclaimer"
+      : "Show calculation details & disclaimer";
+  });
+</script>
+</body>
+</html>
