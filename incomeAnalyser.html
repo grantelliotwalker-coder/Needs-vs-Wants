@@ -589,6 +589,10 @@
 
         <div class="income-list" id="incomeList"></div>
 
+        <button class="secondary-btn" id="deleteIncomeBtn">
+    Delete selected income line
+  </button>
+
         <div class="note">
           You can add more than one source (for example, two jobs or a job plus a side gig). The planner will use the sum of all net incomes.
         </div>
@@ -649,6 +653,9 @@
 <script>
   const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
   const STORAGE_KEY_INCOME_ANALYSER = "budgetIncomeAnalyserState";
+
+  const deleteIncomeBtn = document.getElementById("deleteIncomeBtn");
+
 
   const labelInput = document.getElementById("labelInput");
   const grossInput = document.getElementById("grossInput");
@@ -867,6 +874,11 @@
       netEl.textContent = formatCurrency(netAmount, analyserCurrency);
       pill.appendChild(netEl);
 
+            if (editingIndex === index) {
+        pill.style.borderColor = "var(--accent)";
+      }
+
+
       pill.addEventListener("click", () => {
         editingIndex = index;
         const edited = incomes[index];
@@ -994,6 +1006,19 @@
     }
 
     loadPlannerIncome();
+  });
+
+    deleteIncomeBtn.addEventListener("click", () => {
+    if (editingIndex == null) {
+      inputError.textContent = "Tap an income line first, then press delete.";
+      return;
+    }
+    incomes.splice(editingIndex, 1);
+    editingIndex = null;
+    addIncomeBtn.textContent = "Add / update income line";
+    inputError.textContent = "";
+    persistState();
+    render();
   });
 
   restoreState();
