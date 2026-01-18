@@ -800,9 +800,16 @@
   let lastRate = 0;
 
   function formatCurrency(amount) {
-    if (!isFinite(amount)) return "—";
-    return "$" + amount.toFixed(2).replace(/\.00$/, "");
-  }
+  if (!isFinite(amount)) return "—";
+  return amount.toLocaleString("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+
 
   function fromWeekly(amount, freq) {
     if (freq === "fortnightly") return amount * 2;
@@ -843,7 +850,8 @@
       plannerSurplusWeekly = weekly;
 
       const display = fromWeekly(weekly, viewMode);
-      plannerSurplusEl.textContent = formatCurrency(display).replace("$", "");
+      plannerSurplusEl.textContent = formatCurrency(display);
+
       plannerBasisEl.textContent =
         viewMode === "weekly"
           ? "Per week"
