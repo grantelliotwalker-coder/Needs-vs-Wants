@@ -1,1 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Income Analyser – Budget Needs vs Wants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Income analyser tool for the Budget Needs vs Wants planner. Build multiple income scenarios, estimate net income, and push the combined total to your main budget." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --pill-need: #1b9c5b;
+      --pill-want: #cc7a1c;
+      --disabled: #555c72;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.donate {
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .pill-button.donate .pill-button-icon {
+      color: #ffcf66;
+    }
+
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px 12px;
+      gap: 10px;
+    }
+
+    .panel {
+      padding: 10px 10px 12px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .panel-totals {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .panel-totals-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .summary-card {
+      background: rgba(5, 8, 22, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .summary-card-title {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+    }
+
+    .mini-value {
+      font-weight: 600;
+    }
+
+    .mini-value.surplus {
+      color: var(--success);
+    }
+
+    .mini-value.deficit {
+      color: var(--danger);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .app-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        font-size: 16px;
+      }
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .error-text {
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 14px;
+      margin-top: 2px;
+    }
+
+    .calculate-btn {
+      margin-top: 6px;
+      background: var(--accent);
+      border: none;
+      color: #02040a;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .calculate-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #02040a;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .secondary-btn {
+      margin-top: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      padding: 6px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .secondary-btn.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .secondary-btn.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .income-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .income-pill {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(10, 16, 30, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .income-pill-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .income-pill-label {
+      font-weight: 600;
+    }
+
+    .income-pill-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .income-pill-net {
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 13px;
+    }
+
+    .tag-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .tag-pill.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-title">Income Analyser</div>
+        <div class="brand-tagline">
+          Build one or more income scenarios and send the combined net income to your main planner.
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a href="tools.html"
+           class="summary-toggle-button active">
+          ← Tools
+        </a>
+
+        <a href="index.html"
+           class="summary-toggle-button">
+          Main planner
+        </a>
+
+        <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+           class="pill-button donate"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="pill-button-icon">💖</span>
+          Leave a tip
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            Income inputs
+            <span class="panel-badge">Global maths only</span>
+          </div>
+          <div class="panel-subtitle">
+            Use simple percentages to estimate net income for one or more jobs or sources.
+          </div>
+        </div>
+      </div>
+
+      <div class="inputs-grid">
+        <div class="field-group">
+          <div class="field-label">Label for this income</div>
+          <input id="labelInput" type="text" placeholder="e.g. Main job, Side gig" />
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Gross amount</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="grossInput" type="number" min="0" step="0.01" placeholder="" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Gross frequency</div>
+          <select id="grossFreqInput">
+            <option value="weekly">Weekly</option>
+            <option value="fortnightly">Fortnightly</option>
+            <option value="monthly" selected>Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Tax rate (rough %)</div>
+          <div class="field-inline">
+            <input id="taxRateInput" type="number" min="0" max="60" step="0.1" placeholder="23" />
+            <span style="font-size:12px;color:var(--muted);">%</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Other deductions % (optional)</div>
+          <div class="field-inline">
+            <input id="deductRateInput" type="number" min="0" max="40" step="0.1" placeholder="6" />
+            <span style="font-size:12px;color:var(--muted);">%</span>
+          </div>
+          <div class="note">
+            For things like pension / super / salary sacrifice taken from gross pay.
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Display / planner frequency</div>
+          <select id="netFreqOutputInput">
+            <option value="weekly">Weekly</option>
+            <option value="fortnightly">Fortnightly</option>
+            <option value="monthly" selected>Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+          <div class="note">
+            This is the frequency that will be sent to the main planner when you update it.
+          </div>
+        </div>
+      </div>
+
+      <div class="error-text" id="inputError"></div>
+
+      <button class="calculate-btn" id="addIncomeBtn">
+        <span class="icon">＋</span>
+        Add / update income line
+      </button>
+
+      <div class="note">
+        This tool uses simple percentages only and does not know your local tax or benefit rules. Treat the results as a rough guide.
+      </div>
+    </section>
+
+    <div class="app-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Income lines</div>
+            <div class="panel-subtitle">
+              Tap a line to edit. Net income is shown in your chosen frequency.
+            </div>
+          </div>
+        </div>
+
+        <div class="income-list" id="incomeList"></div>
+
+        <div class="note">
+          You can add more than one source (for example, two jobs or a job plus a side gig). The planner will use the sum of all net incomes.
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Summary & planner link</div>
+            <div class="panel-subtitle">
+              Combined net income, plus a quick view of what is currently saved in your main planner.
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-card-title">Combined net from this tool</div>
+            <div class="mini-row">
+              <span class="mini-label">Frequency</span>
+              <span class="mini-value" id="summaryFreqLabel">Monthly</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Total net income</span>
+              <span class="mini-value surplus" id="summaryNetTotal">$0</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">Main planner income (current)</div>
+            <div class="mini-row">
+              <span class="mini-label">Amount</span>
+              <span class="mini-value" id="plannerIncomeAmount">$0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Frequency</span>
+              <span class="mini-value" id="plannerIncomeFreq">—</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="secondary-btn" id="updatePlannerBtn">
+          Use combined net income in main planner
+        </button>
+
+        <div class="note">
+          When you press the button, the combined net income and frequency from this page overwrite the income field in your main Budget Needs vs Wants planner on this device.
+        </div>
+
+        <div style="margin-top:6px;">
+          <span class="tag-pill good" id="statusTag">Ready</span>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
+  const STORAGE_KEY_INCOME_ANALYSER = "budgetIncomeAnalyserState";
+
+  const labelInput = document.getElementById("labelInput");
+  const grossInput = document.getElementById("grossInput");
+  const grossFreqInput = document.getElementById("grossFreqInput");
+  const taxRateInput = document.getElementById("taxRateInput");
+  const deductRateInput = document.getElementById("deductRateInput");
+  const netFreqOutputInput = document.getElementById("netFreqOutputInput");
+  const inputError = document.getElementById("inputError");
+  const addIncomeBtn = document.getElementById("addIncomeBtn");
+
+  const incomeListEl = document.getElementById("incomeList");
+
+  const summaryFreqLabelEl = document.getElementById("summaryFreqLabel");
+  const summaryNetTotalEl = document.getElementById("summaryNetTotal");
+  const plannerIncomeAmountEl = document.getElementById("plannerIncomeAmount");
+  const plannerIncomeFreqEl = document.getElementById("plannerIncomeFreq");
+  const updatePlannerBtn = document.getElementById("updatePlannerBtn");
+  const statusTagEl = document.getElementById("statusTag");
+
+  let incomes = [];
+  let editingIndex = null;
+
+  function formatCurrency(amount, currencyCode) {
+    if (!isFinite(amount)) return "$0";
+    try {
+      return amount.toLocaleString(undefined, {
+        style: "currency",
+        currency: currencyCode || "USD",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+    } catch (e) {
+      return "$" + amount.toFixed(0);
+    }
+  }
+
+  function toWeekly(amount, freq) {
+    if (freq === "fortnightly") return amount / 2;
+    if (freq === "monthly") return amount * (12 / 52);
+    if (freq === "yearly") return amount / 52;
+    return amount;
+  }
+
+  function fromWeekly(weekly, target) {
+    if (target === "fortnightly") return weekly * 2;
+    if (target === "monthly") return weekly * (52 / 12);
+    if (target === "yearly") return weekly * 52;
+    return weekly;
+  }
+
+  function persistState() {
+    const state = {
+      incomes,
+      netFrequency: netFreqOutputInput.value || "monthly"
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY_INCOME_ANALYSER, JSON.stringify(state));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function restoreState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_INCOME_ANALYSER);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (!state || typeof state !== "object") return;
+
+      if (Array.isArray(state.incomes)) {
+        incomes = state.incomes.map((it) => ({
+          label: typeof it.label === "string" ? it.label : "Income",
+          gross: typeof it.gross === "number" ? it.gross : 0,
+          grossFreq: it.grossFreq || "monthly",
+          taxRate: typeof it.taxRate === "number" ? it.taxRate : 0,
+          deductRate: typeof it.deductRate === "number" ? it.deductRate : 0
+        }));
+      }
+
+      if (
+        state.netFrequency === "weekly" ||
+        state.netFrequency === "fortnightly" ||
+        state.netFrequency === "monthly" ||
+        state.netFrequency === "yearly"
+      ) {
+        netFreqOutputInput.value = state.netFrequency;
+      }
+    } catch (e) {
+      // ignore
+    }
+    render();
+  }
+
+  function loadPlannerIncome() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_INCOME);
+      if (!raw) {
+        plannerIncomeAmountEl.textContent = "$0";
+        plannerIncomeFreqEl.textContent = "Not set";
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return;
+
+      const amount = parseFloat(parsed.amount || "0") || 0;
+      const freq = parsed.frequency || "fortnightly";
+
+      plannerIncomeAmountEl.textContent = formatCurrency(amount, "USD");
+      plannerIncomeFreqEl.textContent =
+        freq === "weekly"
+          ? "Weekly"
+          : freq === "fortnightly"
+          ? "Fortnightly"
+          : freq === "monthly"
+          ? "Monthly"
+          : "Yearly";
+    } catch (e) {
+      plannerIncomeAmountEl.textContent = "$0";
+      plannerIncomeFreqEl.textContent = "Not set";
+    }
+  }
+
+  function calculateNetForIncome(gross, taxRate, deductRate, grossFreq, netFreq) {
+    const totalRate = (taxRate || 0) + (deductRate || 0);
+    const netGross = gross * (1 - totalRate / 100);
+    const weeklyNet = toWeekly(netGross, grossFreq);
+    return fromWeekly(weeklyNet, netFreq);
+  }
+
+  function render() {
+    incomeListEl.innerHTML = "";
+
+    const netFreq = netFreqOutputInput.value || "monthly";
+    summaryFreqLabelEl.textContent =
+      netFreq === "weekly"
+        ? "Weekly"
+        : netFreq === "fortnightly"
+        ? "Fortnightly"
+        : netFreq === "monthly"
+        ? "Monthly"
+        : "Yearly";
+
+    let totalNet = 0;
+
+    incomes.forEach((inc, index) => {
+      const netAmount = calculateNetForIncome(
+        inc.gross,
+        inc.taxRate,
+        inc.deductRate,
+        inc.grossFreq,
+        netFreq
+      );
+      totalNet += netAmount;
+
+      const pill = document.createElement("div");
+      pill.className = "income-pill";
+
+      const main = document.createElement("div");
+      main.className = "income-pill-main";
+
+      const labelEl = document.createElement("div");
+      labelEl.className = "income-pill-label";
+      labelEl.textContent = inc.label || "Income " + (index + 1);
+      main.appendChild(labelEl);
+
+      const subEl = document.createElement("div");
+      subEl.className = "income-pill-sub";
+      const freqText =
+        inc.grossFreq === "weekly"
+          ? "weekly"
+          : inc.grossFreq === "fortnightly"
+          ? "fortnightly"
+          : inc.grossFreq === "monthly"
+          ? "monthly"
+          : "yearly";
+      subEl.textContent =
+        formatCurrency(inc.gross, "USD") +
+        " " +
+        "/" +
+        freqText +
+        " · tax " +
+        (inc.taxRate || 0) +
+        "% · other " +
+        (inc.deductRate || 0) +
+        "%";
+      main.appendChild(subEl);
+
+      pill.appendChild(main);
+
+      const netEl = document.createElement("div");
+      netEl.className = "income-pill-net";
+      netEl.textContent = formatCurrency(netAmount, "USD");
+      pill.appendChild(netEl);
+
+      pill.addEventListener("click", () => {
+        editingIndex = index;
+        const edited = incomes[index];
+        labelInput.value = edited.label;
+        grossInput.value = edited.gross;
+        grossFreqInput.value = edited.grossFreq;
+        taxRateInput.value = edited.taxRate;
+        deductRateInput.value = edited.deductRate;
+        inputError.textContent = "";
+        addIncomeBtn.textContent = "Update income line";
+      });
+
+      incomeListEl.appendChild(pill);
+    });
+
+    summaryNetTotalEl.textContent = formatCurrency(totalNet, "USD");
+  }
+
+  addIncomeBtn.addEventListener("click", () => {
+    const label = labelInput.value.trim() || "Income " + (incomes.length + 1);
+    const gross = parseFloat(grossInput.value || "0");
+    const grossFreq = grossFreqInput.value || "monthly";
+    const taxRate = parseFloat(taxRateInput.value || "0");
+    const deductRate = parseFloat(deductRateInput.value || "0");
+
+    if (!isFinite(gross) || gross <= 0) {
+      inputError.textContent = "Enter a gross amount above 0.";
+      grossInput.focus();
+      return;
+    }
+    if (!isFinite(taxRate) || taxRate < 0) {
+      inputError.textContent = "Tax rate cannot be negative.";
+      taxRateInput.focus();
+      return;
+    }
+    if (!isFinite(deductRate) || deductRate < 0) {
+      inputError.textContent = "Other deduction % cannot be negative.";
+      deductRateInput.focus();
+      return;
+    }
+
+    inputError.textContent = "";
+
+    const payload = {
+      label,
+      gross,
+      grossFreq:
+        grossFreq === "weekly" ||
+        grossFreq === "fortnightly" ||
+        grossFreq === "monthly" ||
+        grossFreq === "yearly"
+          ? grossFreq
+          : "monthly",
+      taxRate,
+      deductRate
+    };
+
+    if (editingIndex == null) {
+      incomes.push(payload);
+    } else {
+      incomes[editingIndex] = payload;
+    }
+
+    editingIndex = null;
+    addIncomeBtn.textContent = "Add / update income line";
+
+    labelInput.value = "";
+    grossInput.value = "";
+    taxRateInput.value = "";
+    deductRateInput.value = "";
+
+    persistState();
+    render();
+  });
+
+  netFreqOutputInput.addEventListener("change", () => {
+    persistState();
+    render();
+  });
+
+  updatePlannerBtn.addEventListener("click", () => {
+    const netFreq = netFreqOutputInput.value || "monthly";
+
+    let totalNet = 0;
+    incomes.forEach((inc) => {
+      totalNet += calculateNetForIncome(
+        inc.gross,
+        inc.taxRate,
+        inc.deductRate,
+        inc.grossFreq,
+        netFreq
+      );
+    });
+
+    if (totalNet <= 0) {
+      statusTagEl.textContent = "Nothing to send yet";
+      statusTagEl.classList.remove("good");
+      statusTagEl.classList.remove("bad");
+      return;
+    }
+
+    const incomeState = {
+      amount: totalNet.toFixed(2),
+      frequency: netFreq
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY_INCOME, JSON.stringify(incomeState));
+      statusTagEl.textContent = "Updated main planner income";
+      statusTagEl.classList.add("good");
+    } catch (e) {
+      statusTagEl.textContent = "Could not update planner income";
+      statusTagEl.classList.remove("good");
+    }
+
+    loadPlannerIncome();
+  });
+
+  restoreState();
+  loadPlannerIncome();
+</script>
+</body>
+</html>
 
