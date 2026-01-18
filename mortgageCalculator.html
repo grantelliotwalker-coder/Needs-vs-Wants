@@ -738,21 +738,32 @@
           </div>
 
           <div class="field-group">
-            <div class="field-label">Repayment frequency</div>
-            <select id="freqInput">
-              <option value="monthly" selected>Monthly</option>
-              <option value="fortnightly">Fortnightly</option>
-              <option value="weekly">Weekly</option>
-            </select>
-          </div>
+  <div class="field-label">Repayment frequency</div>
+  <select id="freqInput">
+    <option value="monthly" selected>Monthly</option>
+    <option value="fortnightly">Fortnightly</option>
+    <option value="weekly">Weekly</option>
+  </select>
+</div>
 
-          <div class="field-group">
-            <div class="field-label">Extra repayment (optional)</div>
-            <div class="field-inline">
-              <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="extraInput" type="number" min="0" step="1" placeholder="" />
-            </div>
-          </div>
+<div class="field-group">
+  <div class="field-label">Extra repayment (optional)</div>
+  <div class="field-inline">
+    <span style="font-size:12px;color:var(--muted);">$</span>
+    <input id="extraInput" type="number" min="0" step="1" placeholder="" />
+  </div>
+</div>
+
+<!-- NEW: split for affordability / calculator -->
+<div class="field-group">
+  <div class="field-inline">
+    <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
+    <span class="field-label" style="margin-left:2px;">
+      Split with partner for this calc (use half in affordability)
+    </span>
+  </div>
+</div>
+
         </div>
 
         <div class="error-text" id="inputError"></div>
@@ -932,6 +943,7 @@
   const termInput = document.getElementById("termInput");
   const freqInput = document.getElementById("freqInput");
   const extraInput = document.getElementById("extraInput");
+  const calcSplitCheckbox = document.getElementById("calcSplitCheckbox");
   const inputError = document.getElementById("inputError");
   const calcBtn = document.getElementById("calcBtn");
   const addToPlannerBtn = document.getElementById("addToPlannerBtn");
@@ -1058,114 +1070,123 @@
   }
 
   function calculate() {
-    const price = parseFloat(priceInput.value || "0");
-    const deposit = parseFloat(depositInput.value || "0");
-    const rate = parseFloat(rateInput.value || "0");
-    const termYears = parseFloat(termInput.value || "0");
-    const freq = freqInput.value;
-    const extra = parseFloat(extraInput.value || "0");
+  const price = parseFloat(priceInput.value || "0");
+  const deposit = parseFloat(depositInput.value || "0");
+  const rate = parseFloat(rateInput.value || "0");
+  const termYears = parseFloat(termInput.value || "0");
+  const freq = freqInput.value;
+  const extra = parseFloat(extraInput.value || "0");
 
-    if (!isFinite(price) || price <= 0) {
-      inputError.textContent = "Enter a property price above 0.";
-      priceInput.focus();
-      return;
-    }
-    if (!isFinite(deposit) || deposit < 0) {
-      inputError.textContent = "Deposit cannot be negative.";
-      depositInput.focus();
-      return;
-    }
-    if (deposit >= price) {
-      inputError.textContent = "Deposit must be less than the property price.";
-      depositInput.focus();
-      return;
-    }
-    if (!isFinite(rate) || rate <= 0) {
-      inputError.textContent = "Enter a positive interest rate.";
-      rateInput.focus();
-      return;
-    }
-    if (!isFinite(termYears) || termYears <= 0) {
-      inputError.textContent = "Enter a term greater than 0 years.";
-      termInput.focus();
-      return;
-    }
-    if (!isFinite(extra) || extra < 0) {
-      inputError.textContent = "Extra repayment cannot be negative.";
-      extraInput.focus();
-      return;
-    }
-
-    inputError.textContent = "";
-
-    const principal = price - deposit;
-    const paymentsPerYear =
-      freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
-
-    const basePayment = annuityPayment(principal, rate, termYears, paymentsPerYear);
-    const paymentWithExtra = basePayment + extra;
-
-    const n = termYears * paymentsPerYear;
-    const r = rate / 100 / paymentsPerYear;
-
-    let totalInterestBase;
-    if (r === 0) {
-      totalInterestBase = 0;
-    } else {
-      totalInterestBase = basePayment * n - principal;
-    }
-
-    let remaining = principal;
-    let periodsExtra = 0;
-    if (r === 0) {
-      periodsExtra = paymentWithExtra > 0 ? Math.ceil(principal / paymentWithExtra) : n;
-    } else if (paymentWithExtra <= basePayment) {
-      periodsExtra = n;
-    } else {
-      while (remaining > 0 && periodsExtra < n * 2) {
-        const interest = remaining * r;
-        const principalPaid = paymentWithExtra - interest;
-        if (principalPaid <= 0) {
-          periodsExtra = n;
-          break;
-        }
-        remaining -= principalPaid;
-        periodsExtra++;
-      }
-    }
-
-    const totalPaidExtra = paymentWithExtra * periodsExtra;
-    const totalInterestExtra =
-      r === 0 ? 0 : Math.max(totalPaidExtra - principal, 0);
-
-    const baseYears = n / paymentsPerYear;
-    const extraYears = periodsExtra / paymentsPerYear;
-
-    resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
-    resultPaymentLabelEl.textContent =
-      "Per " +
-      (freq === "weekly"
-        ? "week"
-        : freq === "fortnightly"
-        ? "fortnight"
-        : "month");
-
-    resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
-    resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
-
-    resultTermBaseEl.textContent = baseYears.toFixed(1) + " years";
-    resultTermExtraEl.textContent = extraYears.toFixed(1) + " years";
-
-    lastFreq = freq;
-    lastPaymentPerFreq = paymentWithExtra;
-    lastPrincipal = principal;
-    lastTermYears = termYears;
-    lastRate = rate;
-
-    updateAffordability();
-    updateFutureRateView();
-    persistMortgageState();
+  if (!isFinite(price) || price <= 0) {
+    inputError.textContent = "Enter a property price above 0.";
+    priceInput.focus();
+    return;
   }
+  if (!isFinite(deposit) || deposit < 0) {
+    inputError.textContent = "Deposit cannot be negative.";
+    depositInput.focus();
+    return;
+  }
+  if (deposit >= price) {
+    inputError.textContent = "Deposit must be less than the property price.";
+    depositInput.focus();
+    return;
+  }
+  if (!isFinite(rate) || rate <= 0) {
+    inputError.textContent = "Enter a positive interest rate.";
+    rateInput.focus();
+    return;
+  }
+  if (!isFinite(termYears) || termYears <= 0) {
+    inputError.textContent = "Enter a term greater than 0 years.";
+    termInput.focus();
+    return;
+  }
+  if (!isFinite(extra) || extra < 0) {
+    inputError.textContent = "Extra repayment cannot be negative.";
+    extraInput.focus();
+    return;
+  }
+
+  inputError.textContent = "";
+
+  const principal = price - deposit;
+  const paymentsPerYear =
+    freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
+
+  // --- repayment base + extra ---
+  const basePayment = annuityPayment(principal, rate, termYears, paymentsPerYear);
+  const paymentWithExtra = basePayment + extra;
+
+  // Use split for all downstream calcs that look at "your share"
+  const splitForCalc = !!calcSplitCheckbox.checked;
+  const effectivePayment = splitForCalc ? paymentWithExtra / 2 : paymentWithExtra;
+
+  // display: still show the full payment (or your choice)
+  resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
+  resultPaymentLabelEl.textContent =
+    "Per " +
+    (freq === "weekly"
+      ? "week"
+      : freq === "fortnightly"
+      ? "fortnight"
+      : "month");
+
+  // --- interest and term calcs (whole loan, not halved) ---
+  const n = termYears * paymentsPerYear;
+  const r = rate / 100 / paymentsPerYear;
+
+  let totalInterestBase;
+  if (r === 0) {
+    totalInterestBase = 0;
+  } else {
+    totalInterestBase = basePayment * n - principal;
+  }
+
+  let remaining = principal;
+  let periodsExtra = 0;
+  if (r === 0) {
+    periodsExtra = paymentWithExtra > 0 ? Math.ceil(principal / paymentWithExtra) : n;
+  } else if (paymentWithExtra <= basePayment) {
+    periodsExtra = n;
+  } else {
+    while (remaining > 0 && periodsExtra < n * 2) {
+      const interest = remaining * r;
+      const principalPaid = paymentWithExtra - interest;
+      if (principalPaid <= 0) {
+        periodsExtra = n;
+        break;
+      }
+      remaining -= principalPaid;
+      periodsExtra++;
+    }
+  }
+
+  const totalPaidExtra = paymentWithExtra * periodsExtra;
+  const totalInterestExtra =
+    r === 0 ? 0 : Math.max(totalPaidExtra - principal, 0);
+
+  const baseYears = n / paymentsPerYear;
+  const extraYears = periodsExtra / paymentsPerYear;
+
+  resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
+  resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
+
+  resultTermBaseEl.textContent = baseYears.toFixed(1) + " years";
+  resultTermExtraEl.textContent = extraYears.toFixed(1) + " years";
+
+  // --- values used by affordability + future rate + save-to-planner ---
+  lastFreq = freq;
+  lastPaymentPerFreq = effectivePayment;  // this is now your share
+  lastPrincipal = principal;
+  lastTermYears = termYears;
+  lastRate = rate;
+
+  updateAffordability();
+  updateFutureRateView();
+  persistMortgageState();
+}
+
 
   function updateAffordability() {
     const weeklyPayment = toWeekly(lastPaymentPerFreq, lastFreq);
@@ -1280,22 +1301,24 @@
   }
 
   function persistMortgageState() {
-    const state = {
-      price: priceInput.value || "",
-      deposit: depositInput.value || "",
-      rate: rateInput.value || "",
-      futureRate: futureRateInput.value || "",
-      term: termInput.value || "",
-      freq: freqInput.value || "monthly",
-      extra: extraInput.value || "",
-      viewMode
-    };
-    try {
-      localStorage.setItem(STORAGE_KEY_MORTGAGE, JSON.stringify(state));
-    } catch (e) {
-      // ignore
-    }
+  const state = {
+    price: priceInput.value || "",
+    deposit: depositInput.value || "",
+    rate: rateInput.value || "",
+    futureRate: futureRateInput.value || "",
+    term: termInput.value || "",
+    freq: freqInput.value || "monthly",
+    extra: extraInput.value || "",
+    calcSplit: !!calcSplitCheckbox.checked,  // NEW
+    viewMode
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY_MORTGAGE, JSON.stringify(state));
+  } catch (e) {
+    // ignore
   }
+}
+
 
   function restoreMortgageState() {
     try {
@@ -1312,6 +1335,7 @@
       if (typeof state.term === "string") termInput.value = state.term;
       if (typeof state.extra === "string") extraInput.value = state.extra;
       if (typeof state.freq === "string") freqInput.value = state.freq;
+      if (typeof state.calcSplit === "boolean") calcSplitCheckbox.checked = state.calcSplit; 
 
       if (
         state.viewMode === "weekly" ||
@@ -1405,14 +1429,17 @@
 
   calcBtn.addEventListener("click", calculate);
 
-  [priceInput, depositInput, rateInput, futureRateInput, termInput, extraInput, freqInput].forEach(
-    (el) => {
-      el.addEventListener("change", persistMortgageState);
+  [priceInput, depositInput, rateInput, futureRateInput, termInput, extraInput, freqInput, calcSplitCheckbox].forEach(
+  (el) => {
+    el.addEventListener("change", persistMortgageState);
+    if (el !== calcSplitCheckbox) {
       el.addEventListener("keydown", (e) => {
         if (e.key === "Enter") calculate();
       });
     }
-  );
+  }
+);
+
 
   futureRateInput.addEventListener("input", () => {
     updateFutureRateView();
