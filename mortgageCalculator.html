@@ -470,6 +470,115 @@
       cursor: pointer;
       text-decoration: underline;
     }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal {
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 12px 12px 10px;
+      max-width: 320px;
+      width: 100%;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-ghost {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent;
+      color: var(--muted);
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      border-radius: 999px;
+      border: none;
+      background: var(--accent);
+      color: #02040a;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .pill-toggle-row {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+    }
+
+    .pill-option {
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+    }
+
+    .pill-option.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .split-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .split-row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+    }
+
+    .saved-loans-list {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .saved-loans-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    }
+
+    .saved-loans-item:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -509,6 +618,7 @@
   </header>
 
   <main class="app-main">
+    <!-- Affordability snapshot (hide by default with toggle) -->
     <section class="panel">
       <div class="panel-header">
         <div>
@@ -516,50 +626,57 @@
             Affordability snapshot
             <span class="panel-badge">Linked to planner</span>
           </div>
-          <div class="panel-subtitle">
+          <div class="panel-subtitle" id="affordSubtitle">
             Compare the mortgage payment to the surplus stored in your main budget.
           </div>
         </div>
 
-        <div class="panel-totals">
-          <div class="panel-totals-row">
-            <label>View as:</label>
-            <div class="type-toggle" id="viewToggle">
-              <button class="type-option" data-view="weekly">W</button>
-              <button class="type-option" data-view="fortnightly">F</button>
-              <button class="type-option active" data-view="monthly">M</button>
-              <button class="type-option" data-view="yearly">Y</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <button class="summary-toggle-button" id="mortgageSummaryToggle">
+            Show
+          </button>
+          <div class="panel-totals" id="affordViewWrapper">
+            <div class="panel-totals-row">
+              <label>View as:</label>
+              <div class="type-toggle" id="viewToggle">
+                <button class="type-option" data-view="weekly">W</button>
+                <button class="type-option" data-view="fortnightly">F</button>
+                <button class="type-option active" data-view="monthly">M</button>
+                <button class="type-option" data-view="yearly">Y</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="summary-row">
-        <div class="summary-card">
-          <div class="summary-card-title">Planner surplus (est)</div>
-          <div class="mini-row">
-            <span class="mini-label">From main planner</span>
-            <span id="plannerSurplus" class="mini-value surplus">0</span>
+      <div id="affordBody">
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-card-title">Planner surplus (est)</div>
+            <div class="mini-row">
+              <span class="mini-label">From main planner</span>
+              <span id="plannerSurplus" class="mini-value surplus">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Basis</span>
+              <span id="plannerBasis" class="mini-value">—</span>
+            </div>
           </div>
-          <div class="mini-row">
-            <span class="mini-label">Basis</span>
-            <span id="plannerBasis" class="mini-value">—</span>
-          </div>
-        </div>
 
-        <div class="summary-card">
-          <div class="summary-card-title">Mortgage payment</div>
-          <div class="mini-row">
-            <span class="mini-label">Payment</span>
-            <span id="paymentDisplay" class="mini-value">0</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Coverage</span>
-            <span id="coverageLabel" class="mini-value surplus">Run a calculation</span>
-          </div>
-          <div class="mini-row">
-            <span class="mini-label">Surplus after payment</span>
-            <span id="afterPayment" class="mini-value surplus">0</span>
+          <div class="summary-card">
+            <div class="summary-card-title">Mortgage payment</div>
+            <div class="mini-row">
+              <span class="mini-label">Payment</span>
+              <span id="paymentDisplay" class="mini-value">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Coverage</span>
+              <span id="coverageLabel" class="mini-value surplus">Run a calculation</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Surplus after payment</span>
+              <span id="afterPayment" class="mini-value surplus">0</span>
+            </div>
           </div>
         </div>
       </div>
@@ -648,6 +765,17 @@
         <button class="secondary-btn" id="addToPlannerBtn">
           Add / update mortgage in planner
         </button>
+
+        <button class="secondary-btn" id="toggleSavedLoansBtn" style="margin-left:4px;">
+          Manage saved loans
+        </button>
+
+        <div class="hidden-box" id="savedLoansBox">
+          <div class="field-label">Loans saved into your planner from this tool</div>
+          <div id="savedLoansList" class="saved-loans-list">
+            <span>No loans saved yet.</span>
+          </div>
+        </div>
 
         <div class="note">
           Rough guide only. Does not include fees, changing rates, or lender-specific rules.
@@ -749,10 +877,46 @@
   </main>
 </div>
 
+<!-- Save-to-planner modal -->
+<div class="modal-backdrop" id="saveModalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
+    <div class="modal-title" id="saveModalTitle">Save mortgage to planner</div>
+    <div class="field-group">
+      <div class="field-label">Name in planner</div>
+      <input id="saveNameInput" type="text" placeholder="e.g. Home loan, Investment loan" />
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Type</div>
+      <div class="pill-toggle-row" id="saveTypeToggle">
+        <button type="button" class="pill-option active" data-type="need">Need</button>
+        <button type="button" class="pill-option" data-type="want">Want</button>
+      </div>
+    </div>
+
+    <div class="split-row">
+      <input id="saveSplitCheckbox" type="checkbox" />
+      <label for="saveSplitCheckbox" style="font-size:11px;color:var(--muted);">
+        Split with partner (save half the repayment)
+      </label>
+    </div>
+
+    <div class="note" id="saveModalNote">
+      The current repayment amount and frequency will be saved into your main planner.
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="saveCancelBtn">Cancel</button>
+      <button type="button" class="btn-primary" id="saveConfirmBtn">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
   const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
   const STORAGE_KEY_MORTGAGE = "budgetMortgageCalcState";
+  const STORAGE_KEY_MORTGAGE_VIS = "budgetMortgageAffordVisible";
 
   const viewToggle = document.getElementById("viewToggle");
   const plannerSurplusEl = document.getElementById("plannerSurplus");
@@ -781,7 +945,6 @@
   const coverageBarEl = document.getElementById("coverageBar");
   const coverageNoteEl = document.getElementById("coverageNote");
   const coverageTagEl = document.getElementById("coverageTag");
-
   const futureBox = document.getElementById("futureBox");
   const futurePaymentEl = document.getElementById("futurePayment");
   const futureInterestEl = document.getElementById("futureInterest");
@@ -791,6 +954,24 @@
   const detailsToggle = document.getElementById("detailsToggle");
   const detailsBox = document.getElementById("detailsBox");
 
+  const mortgageSummaryToggleBtn = document.getElementById("mortgageSummaryToggle");
+  const affordBody = document.getElementById("affordBody");
+  const affordSubtitle = document.getElementById("affordSubtitle");
+  const affordViewWrapper = document.getElementById("affordViewWrapper");
+
+  const toggleSavedLoansBtn = document.getElementById("toggleSavedLoansBtn");
+  const savedLoansBox = document.getElementById("savedLoansBox");
+  const savedLoansList = document.getElementById("savedLoansList");
+
+  // Modal elements
+  const saveModalBackdrop = document.getElementById("saveModalBackdrop");
+  const saveNameInput = document.getElementById("saveNameInput");
+  const saveTypeToggle = document.getElementById("saveTypeToggle");
+  const saveSplitCheckbox = document.getElementById("saveSplitCheckbox");
+  const saveModalNote = document.getElementById("saveModalNote");
+  const saveCancelBtn = document.getElementById("saveCancelBtn");
+  const saveConfirmBtn = document.getElementById("saveConfirmBtn");
+
   let plannerSurplusWeekly = 0;
   let viewMode = "monthly";
   let lastPaymentPerFreq = 0;
@@ -799,17 +980,17 @@
   let lastTermYears = 0;
   let lastRate = 0;
 
+  let savedLoansVisible = false;
+
   function formatCurrency(amount) {
-  if (!isFinite(amount)) return "—";
-  return amount.toLocaleString("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
-
-
+    if (!isFinite(amount)) return "—";
+    return amount.toLocaleString("en-AU", {
+      style: "currency",
+      currency: "AUD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
 
   function fromWeekly(amount, freq) {
     if (freq === "fortnightly") return amount * 2;
@@ -963,7 +1144,11 @@
     resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
     resultPaymentLabelEl.textContent =
       "Per " +
-      (freq === "weekly" ? "week" : freq === "fortnightly" ? "fortnight" : "month");
+      (freq === "weekly"
+        ? "week"
+        : freq === "fortnightly"
+        ? "fortnight"
+        : "month");
 
     resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
     resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
@@ -1154,6 +1339,58 @@
     }
   }
 
+  // Affordability snapshot visibility (hide by default)
+  let mortgageSummaryVisible = false;
+  function restoreMortgageSummaryVisibility() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_MORTGAGE_VIS);
+      if (!raw) {
+        mortgageSummaryVisible = false;
+        updateMortgageSummaryVisibility();
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      mortgageSummaryVisible = !!parsed.visible;
+      updateMortgageSummaryVisibility();
+    } catch (e) {
+      mortgageSummaryVisible = false;
+      updateMortgageSummaryVisibility();
+    }
+  }
+
+  function persistMortgageSummaryVisibility() {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY_MORTGAGE_VIS,
+        JSON.stringify({ visible: mortgageSummaryVisible })
+      );
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function updateMortgageSummaryVisibility() {
+    if (mortgageSummaryVisible) {
+      affordBody.style.display = "";
+      affordSubtitle.style.display = "";
+      affordViewWrapper.style.display = "";
+      mortgageSummaryToggleBtn.textContent = "Hide";
+      mortgageSummaryToggleBtn.classList.add("active");
+    } else {
+      affordBody.style.display = "none";
+      affordSubtitle.style.display = "none";
+      affordViewWrapper.style.display = "none";
+      mortgageSummaryToggleBtn.textContent = "Show";
+      mortgageSummaryToggleBtn.classList.remove("active");
+    }
+  }
+
+  mortgageSummaryToggleBtn.addEventListener("click", () => {
+    mortgageSummaryVisible = !mortgageSummaryVisible;
+    updateMortgageSummaryVisibility();
+    persistMortgageSummaryVisibility();
+  });
+
   viewToggle.addEventListener("click", (e) => {
     const btn = e.target.closest(".type-option");
     if (!btn) return;
@@ -1190,56 +1427,101 @@
       : "Hide calculation notes";
   });
 
-  addToPlannerBtn.addEventListener("click", () => {
+  // Modal helpers
+  function openSaveModal() {
     if (!lastPaymentPerFreq || lastPaymentPerFreq <= 0) {
       inputError.textContent =
         "Run a calculation first before adding the mortgage to the planner.";
       return;
     }
     inputError.textContent = "";
+    saveNameInput.value = "";
+    saveSplitCheckbox.checked = false;
+    saveModalNote.textContent =
+      "The current repayment amount and frequency will be saved into your main planner.";
+    // default type = need
+    saveTypeToggle.querySelectorAll(".pill-option").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.type === "need");
+    });
+    saveModalBackdrop.style.display = "flex";
+    saveNameInput.focus();
+  }
+
+  function closeSaveModal() {
+    saveModalBackdrop.style.display = "none";
+  }
+
+  saveTypeToggle.addEventListener("click", (e) => {
+    const btn = e.target.closest(".pill-option");
+    if (!btn) return;
+    saveTypeToggle.querySelectorAll(".pill-option").forEach((b) => {
+      b.classList.toggle("active", b === btn);
+    });
+  });
+
+  saveCancelBtn.addEventListener("click", closeSaveModal);
+  saveModalBackdrop.addEventListener("click", (e) => {
+    if (e.target === saveModalBackdrop) {
+      closeSaveModal();
+    }
+  });
+
+  saveConfirmBtn.addEventListener("click", () => {
+    if (!lastPaymentPerFreq || lastPaymentPerFreq <= 0) {
+      saveModalNote.textContent =
+        "Run a calculation first before saving.";
+      return;
+    }
+
+    const rawName = (saveNameInput.value || "").trim();
+    const label = rawName || "Mortgage repayment";
+
+    const typeBtn = saveTypeToggle.querySelector(".pill-option.active");
+    const type = typeBtn ? typeBtn.dataset.type : "need";
+
+    const split = saveSplitCheckbox.checked;
+    const freq =
+      lastFreq === "weekly" ||
+      lastFreq === "fortnightly" ||
+      lastFreq === "monthly" ||
+      lastFreq === "yearly"
+        ? lastFreq
+        : "monthly";
+    const amountToSave = split ? lastPaymentPerFreq / 2 : lastPaymentPerFreq;
 
     try {
       const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
       const items = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(items)) return;
-
-      const label = "Mortgage repayment";
-      const freq = lastFreq === "weekly" || lastFreq === "fortnightly" || lastFreq === "monthly" || lastFreq === "yearly"
-        ? lastFreq
-        : "monthly";
-
-      let existing = items.find(
-        (i) => i && i.label === label && i.type === "need"
-      );
-      if (existing) {
-        existing.amount = lastPaymentPerFreq;
-        existing.frequency = freq;
-        existing.enabled = true;
-        existing.color = existing.color || "blue";
-      } else {
-        const maxId = items.reduce(
-          (max, i) => (i && typeof i.id === "number" ? Math.max(max, i.id) : max),
-          0
-        );
-        items.push({
-          id: maxId + 1,
-          type: "need",
-          label,
-          amount: lastPaymentPerFreq,
-          frequency: freq,
-          enabled: true,
-          color: "blue"
-        });
+      if (!Array.isArray(items)) {
+        throw new Error("Items not an array");
       }
+
+      // Create new entry every time (allow multiple loans)
+      const maxId = items.reduce(
+        (max, i) => (i && typeof i.id === "number" ? Math.max(max, i.id) : max),
+        0
+      );
+      items.push({
+        id: maxId + 1,
+        type: type === "want" ? "want" : "need",
+        label,
+        amount: amountToSave,
+        frequency: freq,
+        enabled: true,
+        color: "blue"
+      });
 
       localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
       addToPlannerBtn.classList.remove("bad");
       addToPlannerBtn.classList.add("good");
-      addToPlannerBtn.textContent = "Saved to planner as a need";
+      addToPlannerBtn.textContent = "Saved to planner";
       setTimeout(() => {
         addToPlannerBtn.classList.remove("good");
         addToPlannerBtn.textContent = "Add / update mortgage in planner";
       }, 2000);
+
+      closeSaveModal();
+      renderSavedLoansList();
     } catch (e) {
       addToPlannerBtn.classList.remove("good");
       addToPlannerBtn.classList.add("bad");
@@ -1251,8 +1533,80 @@
     }
   });
 
+  addToPlannerBtn.addEventListener("click", openSaveModal);
+
+  // Saved loans list (purely UI helper)
+  function renderSavedLoansList() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      if (!raw) {
+        savedLoansList.innerHTML = "<span>No loans saved yet.</span>";
+        return;
+      }
+      const items = JSON.parse(raw);
+      if (!Array.isArray(items)) {
+        savedLoansList.innerHTML = "<span>No loans saved yet.</span>";
+        return;
+      }
+
+      const loans = items.filter(
+        (i) =>
+          i &&
+          typeof i.label === "string" &&
+          (i.label.toLowerCase().includes("mortgage") ||
+            i.label.toLowerCase().includes("loan"))
+      );
+      if (!loans.length) {
+        savedLoansList.innerHTML = "<span>No loans saved yet.</span>";
+        return;
+      }
+
+      savedLoansList.innerHTML = "";
+      loans.forEach((loan) => {
+        const div = document.createElement("div");
+        div.className = "saved-loans-item";
+        const left = document.createElement("span");
+        left.textContent = loan.label || "Loan";
+        const right = document.createElement("span");
+        const amt = typeof loan.amount === "number" ? loan.amount : 0;
+        const freq =
+          loan.frequency === "weekly" ||
+          loan.frequency === "fortnightly" ||
+          loan.frequency === "monthly" ||
+          loan.frequency === "yearly"
+            ? loan.frequency
+            : "weekly";
+        right.textContent =
+          formatCurrency(amt) +
+          " " +
+          (freq === "weekly"
+            ? "per week"
+            : freq === "fortnightly"
+            ? "per fortnight"
+            : freq === "monthly"
+            ? "per month"
+            : "per year");
+        div.appendChild(left);
+        div.appendChild(right);
+        savedLoansList.appendChild(div);
+      });
+    } catch (e) {
+      savedLoansList.innerHTML = "<span>Could not read saved loans.</span>";
+    }
+  }
+
+  toggleSavedLoansBtn.addEventListener("click", () => {
+    savedLoansVisible = !savedLoansVisible;
+    savedLoansBox.style.display = savedLoansVisible ? "block" : "none";
+    if (savedLoansVisible) {
+      renderSavedLoansList();
+    }
+  });
+
+  // Init
   loadPlannerSurplus();
   restoreMortgageState();
+  restoreMortgageSummaryVisibility();
   updateAffordability();
 </script>
 </body>
