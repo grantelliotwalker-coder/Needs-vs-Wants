@@ -718,71 +718,86 @@
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <!-- New tiny top-right favicon row -->
-  <div style="
-    display:flex;
-    justify-content:flex-end;
-    align-items:center;
-    gap:8px;
-    margin-bottom:2px;
-    font-size:16px;
-    color:var(--muted);
-  ">
-    <!-- Bigger favicon that opens the info modal -->
-    <button
+  <!-- Top line: title, tip, favicon -->
+  <div class="top-row" style="align-items:center;">
+    <div
+      class="brand"
       onclick="openInfoModal()"
-      style="
-        border:none;
-        background:transparent;
-        padding:0;
-        cursor:pointer;
-        display:flex;
-        align-items:center;
-      "
-      aria-label="About these tools"
+      style="cursor:pointer; flex:1 1 auto;"
     >
-      <img
-        src="/favicon.png"
-        alt=""
-        style="width:40px; height:40px; border-radius:6px;"
-      />
-    </button>
-  </div>
-      <div class="top-row">
-        <div class="brand" onclick="openInfoModal()" style="cursor:pointer;">
-  <div class="brand-title">
-    Budget
-    <span style="display:block;">Needs vs Wants</span>
-  </div>
-  <div class="brand-tagline">
-    Quickly separate needs from wants and see your budget surplus at a glance.
-    <br />
-    <!-- Future sentence placeholder -->
-    <span style="opacity:0.30;">Data Saved to Browser 🔒</span>
-    <br />
-  </div>
-          
-</div>
-
-
-<div class="header-actions">
-  <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
-     class="pill-button donate"
-     id="donateLink"
-     target="_blank"
-     rel="noopener noreferrer">
-    <span class="pill-button-icon">💖</span>
-    Leave a tip
-  </a>
-
-  <button class="add-btn" id="openCreateModal">
-    <span class="icon">＋</span>
-    Add
-  </button>
-</div>
-
-
+      <div class="brand-title">
+        Budget
+        <span style="display:inline;">Needs vs Wants</span>
       </div>
+    </div>
+
+    <div
+      style="
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        flex:0 0 auto;
+      "
+    >
+      <a
+        href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+        class="pill-button donate"
+        id="donateLink"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="pill-button-icon">💖</span>
+        Leave a tip
+      </a>
+
+      <button
+        onclick="openInfoModal()"
+        style="
+          border:none;
+          background:transparent;
+          padding:0;
+          cursor:pointer;
+          display:flex;
+          align-items:center;
+        "
+        aria-label="About these tools"
+      >
+        <img
+          src="/favicon.png"
+          alt=""
+          style="width:32px; height:32px; border-radius:6px;"
+        />
+      </button>
+    </div>
+  </div>
+
+  <!-- Second line: tagline and Add, loosely centred together -->
+  <div
+    style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-top:4px;
+    "
+  >
+    <div
+      class="brand-tagline"
+      style="flex:1 1 auto; max-width:60%;"
+    >
+      Quickly separate needs from wants and see your budget surplus at a glance.
+      <br />
+      <span style="opacity:0.30;">Data saved to this browser 🔒</span>
+    </div>
+
+    <div class="header-actions" style="flex:0 0 auto;">
+      <button class="add-btn" id="openCreateModal">
+        <span class="icon">＋</span>
+        Add
+      </button>
+    </div>
+  </div>
+
 
 <div class="summary-toggle-row">
   <div class="summary-toggle-label">Show income &amp; summary</div>
