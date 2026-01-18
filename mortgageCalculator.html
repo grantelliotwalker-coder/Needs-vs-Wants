@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Mortgage Calculator – Budget Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="Mortgage calculator tool for the Budget Needs vs Wants planner. Calculate repayments, interest, and compare to your surplus." />
+  <meta name="description" content="Mortgage calculator tool for the Budget Needs vs Wants planner. Estimate repayments, total interest, and compare to your budget surplus." />
 
   <style>
     :root {
@@ -383,6 +383,31 @@
       font-weight: 700;
     }
 
+    .secondary-btn {
+      margin-top: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      padding: 6px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .secondary-btn.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .secondary-btn.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
     .result-big {
       font-size: 18px;
       font-weight: 600;
@@ -428,6 +453,23 @@
       color: var(--muted);
       margin-top: 4px;
     }
+
+    .hidden-box {
+      margin-top: 6px;
+      padding: 8px 8px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      font-size: 11px;
+      display: none;
+    }
+
+    .toggle-link {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -467,7 +509,6 @@
   </header>
 
   <main class="app-main">
-    <!-- Summary vs planner surplus -->
     <section class="panel">
       <div class="panel-header">
         <div>
@@ -476,7 +517,7 @@
             <span class="panel-badge">Linked to planner</span>
           </div>
           <div class="panel-subtitle">
-            Compare the mortgage payment to the surplus from your main budget.
+            Compare the mortgage payment to the surplus stored in your main budget.
           </div>
         </div>
 
@@ -484,6 +525,8 @@
           <div class="panel-totals-row">
             <label>View as:</label>
             <div class="type-toggle" id="viewToggle">
+              <button class="type-option" data-view="weekly">W</button>
+              <button class="type-option" data-view="fortnightly">F</button>
               <button class="type-option active" data-view="monthly">M</button>
               <button class="type-option" data-view="yearly">Y</button>
             </div>
@@ -508,11 +551,11 @@
           <div class="summary-card-title">Mortgage payment</div>
           <div class="mini-row">
             <span class="mini-label">Payment</span>
-            <span id="paymentDisplay" class="mini-value accent">0</span>
+            <span id="paymentDisplay" class="mini-value">0</span>
           </div>
           <div class="mini-row">
             <span class="mini-label">Coverage</span>
-            <span id="coverageLabel" class="mini-value surplus">Enter details</span>
+            <span id="coverageLabel" class="mini-value surplus">Run a calculation</span>
           </div>
           <div class="mini-row">
             <span class="mini-label">Surplus after payment</span>
@@ -531,7 +574,7 @@
               Loan details
             </div>
             <div class="panel-subtitle">
-              Tweak the loan amount, rate, and term to see how repayments move.
+              Adjust the loan amount, rate, and term, then compare to your planner surplus.
             </div>
           </div>
         </div>
@@ -541,7 +584,7 @@
             <div class="field-label">Property price</div>
             <div class="field-inline">
               <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="priceInput" type="number" min="0" step="1000" placeholder="600000" />
+              <input id="priceInput" type="number" min="0" step="1000" placeholder="" />
             </div>
           </div>
 
@@ -549,14 +592,22 @@
             <div class="field-label">Deposit</div>
             <div class="field-inline">
               <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="depositInput" type="number" min="0" step="1000" placeholder="120000" />
+              <input id="depositInput" type="number" min="0" step="1000" placeholder="" />
             </div>
           </div>
 
           <div class="field-group">
             <div class="field-label">Interest rate (p.a.)</div>
             <div class="field-inline">
-              <input id="rateInput" type="number" min="0" step="0.01" placeholder="5.50" />
+              <input id="rateInput" type="number" min="0" step="0.01" placeholder="" />
+              <span style="font-size:12px;color:var(--muted);">%</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">Future rate (optional)</div>
+            <div class="field-inline">
+              <input id="futureRateInput" type="number" min="0" step="0.01" placeholder="" />
               <span style="font-size:12px;color:var(--muted);">%</span>
             </div>
           </div>
@@ -564,7 +615,7 @@
           <div class="field-group">
             <div class="field-label">Loan term</div>
             <div class="field-inline">
-              <input id="termInput" type="number" min="1" max="40" step="1" placeholder="30" />
+              <input id="termInput" type="number" min="1" max="40" step="1" placeholder="" />
               <span style="font-size:12px;color:var(--muted);">years</span>
             </div>
           </div>
@@ -582,7 +633,7 @@
             <div class="field-label">Extra repayment (optional)</div>
             <div class="field-inline">
               <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="extraInput" type="number" min="0" step="1" placeholder="0" />
+              <input id="extraInput" type="number" min="0" step="1" placeholder="" />
             </div>
           </div>
         </div>
@@ -594,8 +645,12 @@
           Calculate repayments
         </button>
 
+        <button class="secondary-btn" id="addToPlannerBtn">
+          Add / update mortgage in planner
+        </button>
+
         <div class="note">
-          Rough guide only. Does not factor in fees, rate changes, or specific lender policies.
+          Rough guide only. Does not include fees, changing rates, or lender-specific rules.
         </div>
       </section>
 
@@ -605,14 +660,14 @@
           <div>
             <div class="panel-title">Results</div>
             <div class="panel-subtitle">
-              See repayment, total interest, and how much earlier extra repayments could finish the loan.
+              Repayments, total interest, time saved with extra, and a simple future-rate comparison.
             </div>
           </div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div>
-            <div class="field-label">Repayment</div>
+            <div class="field-label">Repayment (including extra)</div>
             <div class="result-big" id="resultPayment">—</div>
             <div class="field-label" id="resultPaymentLabel">Per month</div>
           </div>
@@ -620,7 +675,7 @@
           <div>
             <div class="field-label">Total interest over life of loan</div>
             <div class="mini-row">
-              <span class="mini-label">Base loan</span>
+              <span class="mini-label">Current rate</span>
               <span class="mini-value" id="resultInterestBase">—</span>
             </div>
             <div class="mini-row">
@@ -651,6 +706,43 @@
               <span class="result-tag" id="coverageTag">—</span>
             </div>
           </div>
+
+          <div>
+            <div class="field-label">
+              Future rate comparison (if you fill the future rate box)
+            </div>
+            <div class="hidden-box" id="futureBox">
+              <div class="mini-row">
+                <span class="mini-label">Repayment at future rate</span>
+                <span class="mini-value" id="futurePayment">—</span>
+              </div>
+              <div class="mini-row">
+                <span class="mini-label">Total interest at future rate</span>
+                <span class="mini-value" id="futureInterest">—</span>
+              </div>
+              <div class="mini-row">
+                <span class="mini-label">Change vs current</span>
+                <span class="mini-value" id="futureChange">—</span>
+              </div>
+            </div>
+            <div class="note" id="futureNote">
+              Enter a future interest rate to see how repayments and total interest could change.
+            </div>
+          </div>
+
+          <div>
+            <span class="toggle-link" id="detailsToggle">Show calculation notes</span>
+            <div class="hidden-box" id="detailsBox">
+              <strong>How this calculator works</strong>
+              <ul>
+                <li>Loan amount = property price minus your deposit.</li>
+                <li>Repayments use a standard amortising loan formula based on your rate, term, and chosen frequency.</li>
+                <li>Extra repayments are simply added on top of the base repayment and then used to simulate an earlier payoff.</li>
+                <li>“Mortgage vs planner surplus” compares the repayment to the surplus stored in your main planner for W/F/M/Y.</li>
+                <li>The future rate view re-runs the same formula at the alternative rate so you can see how sensitive the loan is to rate changes.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -659,6 +751,8 @@
 
 <script>
   const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
+  const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
+  const STORAGE_KEY_MORTGAGE = "budgetMortgageCalcState";
 
   const viewToggle = document.getElementById("viewToggle");
   const plannerSurplusEl = document.getElementById("plannerSurplus");
@@ -670,11 +764,13 @@
   const priceInput = document.getElementById("priceInput");
   const depositInput = document.getElementById("depositInput");
   const rateInput = document.getElementById("rateInput");
+  const futureRateInput = document.getElementById("futureRateInput");
   const termInput = document.getElementById("termInput");
   const freqInput = document.getElementById("freqInput");
   const extraInput = document.getElementById("extraInput");
   const inputError = document.getElementById("inputError");
   const calcBtn = document.getElementById("calcBtn");
+  const addToPlannerBtn = document.getElementById("addToPlannerBtn");
 
   const resultPaymentEl = document.getElementById("resultPayment");
   const resultPaymentLabelEl = document.getElementById("resultPaymentLabel");
@@ -686,17 +782,39 @@
   const coverageNoteEl = document.getElementById("coverageNote");
   const coverageTagEl = document.getElementById("coverageTag");
 
-  let plannerSurplusMonthly = 0;
-  let viewMode = "monthly"; // or "yearly";
-  let lastPaymentMonthly = 0;
+  const futureBox = document.getElementById("futureBox");
+  const futurePaymentEl = document.getElementById("futurePayment");
+  const futureInterestEl = document.getElementById("futureInterest");
+  const futureChangeEl = document.getElementById("futureChange");
+  const futureNoteEl = document.getElementById("futureNote");
+
+  const detailsToggle = document.getElementById("detailsToggle");
+  const detailsBox = document.getElementById("detailsBox");
+
+  let plannerSurplusWeekly = 0;
+  let viewMode = "monthly";
+  let lastPaymentPerFreq = 0;
+  let lastFreq = "monthly";
+  let lastPrincipal = 0;
+  let lastTermYears = 0;
+  let lastRate = 0;
 
   function formatCurrency(amount) {
     if (!isFinite(amount)) return "—";
     return "$" + amount.toFixed(2).replace(/\.00$/, "");
   }
 
-  function fromMonthly(amount, view) {
-    if (view === "yearly") return amount * 12;
+  function fromWeekly(amount, freq) {
+    if (freq === "fortnightly") return amount * 2;
+    if (freq === "monthly") return amount * 52 / 12;
+    if (freq === "yearly") return amount * 52;
+    return amount;
+  }
+
+  function toWeekly(amount, freq) {
+    if (freq === "fortnightly") return amount / 2;
+    if (freq === "monthly") return amount * 12 / 52;
+    if (freq === "yearly") return amount / 52;
     return amount;
   }
 
@@ -704,7 +822,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY_INCOME);
       if (!raw) {
-        plannerSurplusMonthly = 0;
+        plannerSurplusWeekly = 0;
         plannerSurplusEl.textContent = "0";
         plannerBasisEl.textContent = "No surplus saved yet";
         return;
@@ -721,19 +839,21 @@
           ? parsed.frequency
           : "fortnightly";
 
-      let weekly = amount;
-      if (freq === "fortnightly") weekly = amount / 2;
-      if (freq === "monthly") weekly = amount * 12 / 52;
-      if (freq === "yearly") weekly = amount / 52;
+      const weekly = toWeekly(amount, freq);
+      plannerSurplusWeekly = weekly;
 
-      const monthly = (weekly * 52) / 12;
-      plannerSurplusMonthly = monthly;
-
-      const display = fromMonthly(monthly, viewMode);
+      const display = fromWeekly(weekly, viewMode);
       plannerSurplusEl.textContent = formatCurrency(display).replace("$", "");
-      plannerBasisEl.textContent = viewMode === "monthly" ? "Per month" : "Per year";
+      plannerBasisEl.textContent =
+        viewMode === "weekly"
+          ? "Per week"
+          : viewMode === "fortnightly"
+          ? "Per fortnight"
+          : viewMode === "monthly"
+          ? "Per month"
+          : "Per year";
     } catch (e) {
-      plannerSurplusMonthly = 0;
+      plannerSurplusWeekly = 0;
       plannerSurplusEl.textContent = "0";
       plannerBasisEl.textContent = "No surplus saved yet";
     }
@@ -813,7 +933,7 @@
     } else if (paymentWithExtra <= basePayment) {
       periodsExtra = n;
     } else {
-      while (remaining > 0 && periodsExtra < 2000 * n) {
+      while (remaining > 0 && periodsExtra < n * 2) {
         const interest = remaining * r;
         const principalPaid = paymentWithExtra - interest;
         if (principalPaid <= 0) {
@@ -834,7 +954,8 @@
 
     resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
     resultPaymentLabelEl.textContent =
-      "Per " + (freq === "weekly" ? "week" : freq === "fortnightly" ? "fortnight" : "month");
+      "Per " +
+      (freq === "weekly" ? "week" : freq === "fortnightly" ? "fortnight" : "month");
 
     resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
     resultInterestExtraEl.textContent = formatCurrency(totalInterestExtra);
@@ -842,21 +963,21 @@
     resultTermBaseEl.textContent = baseYears.toFixed(1) + " years";
     resultTermExtraEl.textContent = extraYears.toFixed(1) + " years";
 
-    const monthlyFromFreq =
-      freq === "weekly"
-        ? paymentWithExtra * 52 / 12
-        : freq === "fortnightly"
-        ? paymentWithExtra * 26 / 12
-        : paymentWithExtra;
-
-    lastPaymentMonthly = monthlyFromFreq;
+    lastFreq = freq;
+    lastPaymentPerFreq = paymentWithExtra;
+    lastPrincipal = principal;
+    lastTermYears = termYears;
+    lastRate = rate;
 
     updateAffordability();
+    updateFutureRateView();
+    persistMortgageState();
   }
 
   function updateAffordability() {
-    const paymentView = fromMonthly(lastPaymentMonthly, viewMode);
-    const surplusView = fromMonthly(plannerSurplusMonthly, viewMode);
+    const weeklyPayment = toWeekly(lastPaymentPerFreq, lastFreq);
+    const paymentView = fromWeekly(weeklyPayment, viewMode);
+    const surplusView = fromWeekly(plannerSurplusWeekly, viewMode);
 
     if (!isFinite(paymentView) || paymentView <= 0) {
       paymentDisplayEl.textContent = "0";
@@ -914,6 +1035,117 @@
     coverageTagEl.classList.toggle("bad", ratio > 0.75);
   }
 
+  function updateFutureRateView() {
+    const futureRate = parseFloat(futureRateInput.value || "0");
+    if (!isFinite(futureRate) || futureRate <= 0 || lastPrincipal <= 0 || lastTermYears <= 0) {
+      futureBox.style.display = "none";
+      futurePaymentEl.textContent = "—";
+      futureInterestEl.textContent = "—";
+      futureChangeEl.textContent = "—";
+      futureNoteEl.textContent =
+        "Enter a future interest rate to see how repayments and total interest could change.";
+      return;
+    }
+
+    const paymentsPerYear =
+      lastFreq === "weekly" ? 52 : lastFreq === "fortnightly" ? 26 : 12;
+    const n = lastTermYears * paymentsPerYear;
+    const currentPayment = annuityPayment(
+      lastPrincipal,
+      lastRate,
+      lastTermYears,
+      paymentsPerYear
+    );
+    const currentInterest =
+      currentPayment * n - lastPrincipal;
+
+    const futurePayment = annuityPayment(
+      lastPrincipal,
+      futureRate,
+      lastTermYears,
+      paymentsPerYear
+    );
+    const futureInterest =
+      futurePayment * n - lastPrincipal;
+
+    futurePaymentEl.textContent = formatCurrency(futurePayment);
+    futureInterestEl.textContent = formatCurrency(futureInterest);
+
+    const diff = futurePayment - currentPayment;
+    const sign = diff >= 0 ? "+" : "–";
+    futureChangeEl.textContent =
+      sign + formatCurrency(Math.abs(diff)) + " per " +
+      (lastFreq === "weekly"
+        ? "week"
+        : lastFreq === "fortnightly"
+        ? "fortnight"
+        : "month") +
+      " (repayment change)";
+    futureBox.style.display = "block";
+    futureNoteEl.textContent =
+      "Comparison assumes the same term and loan amount; it only changes the interest rate.";
+  }
+
+  function persistMortgageState() {
+    const state = {
+      price: priceInput.value || "",
+      deposit: depositInput.value || "",
+      rate: rateInput.value || "",
+      futureRate: futureRateInput.value || "",
+      term: termInput.value || "",
+      freq: freqInput.value || "monthly",
+      extra: extraInput.value || "",
+      viewMode
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY_MORTGAGE, JSON.stringify(state));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function restoreMortgageState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_MORTGAGE);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (!state || typeof state !== "object") return;
+
+      if (typeof state.price === "string") priceInput.value = state.price;
+      if (typeof state.deposit === "string") depositInput.value = state.deposit;
+      if (typeof state.rate === "string") rateInput.value = state.rate;
+      if (typeof state.futureRate === "string")
+        futureRateInput.value = state.futureRate;
+      if (typeof state.term === "string") termInput.value = state.term;
+      if (typeof state.extra === "string") extraInput.value = state.extra;
+      if (typeof state.freq === "string") freqInput.value = state.freq;
+
+      if (
+        state.viewMode === "weekly" ||
+        state.viewMode === "fortnightly" ||
+        state.viewMode === "monthly" ||
+        state.viewMode === "yearly"
+      ) {
+        viewMode = state.viewMode;
+      }
+
+      [...viewToggle.querySelectorAll(".type-option")].forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.view === viewMode);
+      });
+
+      if (
+        state.price ||
+        state.deposit ||
+        state.rate ||
+        state.term
+      ) {
+        calculate();
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   viewToggle.addEventListener("click", (e) => {
     const btn = e.target.closest(".type-option");
     if (!btn) return;
@@ -923,17 +1155,96 @@
       .forEach((b) => b.classList.toggle("active", b === btn));
     loadPlannerSurplus();
     updateAffordability();
+    persistMortgageState();
   });
 
   calcBtn.addEventListener("click", calculate);
 
-  [priceInput, depositInput, rateInput, termInput, extraInput].forEach((el) => {
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") calculate();
-    });
+  [priceInput, depositInput, rateInput, futureRateInput, termInput, extraInput, freqInput].forEach(
+    (el) => {
+      el.addEventListener("change", persistMortgageState);
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") calculate();
+      });
+    }
+  );
+
+  futureRateInput.addEventListener("input", () => {
+    updateFutureRateView();
+    persistMortgageState();
+  });
+
+  detailsToggle.addEventListener("click", () => {
+    const open = detailsBox.style.display === "block";
+    detailsBox.style.display = open ? "none" : "block";
+    detailsToggle.textContent = open
+      ? "Show calculation notes"
+      : "Hide calculation notes";
+  });
+
+  addToPlannerBtn.addEventListener("click", () => {
+    if (!lastPaymentPerFreq || lastPaymentPerFreq <= 0) {
+      inputError.textContent =
+        "Run a calculation first before adding the mortgage to the planner.";
+      return;
+    }
+    inputError.textContent = "";
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      const items = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(items)) return;
+
+      const label = "Mortgage repayment";
+      const freq = lastFreq === "weekly" || lastFreq === "fortnightly" || lastFreq === "monthly" || lastFreq === "yearly"
+        ? lastFreq
+        : "monthly";
+
+      let existing = items.find(
+        (i) => i && i.label === label && i.type === "need"
+      );
+      if (existing) {
+        existing.amount = lastPaymentPerFreq;
+        existing.frequency = freq;
+        existing.enabled = true;
+        existing.color = existing.color || "blue";
+      } else {
+        const maxId = items.reduce(
+          (max, i) => (i && typeof i.id === "number" ? Math.max(max, i.id) : max),
+          0
+        );
+        items.push({
+          id: maxId + 1,
+          type: "need",
+          label,
+          amount: lastPaymentPerFreq,
+          frequency: freq,
+          enabled: true,
+          color: "blue"
+        });
+      }
+
+      localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
+      addToPlannerBtn.classList.remove("bad");
+      addToPlannerBtn.classList.add("good");
+      addToPlannerBtn.textContent = "Saved to planner as a need";
+      setTimeout(() => {
+        addToPlannerBtn.classList.remove("good");
+        addToPlannerBtn.textContent = "Add / update mortgage in planner";
+      }, 2000);
+    } catch (e) {
+      addToPlannerBtn.classList.remove("good");
+      addToPlannerBtn.classList.add("bad");
+      addToPlannerBtn.textContent = "Could not save to planner";
+      setTimeout(() => {
+        addToPlannerBtn.classList.remove("bad");
+        addToPlannerBtn.textContent = "Add / update mortgage in planner";
+      }, 2500);
+    }
   });
 
   loadPlannerSurplus();
+  restoreMortgageState();
   updateAffordability();
 </script>
 </body>
