@@ -425,19 +425,21 @@
             Summary snapshot
             <span class="panel-badge">From main planner</span>
           </div>
-          <div class="panel-subtitle">
-            See key numbers here while you jump into other tools.
-          </div>
+          <div class="panel-subtitle" id="summarySubtitle">
+  See key numbers here while you jump into other tools.
+</div>
+
         </div>
 
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
           <button class="summary-toggle-button active" id="toolsSummaryToggle">
             Hide
           </button>
-          <div class="panel-totals">
-            <div class="panel-totals-row">
-              <label>Freq:</label>
-              <div class="type-toggle" id="summaryFrequencyToggle">
+          <div class="panel-totals" id="summaryFreqWrapper">
+  <div class="panel-totals-row">
+    <label>Freq:</label>
+    <div class="type-toggle" id="summaryFrequencyToggle">
+
                 <button class="type-option" data-freq="weekly">W</button>
                 <button class="type-option active" data-freq="fortnightly">F</button>
                 <button class="type-option" data-freq="monthly">M</button>
@@ -541,6 +543,8 @@
 
   const toolsSummaryToggleBtn = document.getElementById("toolsSummaryToggle");
   const toolsSummaryBody = document.getElementById("toolsSummaryBody");
+  const summarySubtitle = document.getElementById("summarySubtitle");
+const summaryFreqWrapper = document.getElementById("summaryFreqWrapper");
 
   let items = [];
   let summaryFrequency = "fortnightly";
@@ -670,16 +674,21 @@
   });
 
   function updateToolsSummaryVisibility() {
-    if (toolsSummaryVisible) {
-      toolsSummaryBody.style.display = "";
-      toolsSummaryToggleBtn.textContent = "Hide";
-      toolsSummaryToggleBtn.classList.add("active");
-    } else {
-      toolsSummaryBody.style.display = "none";
-      toolsSummaryToggleBtn.textContent = "Show";
-      toolsSummaryToggleBtn.classList.remove("active");
-    }
+  if (toolsSummaryVisible) {
+    toolsSummaryBody.style.display = "";
+    summarySubtitle.style.display = "";
+    summaryFreqWrapper.style.display = "";
+    toolsSummaryToggleBtn.textContent = "Hide";
+    toolsSummaryToggleBtn.classList.add("active");
+  } else {
+    toolsSummaryBody.style.display = "none";
+    summarySubtitle.style.display = "none";
+    summaryFreqWrapper.style.display = "none";
+    toolsSummaryToggleBtn.textContent = "Show";
+    toolsSummaryToggleBtn.classList.remove("active");
   }
+}
+
 
   toolsSummaryToggleBtn.addEventListener("click", () => {
     toolsSummaryVisible = !toolsSummaryVisible;
