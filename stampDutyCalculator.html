@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Stamp Duty Calculator – Budget Needs vs Wants</title>
+  <title>Upfront Property Costs – Budget Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="Stamp duty calculator tool for the Budget Needs vs Wants planner. Rough stamp duty estimate and upfront cost summary." />
+  <meta name="description" content="Simple global upfront property cost helper. Estimate transfer or stamp tax as a % of price, add other costs, and see how your deposit stacks up." />
 
   <style>
     :root {
@@ -363,6 +362,23 @@
       color: var(--muted);
       margin-top: 4px;
     }
+
+    .hidden-box {
+      margin-top: 6px;
+      padding: 8px 8px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      font-size: 11px;
+      display: none;
+    }
+
+    .toggle-link {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -370,9 +386,9 @@
   <header class="app-header">
     <div class="top-row">
       <div class="brand">
-        <div class="brand-title">Stamp Duty Calculator</div>
+        <div class="brand-title">Upfront Property Costs</div>
         <div class="brand-tagline">
-          Rough NSW-style estimate and simple upfront cost summary.
+          Rough transfer / stamp tax plus other upfront costs, for any country.
         </div>
       </div>
 
@@ -406,11 +422,11 @@
       <div class="panel-header">
         <div>
           <div class="panel-title">
-            Property details
-            <span class="panel-badge">Very rough guide</span>
+            Purchase details
+            <span class="panel-badge">Global maths only</span>
           </div>
           <div class="panel-subtitle">
-            Uses a simplified NSW-style scale, not official rates. Always check with your state revenue office or conveyancer.
+            Enter a rough transfer / stamp tax rate and other upfront costs for your local system.
           </div>
         </div>
       </div>
@@ -420,31 +436,37 @@
           <div class="field-label">Purchase price</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="priceInput" type="number" min="0" step="1000" placeholder="800000" />
+            <input id="priceInput" type="number" min="0" step="1000" placeholder="" />
           </div>
         </div>
 
         <div class="field-group">
-          <div class="field-label">Property type</div>
-          <select id="propertyTypeInput">
-            <option value="owner">Owner-occupier</option>
-            <option value="investment">Investment</option>
-          </select>
+          <div class="field-label">Transfer / stamp tax rate (approx %)</div>
+          <div class="field-inline">
+            <input id="taxRateInput" type="number" min="0" step="0.01" placeholder="" />
+            <span style="font-size:12px;color:var(--muted);">%</span>
+          </div>
+          <div class="note">
+            Use an approximate overall rate for your region (or an average of any tiers).
+          </div>
         </div>
 
         <div class="field-group">
-          <div class="field-label">Buyer type</div>
-          <select id="buyerTypeInput">
-            <option value="first">First home buyer</option>
-            <option value="other">Other buyer</option>
-          </select>
+          <div class="field-label">Estimated discount on that tax (optional)</div>
+          <div class="field-inline">
+            <span style="font-size:12px;color:var(--muted);">$</span>
+            <input id="taxDiscountInput" type="number" min="0" step="100" placeholder="" />
+          </div>
+          <div class="note">
+            Put any first-home, principal-residence, or other relief here as a flat amount.
+          </div>
         </div>
 
         <div class="field-group">
           <div class="field-label">Deposit available</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="depositInput" type="number" min="0" step="1000" placeholder="120000" />
+            <input id="depositInput" type="number" min="0" step="1000" placeholder="" />
           </div>
         </div>
 
@@ -452,7 +474,26 @@
           <div class="field-label">Other upfront costs (legal, inspections, etc.)</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="otherCostsInput" type="number" min="0" step="100" placeholder="5000" />
+            <input id="otherCostsInput" type="number" min="0" step="100" placeholder="" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Example annual property charge (optional %)</div>
+          <div class="field-inline">
+            <input id="annualRateInput" type="number" min="0" step="0.01" placeholder="" />
+            <span style="font-size:12px;color:var(--muted);">%</span>
+          </div>
+          <div class="note">
+            For simple “annual property tax” comparisons, e.g. 0.3% per year.
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Comparison horizon (years)</div>
+          <div class="field-inline">
+            <input id="horizonInput" type="number" min="1" max="40" step="1" placeholder="" />
+            <span style="font-size:12px;color:var(--muted);">years</span>
           </div>
         </div>
       </div>
@@ -461,11 +502,11 @@
 
       <button class="calculate-btn" id="calcBtn">
         <span class="icon">▶</span>
-        Estimate stamp duty
+        Estimate upfront costs
       </button>
 
       <div class="note">
-        This is an educational tool only, using a simplified scale loosely inspired by NSW. Not advice and not guaranteed accurate.
+        Very rough global helper only. Does not know your local bands or exemptions; numbers are just the maths you enter.
       </div>
     </section>
 
@@ -473,41 +514,55 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <div class="panel-title">Stamp duty estimate</div>
+            <div class="panel-title">Transfer tax vs annual charge</div>
             <div class="panel-subtitle">
-              Old upfront stamp duty vs a simple annual property tax style option.
+              One-off transfer / stamp tax compared to an ongoing annual property charge.
             </div>
           </div>
         </div>
 
         <div class="summary-row">
           <div class="summary-card">
-            <div class="summary-card-title">Upfront stamp duty (old style)</div>
+            <div class="summary-card-title">Transfer / stamp tax</div>
             <div class="mini-row">
-              <span class="mini-label">Estimated duty</span>
-              <span id="dutyAmount" class="mini-value">—</span>
+              <span class="mini-label">Estimated tax before discount</span>
+              <span id="dutyBase" class="mini-value">—</span>
             </div>
             <div class="mini-row">
-              <span class="mini-label">After first home adjustments</span>
-              <span id="dutyTag" class="mini-value surplus">—</span>
+              <span class="mini-label">Less discount (if any)</span>
+              <span id="dutyDiscount" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Estimated payable now</span>
+              <span id="dutyAmount" class="mini-value">—</span>
             </div>
           </div>
 
           <div class="summary-card">
-            <div class="summary-card-title">Property tax style (simple)</div>
+            <div class="summary-card-title">Annual charge comparison</div>
             <div class="mini-row">
-              <span class="mini-label">Annual charge (example 0.3%)</span>
+              <span class="mini-label">Annual charge (if entered)</span>
               <span id="annualTax" class="mini-value">—</span>
             </div>
             <div class="mini-row">
-              <span class="mini-label">Total over 10 years</span>
-              <span id="tenYearTax" class="mini-value">—</span>
+              <span class="mini-label">Total over horizon</span>
+              <span id="horizonTax" class="mini-value">—</span>
             </div>
             <div class="mini-row">
-              <span class="mini-label">Which is smaller at 10 years?</span>
+              <span class="mini-label">Which is smaller over that time?</span>
               <span id="compareTag" class="mini-value surplus">—</span>
             </div>
           </div>
+        </div>
+
+        <span class="toggle-link" id="detailsToggle">Show calculation notes</span>
+        <div class="hidden-box" id="detailsBox">
+          <strong>How this calculator works</strong>
+          <ul>
+            <li>Transfer / stamp tax is approximated as purchase price × your % rate, minus any flat discount you enter.</li>
+            <li>The annual charge is a simple % of the same price, multiplied by the number of years you choose.</li>
+            <li>No local thresholds, special schemes, or complex bands are built in; this is a generic maths tool only.</li>
+          </ul>
         </div>
       </section>
 
@@ -516,7 +571,7 @@
           <div>
             <div class="panel-title">Upfront cash needed</div>
             <div class="panel-subtitle">
-              See how your deposit stacks up once duty and other costs are added.
+              See how your deposit stacks up once tax and other costs are added.
             </div>
           </div>
         </div>
@@ -528,7 +583,7 @@
             <span id="sumDeposit" class="mini-value">—</span>
           </div>
           <div class="mini-row">
-            <span class="mini-label">Stamp duty (upfront)</span>
+            <span class="mini-label">Transfer / stamp tax</span>
             <span id="sumDuty" class="mini-value">—</span>
           </div>
           <div class="mini-row">
@@ -536,11 +591,11 @@
             <span id="sumOther" class="mini-value">—</span>
           </div>
           <div class="mini-row">
-            <span class="mini-label">Total cash required</span>
+            <span class="mini-label">Total cash required now</span>
             <span id="sumTotal" class="mini-value">—</span>
           </div>
           <div class="mini-row">
-            <span class="mini-label">Short / extra</span>
+            <span class="mini-label">Short / extra cash</span>
             <span id="sumGap" class="mini-value surplus">—</span>
           </div>
         </div>
@@ -556,17 +611,20 @@
 
 <script>
   const priceInput = document.getElementById("priceInput");
-  const propertyTypeInput = document.getElementById("propertyTypeInput");
-  const buyerTypeInput = document.getElementById("buyerTypeInput");
+  const taxRateInput = document.getElementById("taxRateInput");
+  const taxDiscountInput = document.getElementById("taxDiscountInput");
   const depositInput = document.getElementById("depositInput");
   const otherCostsInput = document.getElementById("otherCostsInput");
+  const annualRateInput = document.getElementById("annualRateInput");
+  const horizonInput = document.getElementById("horizonInput");
   const inputError = document.getElementById("inputError");
   const calcBtn = document.getElementById("calcBtn");
 
+  const dutyBaseEl = document.getElementById("dutyBase");
+  const dutyDiscountEl = document.getElementById("dutyDiscount");
   const dutyAmountEl = document.getElementById("dutyAmount");
-  const dutyTagEl = document.getElementById("dutyTag");
   const annualTaxEl = document.getElementById("annualTax");
-  const tenYearTaxEl = document.getElementById("tenYearTax");
+  const horizonTaxEl = document.getElementById("horizonTax");
   const compareTagEl = document.getElementById("compareTag");
 
   const sumDepositEl = document.getElementById("sumDeposit");
@@ -576,55 +634,41 @@
   const sumGapEl = document.getElementById("sumGap");
   const gapBadgeEl = document.getElementById("gapBadge");
 
+  const detailsToggle = document.getElementById("detailsToggle");
+  const detailsBox = document.getElementById("detailsBox");
+
   function formatCurrency(amount) {
     if (!isFinite(amount)) return "—";
-    return "$" + amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-
-  // Very rough NSW-style scale (approx, simplified)
-  function estimateStampDutyNSW(price) {
-    if (price <= 0) return 0;
-    let duty = 0;
-
-    if (price <= 14000) {
-      duty = price * 0.0125;
-    } else if (price <= 30000) {
-      duty = 175 + (price - 14000) * 0.015;
-    } else if (price <= 81000) {
-      duty = 415 + (price - 30000) * 0.0175;
-    } else if (price <= 304000) {
-      duty = 1340 + (price - 81000) * 0.035;
-    } else if (price <= 1013000) {
-      duty = 9112 + (price - 304000) * 0.045;
-    } else {
-      duty = 41462 + (price - 1013000) * 0.055;
-    }
-
-    return duty;
-  }
-
-  function applyFirstHomeReduction(price, baseDuty) {
-    // Very rough: simple threshold logic
-    if (price <= 650000) {
-      // Full exemption for first home buyers
-      return 0;
-    } else if (price <= 800000) {
-      // Partial discount: 50% off in this band
-      return baseDuty * 0.5;
-    }
-    return baseDuty;
+    return amount.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
   }
 
   function calculate() {
     const price = parseFloat(priceInput.value || "0");
+    const taxRate = parseFloat(taxRateInput.value || "0");
+    const taxDiscount = parseFloat(taxDiscountInput.value || "0");
     const deposit = parseFloat(depositInput.value || "0");
     const otherCosts = parseFloat(otherCostsInput.value || "0");
-    const buyerType = buyerTypeInput.value;
-    const propertyType = propertyTypeInput.value;
+    const annualRate = parseFloat(annualRateInput.value || "0");
+    const horizonYears = parseFloat(horizonInput.value || "0");
 
     if (!isFinite(price) || price <= 0) {
       inputError.textContent = "Enter a purchase price above 0.";
       priceInput.focus();
+      return;
+    }
+    if (!isFinite(taxRate) || taxRate < 0) {
+      inputError.textContent = "Tax rate cannot be negative.";
+      taxRateInput.focus();
+      return;
+    }
+    if (!isFinite(taxDiscount) || taxDiscount < 0) {
+      inputError.textContent = "Discount cannot be negative.";
+      taxDiscountInput.focus();
       return;
     }
     if (!isFinite(deposit) || deposit < 0) {
@@ -637,57 +681,61 @@
       otherCostsInput.focus();
       return;
     }
+    if (!isFinite(annualRate) || annualRate < 0) {
+      inputError.textContent = "Annual charge rate cannot be negative.";
+      annualRateInput.focus();
+      return;
+    }
+    if (!isFinite(horizonYears) || horizonYears <= 0) {
+      inputError.textContent = "Enter a comparison horizon above 0 years.";
+      horizonInput.focus();
+      return;
+    }
 
     inputError.textContent = "";
 
-    let baseDuty = estimateStampDutyNSW(price);
-    let adjustedDuty = baseDuty;
+    const dutyBase = price * (taxRate / 100);
+    const dutyDiscount = Math.min(taxDiscount, Math.max(dutyBase, 0));
+    const duty = Math.max(dutyBase - dutyDiscount, 0);
 
-    if (buyerType === "first" && propertyType === "owner") {
-      adjustedDuty = applyFirstHomeReduction(price, baseDuty);
-    }
+    dutyBaseEl.textContent = formatCurrency(dutyBase);
+    dutyDiscountEl.textContent = "-" + formatCurrency(dutyDiscount);
+    dutyAmountEl.textContent = formatCurrency(duty);
 
-    dutyAmountEl.textContent = formatCurrency(adjustedDuty);
+    let annualTax = 0;
+    let horizonTax = 0;
 
-    if (buyerType === "first" && adjustedDuty === 0) {
-      dutyTagEl.textContent = "Estimated full exemption in this price band";
-      dutyTagEl.classList.remove("deficit");
-      dutyTagEl.classList.add("surplus");
-    } else if (buyerType === "first" && adjustedDuty < baseDuty) {
-      dutyTagEl.textContent = "Estimated discount applied (first home)";
-      dutyTagEl.classList.remove("deficit");
-      dutyTagEl.classList.add("surplus");
+    if (annualRate > 0) {
+      annualTax = price * (annualRate / 100);
+      horizonTax = annualTax * horizonYears;
+
+      annualTaxEl.textContent = formatCurrency(annualTax);
+      horizonTaxEl.textContent = formatCurrency(horizonTax);
+
+      if (horizonTax < duty) {
+        compareTagEl.textContent = "Annual charge smaller over " + horizonYears + " years";
+        compareTagEl.classList.remove("deficit");
+        compareTagEl.classList.add("surplus");
+      } else if (horizonTax > duty) {
+        compareTagEl.textContent = "One-off tax smaller over " + horizonYears + " years";
+        compareTagEl.classList.remove("surplus");
+        compareTagEl.classList.add("deficit");
+      } else {
+        compareTagEl.textContent = "Roughly similar over " + horizonYears + " years";
+        compareTagEl.classList.remove("surplus", "deficit");
+      }
     } else {
-      dutyTagEl.textContent = "No first home discount assumed";
-      dutyTagEl.classList.remove("surplus");
-      dutyTagEl.classList.add("deficit");
-    }
-
-    const annualRate = 0.003; // 0.3% simple example
-    const annualTax = price * annualRate;
-    const tenYearTax = annualTax * 10;
-
-    annualTaxEl.textContent = formatCurrency(annualTax);
-    tenYearTaxEl.textContent = formatCurrency(tenYearTax);
-
-    if (tenYearTax < adjustedDuty) {
-      compareTagEl.textContent = "Property tax cheaper at 10 years";
-      compareTagEl.classList.remove("deficit");
-      compareTagEl.classList.add("surplus");
-    } else if (tenYearTax > adjustedDuty) {
-      compareTagEl.textContent = "Upfront duty cheaper at 10 years";
-      compareTagEl.classList.remove("surplus");
-      compareTagEl.classList.add("deficit");
-    } else {
-      compareTagEl.textContent = "Roughly similar at 10 years";
+      annualTaxEl.textContent = "—";
+      horizonTaxEl.textContent = "—";
+      compareTagEl.textContent = "Enter an annual % to compare";
       compareTagEl.classList.remove("surplus", "deficit");
     }
 
     sumDepositEl.textContent = formatCurrency(deposit);
-    sumDutyEl.textContent = formatCurrency(adjustedDuty);
+    sumDutyEl.textContent = formatCurrency(duty);
     sumOtherEl.textContent = formatCurrency(otherCosts);
 
-    const totalRequired = adjustedDuty + otherCosts;
+    const totalRequired = duty + otherCosts;
     const gap = deposit - totalRequired;
 
     sumTotalEl.textContent = formatCurrency(totalRequired);
@@ -710,10 +758,20 @@
 
   calcBtn.addEventListener("click", calculate);
 
-  [priceInput, depositInput, otherCostsInput].forEach((el) => {
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") calculate();
-    });
+  [priceInput, taxRateInput, taxDiscountInput, depositInput, otherCostsInput, annualRateInput, horizonInput].forEach(
+    (el) => {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") calculate();
+      });
+    }
+  );
+
+  detailsToggle.addEventListener("click", () => {
+    const open = detailsBox.style.display === "block";
+    detailsBox.style.display = open ? "none" : "block";
+    detailsToggle.textContent = open
+      ? "Show calculation notes"
+      : "Hide calculation notes";
   });
 </script>
 </body>
