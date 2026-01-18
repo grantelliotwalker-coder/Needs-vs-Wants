@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Tax‑Deductible Rental Calculator – Budget Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="Simple tax‑deductible rental calculator: rent income minus deductible expenses to show an estimated tax base before local tax rules." />
+  <meta name="description" content="Simple tax-deductible rental calculator: rent income minus deductible expenses to show an estimated tax base before local tax rules." />
 
   <style>
     :root {
@@ -189,6 +189,20 @@
     .panel-subtitle {
       font-size: 11px;
       color: var(--muted);
+    }
+
+    .panel-totals {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .panel-totals-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      align-items: center;
     }
 
     .app-grid {
@@ -467,7 +481,7 @@
 
         <div class="panel-totals">
           <div class="panel-totals-row">
-            <label>Currency label</label>
+            <label>Currency</label>
             <select id="currencyLabel" style="width:auto;">
               <option value="AUD" selected>AUD</option>
               <option value="USD">USD</option>
@@ -486,7 +500,7 @@
           <div class="field-label">Rent income amount</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="rentInput" type="number" min="0" step="0.01" placeholder="550" />
+            <input id="rentInput" type="number" min="0" step="0.01" placeholder="" />
           </div>
           <div class="preset-row" id="rentPresets">
             <button class="preset-btn active" data-freq="weekly">Weekly</button>
@@ -499,7 +513,7 @@
           <div class="field-label">Deductible expenses amount</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="expenseInput" type="number" min="0" step="0.01" placeholder="3000" />
+            <input id="expenseInput" type="number" min="0" step="0.01" placeholder="" />
           </div>
           <div class="preset-row" id="expensePresets">
             <button class="preset-btn" data-freq="weekly">Weekly</button>
@@ -507,14 +521,14 @@
             <button class="preset-btn active" data-freq="yearly">Yearly</button>
           </div>
           <div class="note">
-            Enter only what your local rules treat as deductible for this property (for example, interest, rates, repairs in some systems).[web:1][web:2][web:3][web:4][web:5]
+            Enter only what your local rules treat as deductible for this property.
           </div>
         </div>
 
         <div class="field-group">
           <div class="field-label">Estimated tax rate (optional)</div>
           <div class="field-inline">
-            <input id="rateInput" type="number" min="0" step="0.1" placeholder="0" />
+            <input id="rateInput" type="number" min="0" step="0.1" placeholder="" />
             <span style="font-size:12px;color:var(--muted);">%</span>
           </div>
           <div class="note">
@@ -595,7 +609,7 @@
           <div>
             <div class="panel-title">Explanation & disclaimer</div>
             <div class="panel-subtitle">
-              One‑line reminder: This tool does maths only and does not decide what is deductible.
+              This tool does maths only and does not decide what is deductible.
             </div>
           </div>
         </div>
@@ -615,9 +629,9 @@
 
             <strong>Important disclaimer</strong>
             <ul>
-              <li>This tool never decides what is deductible; it only does the arithmetic you tell it to do.[web:1][web:2][web:3][web:4][web:5]</li>
-              <li>Deductibility rules vary widely across countries and even between types of property.</li>
-              <li>Always check official guidance in your country or speak to a qualified tax professional before relying on numbers.</li>
+              <li>This tool never decides what is deductible; it only does the arithmetic you tell it to do.</li>
+              <li>Deductibility rules vary widely between countries and property types.</li>
+              <li>Always check official guidance in your country or speak to a qualified tax professional before relying on these numbers.</li>
             </ul>
           </div>
         </div>
@@ -627,6 +641,8 @@
 </div>
 
 <script>
+  const STORAGE_KEY_TAX_DEDUCTIBLE = "budgetTaxDeductibleState";
+
   const rentInput = document.getElementById("rentInput");
   const expenseInput = document.getElementById("expenseInput");
   const rateInput = document.getElementById("rateInput");
@@ -650,6 +666,7 @@
 
   let rentFreq = "weekly";
   let expenseFreq = "yearly";
+  let detailsOpen = false;
 
   function formatCurrency(amount, label) {
     if (!isFinite(amount)) return "—";
@@ -668,24 +685,26 @@
     return amount;
   }
 
-  function handlePresetClick(rowEl, isRent, freq) {
+  function setPresetActive(rowEl, freq) {
     [...rowEl.querySelectorAll(".preset-btn")].forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.freq === freq);
     });
-    if (isRent) rentFreq = freq;
-    else expenseFreq = freq;
   }
 
   rentPresetsRow.addEventListener("click", (e) => {
     const btn = e.target.closest(".preset-btn");
     if (!btn) return;
-    handlePresetClick(rentPresetsRow, true, btn.dataset.freq);
+    rentFreq = btn.dataset.freq;
+    setPresetActive(rentPresetsRow, rentFreq);
+    persistState();
   });
 
   expensePresetsRow.addEventListener("click", (e) => {
     const btn = e.target.closest(".preset-btn");
     if (!btn) return;
-    handlePresetClick(expensePresetsRow, false, btn.dataset.freq);
+    expenseFreq = btn.dataset.freq;
+    setPresetActive(expensePresetsRow, expenseFreq);
+    persistState();
   });
 
   function calculate() {
@@ -753,23 +772,87 @@
       baseTagEl.classList.remove("deficit");
       baseTagEl.classList.add("surplus");
     }
+
+    persistState();
+  }
+
+  function persistState() {
+    const state = {
+      rent: rentInput.value || "",
+      rentFreq,
+      expenses: expenseInput.value || "",
+      expenseFreq,
+      rate: rateInput.value || "",
+      currency: currencyLabelSelect.value,
+      detailsOpen
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY_TAX_DEDUCTIBLE, JSON.stringify(state));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function restoreState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_TAX_DEDUCTIBLE);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (!state || typeof state !== "object") return;
+
+      if (typeof state.rent === "string") rentInput.value = state.rent;
+      if (typeof state.expenses === "string") expenseInput.value = state.expenses;
+      if (typeof state.rate === "string") rateInput.value = state.rate;
+      if (typeof state.currency === "string") currencyLabelSelect.value = state.currency;
+
+      if (state.rentFreq === "weekly" || state.rentFreq === "monthly" || state.rentFreq === "yearly") {
+        rentFreq = state.rentFreq;
+      }
+      if (state.expenseFreq === "weekly" || state.expenseFreq === "monthly" || state.expenseFreq === "yearly") {
+        expenseFreq = state.expenseFreq;
+      }
+      setPresetActive(rentPresetsRow, rentFreq);
+      setPresetActive(expensePresetsRow, expenseFreq);
+
+      detailsOpen = !!state.detailsOpen;
+      detailsBox.style.display = detailsOpen ? "block" : "none";
+      detailsToggle.textContent = detailsOpen
+        ? "Hide calculation details & disclaimer"
+        : "Show calculation details & disclaimer";
+
+      // If there was previous data, show the last calculation.
+      calculate();
+    } catch (e) {
+      // ignore restore errors
+    }
   }
 
   calcBtn.addEventListener("click", calculate);
-  [rentInput, expenseInput, rateInput].forEach((el) => {
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") calculate();
+
+  [rentInput, expenseInput, rateInput, currencyLabelSelect].forEach((el) => {
+    el.addEventListener("change", () => {
+      persistState();
     });
   });
 
-  let detailsOpen = false;
+  [rentInput, expenseInput, rateInput].forEach((el) => {
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        calculate();
+      }
+    });
+  });
+
   detailsToggle.addEventListener("click", () => {
     detailsOpen = !detailsOpen;
     detailsBox.style.display = detailsOpen ? "block" : "none";
     detailsToggle.textContent = detailsOpen
       ? "Hide calculation details & disclaimer"
       : "Show calculation details & disclaimer";
+    persistState();
   });
+
+  restoreState();
 </script>
 </body>
 </html>
