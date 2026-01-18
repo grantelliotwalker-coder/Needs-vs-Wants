@@ -748,6 +748,9 @@
 <div class="summary-toggle-row">
   <div class="summary-toggle-label">Show income &amp; summary</div>
   <div class="summary-toggle-actions">
+    <button class="summary-toggle-button" onclick="openInfoModal()">
+      Info
+    </button>
     <a href="tools.html" class="summary-toggle-button" id="toolsLink">Tools</a>
     <a href="export.html" class="summary-toggle-button" id="exportLink">Export</a>
     <button class="summary-toggle-button active" id="summaryToggleBtn">Hide</button>
@@ -1386,6 +1389,11 @@
 
     restore();
     render();
+    
   </script>
+  <script src="modal-info.js"></script>
+<script>
+  injectInfoModal();
+</script>
 </body>
 </html>
