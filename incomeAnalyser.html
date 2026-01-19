@@ -804,11 +804,20 @@
   }
 
   function calculateNetForIncome(gross, taxRate, deductRate, grossFreq, netFreq) {
-    const totalRate = (taxRate || 0) + (deductRate || 0);
-    const netGross = gross * (1 - totalRate / 100);
-    const weeklyNet = toWeekly(netGross, grossFreq);
-    return fromWeekly(weeklyNet, netFreq);
-  }
+  const tax = taxRate || 0;
+  const other = deductRate || 0;
+
+  // 1) take other % off gross
+  const afterOther = gross * (1 - other / 100);
+
+  // 2) apply tax % to the reduced amount
+  const afterTax = afterOther * (1 - tax / 100);
+
+  // 3) convert to target frequency
+  const weeklyNet = toWeekly(afterTax, grossFreq);
+  return fromWeekly(weeklyNet, netFreq);
+}
+
 
   function render() {
     incomeListEl.innerHTML = "";
