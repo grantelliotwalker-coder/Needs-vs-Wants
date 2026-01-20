@@ -813,17 +813,20 @@
   const tax = taxRate || 0;
   const other = deductRate || 0;
 
-  // 1) salary sacrifice (e.g. super) on original gross
-  const sacrificeAmount = gross * (other / 100);
+  // 1) salary sacrifice on original gross, rounded to cents
+  const rawSacrifice = gross * (other / 100);
+  const sacrificeAmount = Math.round(rawSacrifice * 100) / 100;
 
   // 2) taxable income
   const taxable = gross - sacrificeAmount;
 
-  // 3) tax on taxable only
-  const taxAmount = taxable * (tax / 100);
+  // 3) tax on taxable only, rounded to cents
+  const rawTax = taxable * (tax / 100);
+  const taxAmount = Math.round(rawTax * 100) / 100;
 
   // 4) net after sacrifice + tax
   const netAfterBoth = taxable - taxAmount;
+
 
   // Show working for the line we’re actively calculating (form view)
   if (forDisplay) {
