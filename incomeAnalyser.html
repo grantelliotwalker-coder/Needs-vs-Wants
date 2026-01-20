@@ -514,12 +514,27 @@
         </div>
 
         <div class="field-group">
-          <div class="field-label">Gross amount</div>
-          <div class="field-inline">
-            <span style="font-size:12px;color:var(--muted);">$</span>
-            <input id="grossInput" type="number" min="0" step="0.01" />
-          </div>
-        </div>
+  <div class="field-label">Base salary amount (this period)</div>
+  <div class="field-inline">
+    <span style="font-size:12px;color:var(--muted);">$</span>
+    <input id="salaryInput" type="number" min="0" step="0.01" />
+  </div>
+  <div class="note">
+    Excludes tool allowance.
+  </div>
+</div>
+
+<div class="field-group">
+  <div class="field-label">Tool allowance (this period)</div>
+  <div class="field-inline">
+    <span style="font-size:12px;color:var(--muted);">$</span>
+    <input id="allowanceInput" type="number" min="0" step="0.01" />
+  </div>
+  <div class="note">
+    Taxed, but no salary sacrifice taken from this.
+  </div>
+</div>
+
 
         <div class="field-group">
           <div class="field-label">Gross frequency</div>
@@ -664,7 +679,9 @@
 
 
   const labelInput = document.getElementById("labelInput");
-  const grossInput = document.getElementById("grossInput");
+  const salaryInput = document.getElementById("salaryInput");
+const allowanceInput = document.getElementById("allowanceInput");
+
   const grossFreqInput = document.getElementById("grossFreqInput");
   const taxRateInput = document.getElementById("taxRateInput");
   const deductRateInput = document.getElementById("deductRateInput");
@@ -722,8 +739,10 @@
       currency: analyserCurrency,
       currentInputs: {
         label: labelInput.value || "",
-        gross: grossInput.value || "",
-        grossFreq: grossFreqInput.value || "monthly",
+        salary: salaryInput.value || "",
+allowance: allowanceInput.value || "",
+grossFreq: grossFreqInput.value || "monthly",
+
         taxRate: taxRateInput.value || "",
         deductRate: deductRateInput.value || ""
       }
@@ -745,8 +764,10 @@
       if (Array.isArray(state.incomes)) {
         incomes = state.incomes.map((it) => ({
           label: typeof it.label === "string" ? it.label : "Income",
-          gross: typeof it.gross === "number" ? it.gross : 0,
-          grossFreq: it.grossFreq || "monthly",
+          salary: salaryInput.value || "",
+allowance: allowanceInput.value || "",
+grossFreq: grossFreqInput.value || "monthly",
+
           taxRate: typeof it.taxRate === "number" ? it.taxRate : 0,
           deductRate: typeof it.deductRate === "number" ? it.deductRate : 0
         }));
@@ -769,7 +790,8 @@
       if (state.currentInputs && typeof state.currentInputs === "object") {
         const ci = state.currentInputs;
         if (typeof ci.label === "string") labelInput.value = ci.label;
-        if (typeof ci.gross === "string") grossInput.value = ci.gross;
+        if (typeof ci.salary === "string") salaryInput.value = ci.salary;
+        if (typeof ci.allowance === "string") allowanceInput.value = ci.allowance;
         if (typeof ci.grossFreq === "string") grossFreqInput.value = ci.grossFreq;
         if (typeof ci.taxRate === "string") taxRateInput.value = ci.taxRate;
         if (typeof ci.deductRate === "string") deductRateInput.value = ci.deductRate;
@@ -809,18 +831,29 @@
     }
   }
 
-  function calculateNetForIncome(gross, taxRate, deductRate, grossFreq, netFreq, forDisplay) {
-  const tax = taxRate || 0;
-  const other = deductRate || 0;
+  function round2(x) {
+  return Math.round(x * 100) / 100;
+}
 
-  // 1) salary sacrifice on original gross, rounded to cents
-  const sacrificeAmount = gross * (other / 100);
+// salary: base only (no allowance)
+// allowance: tool allowance this period
+function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq, netFreq, forDisplay) {
+  const tax = taxRate || 0;      // e.g. 23.95
+  const other = deductRate || 0; // 6
 
-  // 2) taxable income
-  const taxable = gross - sacrificeAmount;
+  const gross = (salary || 0) + (allowance || 0);
+
+  // 1) salary sacrifice on salary only, rounded to cents
+  const rawSacrifice = (salary || 0) * (other / 100);
+  const sacrificeAmount = round2(rawSacrifice);
+
+  // 2) taxable = (salary - sacrifice) + allowance
+  const taxableSalary = (salary || 0) - sacrificeAmount;
+  const taxable = taxableSalary + (allowance || 0);
 
   // 3) tax on taxable only, rounded to cents
-  const taxAmount = taxable * (tax / 100);
+  const rawTax = taxable * (tax / 100);
+  const taxAmount = round2(rawTax);
 
   // 4) net after sacrifice + tax (same frequency as gross)
   const netAfterBoth = taxable - taxAmount;
@@ -829,7 +862,6 @@
   const weeklyNet = toWeekly(netAfterBoth, grossFreq);
   const netInDisplayFreq = fromWeekly(weeklyNet, netFreq);
 
-  // Show full working for the line we’re actively calculating
   if (forDisplay) {
     const breakdownEl = document.getElementById("breakdownLines");
     if (breakdownEl) {
@@ -860,8 +892,10 @@
           : "year";
 
       breakdownEl.innerHTML =
+        `Salary (${freqLabel}): ${fmt(salary || 0)}<br>` +
+        `Tool allowance (${freqLabel}): ${fmt(allowance || 0)}<br>` +
         `Gross (${freqLabel}): ${fmt(gross)}<br>` +
-        `Other ${other.toFixed(2)}% = ${fmt(sacrificeAmount)}<br>` +
+        `Other ${other.toFixed(2)}% of salary = ${fmt(sacrificeAmount)}<br>` +
         `Taxable (${freqLabel}): ${fmt(taxable)}<br>` +
         `Tax ${tax.toFixed(2)}% of taxable = ${fmt(taxAmount)}<br>` +
         `Net after both (${freqLabel}): ${fmt(netAfterBoth)}<br>` +
@@ -871,6 +905,7 @@
 
   return netInDisplayFreq;
 }
+
 
 
 
@@ -892,7 +927,8 @@
 
     incomes.forEach((inc, index) => {
       const netAmount = calculateNetForIncome(
-  inc.gross,
+  inc.salary,
+  inc.allowance,
   inc.taxRate,
   inc.deductRate,
   inc.grossFreq,
@@ -1015,7 +1051,8 @@
     addIncomeBtn.textContent = "Add / update income line";
 
     const previewNet = calculateNetForIncome(
-  payload.gross,
+  payload.salary,
+  payload.allowance,
   payload.taxRate,
   payload.deductRate,
   payload.grossFreq,
@@ -1052,7 +1089,8 @@
     let totalNet = 0;
     incomes.forEach((inc) => {
       totalNet += calculateNetForIncome(
-  inc.gross,
+  inc.salary,
+  inc.allowance,
   inc.taxRate,
   inc.deductRate,
   inc.grossFreq,
