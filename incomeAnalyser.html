@@ -762,16 +762,16 @@ grossFreq: grossFreqInput.value || "monthly",
       if (!state || typeof state !== "object") return;
 
       if (Array.isArray(state.incomes)) {
-        incomes = state.incomes.map((it) => ({
-          label: typeof it.label === "string" ? it.label : "Income",
-          salary: salaryInput.value || "",
-allowance: allowanceInput.value || "",
-grossFreq: grossFreqInput.value || "monthly",
+  incomes = state.incomes.map((it) => ({
+    label: typeof it.label === "string" ? it.label : "Income",
+    salary: typeof it.salary === "number" ? it.salary : 0,
+    allowance: typeof it.allowance === "number" ? it.allowance : 0,
+    grossFreq: it.grossFreq || "monthly",
+    taxRate: typeof it.taxRate === "number" ? it.taxRate : 0,
+    deductRate: typeof it.deductRate === "number" ? it.deductRate : 0
+  }));
+}
 
-          taxRate: typeof it.taxRate === "number" ? it.taxRate : 0,
-          deductRate: typeof it.deductRate === "number" ? it.deductRate : 0
-        }));
-      }
 
       if (
         state.netFrequency === "weekly" ||
@@ -926,18 +926,20 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
     let totalNet = 0;
 
     incomes.forEach((inc, index) => {
-      const netAmount = calculateNetForIncome(
-  inc.salary,
-  inc.allowance,
-  inc.taxRate,
-  inc.deductRate,
-  inc.grossFreq,
-  netFreq,
-  false
-);
+  const netAmount = calculateNetForIncome(
+    inc.salary,
+    inc.allowance,
+    inc.taxRate,
+    inc.deductRate,
+    inc.grossFreq,
+    netFreq,
+    false
+  );
 
+  totalNet += netAmount;
 
-      totalNet += netAmount;
+  const gross = (inc.salary || 0) + (inc.allowance || 0);
+
 
       const pill = document.createElement("div");
       pill.className = "income-pill";
@@ -961,14 +963,15 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
           ? "monthly"
           : "yearly";
       subEl.textContent =
-        formatCurrency(inc.gross, analyserCurrency) +
-        " /" +
-        freqText +
-        " · tax " +
-        (inc.taxRate || 0) +
-        "% · other " +
-        (inc.deductRate || 0) +
-        "%";
+  formatCurrency(gross, analyserCurrency) +
+  " /" +
+  freqText +
+  " · tax " +
+  (inc.taxRate || 0) +
+  "% · other " +
+  (inc.deductRate || 0) +
+  "%";
+
       main.appendChild(subEl);
 
       pill.appendChild(main);
@@ -984,17 +987,19 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
 
 
       pill.addEventListener("click", () => {
-        editingIndex = index;
-        const edited = incomes[index];
-        labelInput.value = edited.label;
-        grossInput.value = edited.gross;
-        grossFreqInput.value = edited.grossFreq;
-        taxRateInput.value = edited.taxRate;
-        deductRateInput.value = edited.deductRate;
-        inputError.textContent = "";
-        addIncomeBtn.textContent = "Update income line";
-        persistState();
-      });
+  editingIndex = index;
+  const edited = incomes[index];
+  labelInput.value = edited.label;
+  salaryInput.value = edited.salary;
+  allowanceInput.value = edited.allowance;
+  grossFreqInput.value = edited.grossFreq;
+  taxRateInput.value = edited.taxRate;
+  deductRateInput.value = edited.deductRate;
+  inputError.textContent = "";
+  addIncomeBtn.textContent = "Update income line";
+  persistState();
+});
+
 
       incomeListEl.appendChild(pill);
     });
@@ -1003,67 +1008,74 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
   }
 
   addIncomeBtn.addEventListener("click", () => {
-    const label = labelInput.value.trim() || "Income " + (incomes.length + 1);
-    const gross = parseFloat(grossInput.value || "0");
-    const grossFreq = grossFreqInput.value || "monthly";
-    const taxRate = parseFloat(taxRateInput.value || "0");
-    const deductRate = parseFloat(deductRateInput.value || "0");
+  const label = labelInput.value.trim() || "Income " + (incomes.length + 1);
+  const salary = parseFloat(salaryInput.value || "0");
+  const allowance = parseFloat(allowanceInput.value || "0");
+  const grossFreq = grossFreqInput.value || "monthly";
+  const taxRate = parseFloat(taxRateInput.value || "0");
+  const deductRate = parseFloat(deductRateInput.value || "0");
 
-    if (!isFinite(gross) || gross <= 0) {
-      inputError.textContent = "Enter a gross amount above 0.";
-      grossInput.focus();
-      return;
-    }
-    if (!isFinite(taxRate) || taxRate < 0) {
-      inputError.textContent = "Tax rate cannot be negative.";
-      taxRateInput.focus();
-      return;
-    }
-    if (!isFinite(deductRate) || deductRate < 0) {
-      inputError.textContent = "Other deduction % cannot be negative.";
-      deductRateInput.focus();
-      return;
-    }
+  if (!isFinite(salary) || salary <= 0) {
+    inputError.textContent = "Enter a base salary amount above 0.";
+    salaryInput.focus();
+    return;
+  }
+  if (!isFinite(allowance) || allowance < 0) {
+    inputError.textContent = "Tool allowance cannot be negative.";
+    allowanceInput.focus();
+    return;
+  }
+  if (!isFinite(taxRate) || taxRate < 0) {
+    inputError.textContent = "Tax rate cannot be negative.";
+    taxRateInput.focus();
+    return;
+  }
+  if (!isFinite(deductRate) || deductRate < 0) {
+    inputError.textContent = "Other deduction % cannot be negative.";
+    deductRateInput.focus();
+    return;
+  }
 
-    inputError.textContent = "";
+  inputError.textContent = "";
 
-    const payload = {
-      label,
-      gross,
-      grossFreq:
-        grossFreq === "weekly" ||
-        grossFreq === "fortnightly" ||
-        grossFreq === "monthly" ||
-        grossFreq === "yearly"
-          ? grossFreq
-          : "monthly",
-      taxRate,
-      deductRate
-    };
+  const payload = {
+    label,
+    salary,
+    allowance,
+    grossFreq:
+      grossFreq === "weekly" ||
+      grossFreq === "fortnightly" ||
+      grossFreq === "monthly" ||
+      grossFreq === "yearly"
+        ? grossFreq
+        : "monthly",
+    taxRate,
+    deductRate
+  };
 
-    if (editingIndex == null) {
-      incomes.push(payload);
-    } else {
-      incomes[editingIndex] = payload;
-    }
+  if (editingIndex == null) {
+    incomes.push(payload);
+  } else {
+    incomes[editingIndex] = payload;
+  }
 
-    editingIndex = null;
-    addIncomeBtn.textContent = "Add / update income line";
+  editingIndex = null;
+  addIncomeBtn.textContent = "Add / update income line";
 
-    const previewNet = calculateNetForIncome(
-  payload.salary,
-  payload.allowance,
-  payload.taxRate,
-  payload.deductRate,
-  payload.grossFreq,
-  netFreqOutputInput.value || "monthly",
-  true   // show working for this line
-);
+  const previewNet = calculateNetForIncome(
+    payload.salary,
+    payload.allowance,
+    payload.taxRate,
+    payload.deductRate,
+    payload.grossFreq,
+    netFreqOutputInput.value || "monthly",
+    true
+  );
 
+  persistState();
+  render();
+});
 
-    persistState();
-    render();
-  });
 
   netFreqOutputInput.addEventListener("change", () => {
     persistState();
@@ -1077,7 +1089,7 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
     loadPlannerIncome();
   });
 
-  [labelInput, grossInput, grossFreqInput, taxRateInput, deductRateInput].forEach(
+  [labelInput, salaryInput, allowanceInput, grossFreqInput, taxRateInput, deductRateInput].forEach(
     (el) => {
       el.addEventListener("change", persistState);
     }
