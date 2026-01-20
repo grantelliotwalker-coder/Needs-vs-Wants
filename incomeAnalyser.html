@@ -824,11 +824,14 @@
   const rawTax = taxable * (tax / 100);
   const taxAmount = Math.round(rawTax * 100) / 100;
 
-  // 4) net after sacrifice + tax
+  // 4) net after sacrifice + tax (same frequency as gross)
   const netAfterBoth = taxable - taxAmount;
 
+  // Convert net to chosen display frequency
+  const weeklyNet = toWeekly(netAfterBoth, grossFreq);
+  const netInDisplayFreq = fromWeekly(weeklyNet, netFreq);
 
-  // Show working for the line we’re actively calculating (form view)
+  // Show full working for the line we’re actively calculating
   if (forDisplay) {
     const breakdownEl = document.getElementById("breakdownLines");
     if (breakdownEl) {
@@ -840,17 +843,37 @@
           maximumFractionDigits: 2
         });
 
+      const freqLabel =
+        grossFreq === "weekly"
+          ? "week"
+          : grossFreq === "fortnightly"
+          ? "fortnight"
+          : grossFreq === "monthly"
+          ? "month"
+          : "year";
+
+      const outFreqLabel =
+        netFreq === "weekly"
+          ? "week"
+          : netFreq === "fortnightly"
+          ? "fortnight"
+          : netFreq === "monthly"
+          ? "month"
+          : "year";
+
       breakdownEl.innerHTML =
-        `Gross ${fmt(gross)}<br>` +
-        `− ${other.toFixed(2)}% other = taxable ${fmt(taxable)}<br>` +
+        `Gross (${freqLabel}): ${fmt(gross)}<br>` +
+        `Other ${other.toFixed(2)}% = ${fmt(sacrificeAmount)}<br>` +
+        `Taxable (${freqLabel}): ${fmt(taxable)}<br>` +
         `Tax ${tax.toFixed(2)}% of taxable = ${fmt(taxAmount)}<br>` +
-        `<strong>Net (this frequency): ${fmt(netAfterBoth)}</strong>`;
+        `Net after both (${freqLabel}): ${fmt(netAfterBoth)}<br>` +
+        `<strong>Net in display frequency (${outFreqLabel}): ${fmt(netInDisplayFreq)}</strong>`;
     }
   }
 
-  const weeklyNet = toWeekly(netAfterBoth, grossFreq);
-  return fromWeekly(weeklyNet, netFreq);
+  return netInDisplayFreq;
 }
+
 
 
 
