@@ -576,6 +576,12 @@
       </div>
     </section>
 
+    <div class="note" id="breakdownNote">
+  Working: gross − 6% sacrifice → taxable − tax = net. Values will show here.
+</div>
+<div class="note" id="breakdownLines" style="font-size:11px;"></div>
+
+
     <div class="app-grid">
       <section class="panel">
         <div class="panel-header">
@@ -803,11 +809,11 @@
     }
   }
 
-  function calculateNetForIncome(gross, taxRate, deductRate, grossFreq, netFreq) {
-  const tax = taxRate || 0;     // 23.96
-  const other = deductRate || 0; // 6
+  function calculateNetForIncome(gross, taxRate, deductRate, grossFreq, netFreq, forDisplay) {
+  const tax = taxRate || 0;
+  const other = deductRate || 0;
 
-  // 1) salary sacrifice off original gross
+  // 1) salary sacrifice (e.g. super) on original gross
   const sacrificeAmount = gross * (other / 100);
 
   // 2) taxable income
@@ -816,10 +822,29 @@
   // 3) tax on taxable only
   const taxAmount = taxable * (tax / 100);
 
-  // 4) net pay after both
+  // 4) net after sacrifice + tax
   const netAfterBoth = taxable - taxAmount;
 
-  // 5) convert to chosen frequency
+  // Show working for the line we’re actively calculating (form view)
+  if (forDisplay) {
+    const breakdownEl = document.getElementById("breakdownLines");
+    if (breakdownEl) {
+      const fmt = (n) =>
+        n.toLocaleString("en-AU", {
+          style: "currency",
+          currency: analyserCurrency === "Other" ? "AUD" : analyserCurrency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+
+      breakdownEl.innerHTML =
+        `Gross ${fmt(gross)}<br>` +
+        `− ${other.toFixed(2)}% other = taxable ${fmt(taxable)}<br>` +
+        `Tax ${tax.toFixed(2)}% of taxable = ${fmt(taxAmount)}<br>` +
+        `<strong>Net (this frequency): ${fmt(netAfterBoth)}</strong>`;
+    }
+  }
+
   const weeklyNet = toWeekly(netAfterBoth, grossFreq);
   return fromWeekly(weeklyNet, netFreq);
 }
@@ -843,12 +868,15 @@
 
     incomes.forEach((inc, index) => {
       const netAmount = calculateNetForIncome(
-        inc.gross,
-        inc.taxRate,
-        inc.deductRate,
-        inc.grossFreq,
-        netFreq
-      );
+  inc.gross,
+  inc.taxRate,
+  inc.deductRate,
+  inc.grossFreq,
+  netFreq,
+  false
+);
+
+
       totalNet += netAmount;
 
       const pill = document.createElement("div");
@@ -962,6 +990,16 @@
     editingIndex = null;
     addIncomeBtn.textContent = "Add / update income line";
 
+    const previewNet = calculateNetForIncome(
+  payload.gross,
+  payload.taxRate,
+  payload.deductRate,
+  payload.grossFreq,
+  netFreqOutputInput.value || "monthly",
+  true   // show working for this line
+);
+
+
     persistState();
     render();
   });
@@ -990,12 +1028,14 @@
     let totalNet = 0;
     incomes.forEach((inc) => {
       totalNet += calculateNetForIncome(
-        inc.gross,
-        inc.taxRate,
-        inc.deductRate,
-        inc.grossFreq,
-        netFreq
-      );
+  inc.gross,
+  inc.taxRate,
+  inc.deductRate,
+  inc.grossFreq,
+  netFreq,
+  false
+);
+
     });
 
     if (totalNet <= 0) {
