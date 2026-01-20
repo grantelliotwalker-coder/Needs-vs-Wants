@@ -1,1 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mortgage Strategy Training</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="In-depth training on mortgage strategy, repayments, interest rate sensitivity, and surplus planning." />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button,
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.45);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button {
+      font-size: 11px;
+      padding: 4px 10px;
+      color: var(--muted);
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.back {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .pill-button.training {
+      border-color: rgba(0, 194, 255, 0.4);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px 16px;
+      gap: 12px;
+    }
+
+    .panel {
+      padding: 12px 12px 14px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .panel-body h2 {
+      font-size: 14px;
+      margin: 10px 0 4px;
+    }
+
+    .panel-body h3 {
+      font-size: 13px;
+      margin: 8px 0 4px;
+    }
+
+    .panel-body p {
+      font-size: 13px;
+      color: #d0e0ff;
+    }
+
+    .panel-body ul {
+      margin-left: 1.1rem;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .panel-body li {
+      font-size: 13px;
+      color: #d0e0ff;
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .chart-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(5, 8, 22, 0.9);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .chart-title {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 120px;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, #35d5ff, #32d788);
+      min-width: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar.future {
+      background: linear-gradient(180deg, #ff8aa8, #ff4d6a);
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .bar-value {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      font-size: 11px;
+      color: #02040a;
+      background: rgba(229, 244, 255, 0.8);
+      border-radius: 999px;
+      padding: 1px 6px;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    input[type="number"],
+    input[type="range"] {
+      width: 100%;
+    }
+
+    input[type="number"] {
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 1px solid #02040a;
+      box-shadow: 0 0 0 2px rgba(0, 194, 255, 0.4);
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric-row span.value {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .pill-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .pill-tag.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .pill-tag.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .formula-box {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      color: #d0e0ff;
+      overflow-x: auto;
+    }
+
+    .formula-box code {
+      white-space: pre;
+    }
+
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="top-row">
+        <div class="brand">
+          <div class="brand-title">Mortgage Strategy Training</div>
+          <div class="brand-tagline">Understand the theory behind your mortgage calculator decisions.</div>
+        </div>
+        <div class="header-actions">
+          <!-- Back to calculator -->
+          <a href="mortgage.html" class="pill-button back">
+            <span class="pill-button-icon">&#8592;</span>
+            Back to mortgage calc
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- High level context -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Strategic mortgages
+              <span class="panel-badge">Theory</span>
+            </div>
+            <div class="panel-subtitle">
+              Use this page as a training guide to understand how rates, term, and surplus planning fit together.
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            A mortgage is more than a repayment amount; it is a long‑term contract where small changes in rate, term, or extra repayments can shift total interest by tens of thousands.
+          </p>
+          <p>
+            This guide mirrors how the calculator works so you can see how the numbers connect to real‑world strategy, including your budget surplus and the impact of future rate changes.
+          </p>
+        </div>
+      </section>
+
+      <!-- Interactive sensitivity graph -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Interest rate sensitivity
+              <span class="panel-badge">Graph</span>
+            </div>
+            <div class="panel-subtitle">
+              Move the rate slider to see how a small change in rates affects repayments and total interest.
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">Repayment per month (example loan)</div>
+            <div class="chart-bars">
+              <div class="bar" id="bar-current">
+                <div class="bar-value" id="bar-current-label"></div>
+              </div>
+              <div class="bar future" id="bar-future">
+                <div class="bar-value" id="bar-future-label"></div>
+              </div>
+            </div>
+            <div class="chart-bars-labels">
+              <div class="bar-label">Current rate</div>
+              <div class="bar-label">Future rate</div>
+            </div>
+            <div class="note">
+              Bars show repayments on the same principal and remaining term at two different rates. The future bar grows as you move the slider up.
+            </div>
+          </div>
+          <div class="controls-row">
+            <div class="field-group">
+              <div class="field-label">Example loan amount</div>
+              <div class="field-inline">
+                <input id="loanAmountInput" type="number" min="50000" step="10000" value="600000" />
+              </div>
+              <div class="note">This is a hypothetical balance, similar to what you might use in the main calculator.</div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Current interest rate p.a.</div>
+              <div class="field-inline">
+                <input id="currentRateInput" type="number" min="0" step="0.05" value="5.5" />
+                <span class="note">% p.a.</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Future rate scenario</div>
+              <div class="field-inline">
+                <input id="futureRateSlider" type="range" min="2" max="10" step="0.1" value="7.0" />
+              </div>
+              <div class="metric-row">
+                <span>Future rate used</span>
+                <span class="value" id="futureRateLabel"></span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Remaining term (years)</div>
+              <div class="field-inline">
+                <input id="yearsInput" type="number" min="1" max="30" step="1" value="25" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Monthly repayments and interest</div>
+              <div class="metric-row">
+                <span>Current repayment</span>
+                <span class="value" id="metricCurrentRepay"></span>
+              </div>
+              <div class="metric-row">
+                <span>Future repayment</span>
+                <span class="value" id="metricFutureRepay"></span>
+              </div>
+              <div class="metric-row">
+                <span>Total interest (current)</span>
+                <span class="value" id="metricCurrentInterest"></span>
+              </div>
+              <div class="metric-row">
+                <span>Total interest (future)</span>
+                <span class="value" id="metricFutureInterest"></span>
+              </div>
+              <div class="metric-row">
+                <span>Change vs current</span>
+                <span class="value" id="metricChange"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          Use this to build intuition for how sensitive a mortgage is to even 0.5–1.0% changes in interest rates.
+        </div>
+      </section>
+
+      <!-- Formula explanation -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              How the repayment formula works
+              <span class="panel-badge">Formula</span>
+            </div>
+            <div class="panel-subtitle">
+              The training uses the same standard amortising loan formula as the calculator.
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            Most repayment calculators, including your main mortgage tool, use a standard amortising loan formula. This ensures each regular payment covers the interest due plus a slice of principal so the loan finishes on time.
+          </p>
+          <p>
+            The core idea is that the payment is set so that the present value of all payments equals the starting loan amount, given the interest rate and number of payments.
+          </p>
+
+          <h3>Repayment formula (conceptual)</h3>
+          <div class="formula-box">
+            <code>
+Payment =
+  principal × r × (1 + r)^n
+  ----------------------------------
+         (1 + r)^n − 1
+
+Where:
+  principal = loan amount after deposit
+  r         = periodic interest rate (e.g. annual rate / 12 for monthly)
+  n         = total number of payments (years × payments per year)
+            </code>
+          </div>
+
+          <p>
+            When rates rise, the r term increases, which pushes repayments higher and also raises total interest, because more of each payment goes to interest instead of principal at the start.
+          </p>
+        </div>
+      </section>
+
+      <!-- Strategy and surplus -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Strategy: using your surplus
+              <span class="panel-badge">Planning</span>
+            </div>
+            <div class="panel-subtitle">
+              Link your mortgage to the budget surplus concept used in the main planner.
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            The main planner stores a weekly surplus, which represents the gap between income and regular spending. Your mortgage share is then compared against this surplus to show how comfortable the repayment is.
+          </p>
+          <p>
+            A smaller ratio between your mortgage share and your surplus generally means more resilience to rate rises, job changes, or other shocks.
+          </p>
+
+          <h3>Comfort zones (idea)</h3>
+          <ul>
+            <li><strong>Comfortable</strong>: mortgage share uses a relatively small slice of your surplus, leaving room for savings and buffers.</li>
+            <li><strong>OK</strong>: mortgage share uses a moderate part of the surplus, still workable but with less flexibility.</li>
+            <li><strong>Tight</strong>: most of the surplus is consumed by the mortgage, leaving limited room for changes.</li>
+          </ul>
+
+          <p class="note">
+            In the main calculator, this logic is expressed through coverage labels and a progress bar comparing your mortgage share to your stored surplus.
+          </p>
+        </div>
+      </section>
+
+      <!-- Extra repayments -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Extra repayments and time saved
+              <span class="panel-badge">Tips</span>
+            </div>
+            <div class="panel-subtitle">
+              Small regular extra payments can shorten the term and reduce total interest.
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            When you add extra repayments, more principal is paid off each period, which reduces the interest charged next period, creating a compounding effect in your favour.
+          </p>
+          <p>
+            The main calculator simulates this by re‑running the repayment schedule with the extra amount added to each payment and then measuring the new payoff time and total interest.
+          </p>
+
+          <h3>Tips when using the main tool</h3>
+          <ul>
+            <li>Experiment with extra repayments that match realistic surplus, not just theoretical maximums.</li>
+            <li>Compare the “base” term against the “with extras” term to see time saved in years and months.</li>
+            <li>Use future rate scenarios to check if your extra repayments still keep the mortgage comfortable under higher rates.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function annuityPayment(principal, annualRatePercent, years, paymentsPerYear) {
+      const n = years * paymentsPerYear;
+      if (n <= 0) return 0;
+      const r = (annualRatePercent / 100) / paymentsPerYear;
+      if (r === 0) return principal / n;
+      const factor = Math.pow(1 + r, n);
+      return principal * r * factor / (factor - 1);
+    }
+
+    function formatCurrency(amount) {
+      if (!isFinite(amount)) return "";
+      return amount.toLocaleString("en-AU", {
+        style: "currency",
+        currency: "AUD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function updateTrainingView() {
+      const principal = parseFloat(document.getElementById("loanAmountInput").value) || 0;
+      const currentRate = parseFloat(document.getElementById("currentRateInput").value) || 0;
+      const years = parseFloat(document.getElementById("yearsInput").value) || 0;
+      const futureRate = parseFloat(document.getElementById("futureRateSlider").value) || 0;
+
+      const currentPayment = annuityPayment(principal, currentRate, years, 12);
+      const futurePayment = annuityPayment(principal, futureRate, years, 12);
+
+      const n = years * 12;
+      const currentInterest = currentPayment * n - principal;
+      const futureInterest = futurePayment * n - principal;
+
+      document.getElementById("futureRateLabel").textContent = futureRate.toFixed(2) + " % p.a.";
+
+      document.getElementById("metricCurrentRepay").textContent = formatCurrency(currentPayment);
+      document.getElementById("metricFutureRepay").textContent = formatCurrency(futurePayment);
+      document.getElementById("metricCurrentInterest").textContent = formatCurrency(currentInterest);
+      document.getElementById("metricFutureInterest").textContent = formatCurrency(futureInterest);
+
+      const diff = futurePayment - currentPayment;
+      const changeLabel = diff >= 0 ? "+" + formatCurrency(diff) : "-" + formatCurrency(Math.abs(diff));
+      document.getElementById("metricChange").textContent = changeLabel + " per month";
+
+      // Update bars
+      const currentBar = document.getElementById("bar-current");
+      const futureBar = document.getElementById("bar-future");
+      const currentLabel = document.getElementById("bar-current-label");
+      const futureLabel = document.getElementById("bar-future-label");
+
+      const maxPayment = Math.max(currentPayment, futurePayment, 1);
+      const currentHeight = (currentPayment / maxPayment) * 100;
+      const futureHeight = (futurePayment / maxPayment) * 100;
+
+      currentBar.style.height = Math.max(currentHeight, 10) + "%";
+      futureBar.style.height = Math.max(futureHeight, 10) + "%";
+
+      currentLabel.textContent = formatCurrency(currentPayment);
+      futureLabel.textContent = formatCurrency(futurePayment);
+    }
+
+    ["loanAmountInput", "currentRateInput", "yearsInput"].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", updateTrainingView);
+      el.addEventListener("change", updateTrainingView);
+    });
+
+    const futureSlider = document.getElementById("futureRateSlider");
+    futureSlider.addEventListener("input", updateTrainingView);
+    futureSlider.addEventListener("change", updateTrainingView);
+
+    updateTrainingView();
+  </script>
+</body>
+</html>
 
