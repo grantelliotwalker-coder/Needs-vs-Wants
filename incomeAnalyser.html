@@ -804,19 +804,26 @@
   }
 
   function calculateNetForIncome(gross, taxRate, deductRate, grossFreq, netFreq) {
-  const tax = taxRate || 0;
-  const other = deductRate || 0;
+  const tax = taxRate || 0;     // 23.96
+  const other = deductRate || 0; // 6
 
-  // 1) take other % off gross
-  const afterOther = gross * (1 - other / 100);
+  // 1) salary sacrifice off original gross
+  const sacrificeAmount = gross * (other / 100);
 
-  // 2) apply tax % to the reduced amount
-  const afterTax = afterOther * (1 - tax / 100);
+  // 2) taxable income
+  const taxable = gross - sacrificeAmount;
 
-  // 3) convert to target frequency
-  const weeklyNet = toWeekly(afterTax, grossFreq);
+  // 3) tax on taxable only
+  const taxAmount = taxable * (tax / 100);
+
+  // 4) net pay after both
+  const netAfterBoth = taxable - taxAmount;
+
+  // 5) convert to chosen frequency
+  const weeklyNet = toWeekly(netAfterBoth, grossFreq);
   return fromWeekly(weeklyNet, netFreq);
 }
+
 
 
   function render() {
