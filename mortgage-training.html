@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Mortgage Strategy Training</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="In-depth training on mortgage strategy, repayments, interest rate sensitivity, and surplus planning." />
+  <meta name="description" content="Guided training on mortgage strategy: repayments, rate rises, surplus planning, buffers, and extra repayments." />
   <style>
     :root {
       --bg: #050816;
@@ -131,10 +131,6 @@
 
     .pill-button.back {
       border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .pill-button.training {
-      border-color: rgba(0, 194, 255, 0.4);
     }
 
     .app-main {
@@ -277,11 +273,17 @@
       background: linear-gradient(180deg, #ff8aa8, #ff4d6a);
     }
 
+    .bar-label-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
     .bar-label {
       font-size: 11px;
       color: var(--muted);
       text-align: center;
-      margin-top: 2px;
+      flex: 1;
     }
 
     .bar-value {
@@ -402,6 +404,124 @@
       white-space: pre;
     }
 
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .scenario-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .scenario-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(5, 8, 22, 0.9);
+      padding: 8px 10px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .scenario-title {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .scenario-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .my-rules-list {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: #d0e0ff;
+    }
+
+    .my-rules-list li {
+      list-style: none;
+      position: relative;
+      padding-left: 14px;
+    }
+
+    .my-rules-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    .my-rule-input {
+      width: 100%;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: #050816;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .toggle-row {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+    }
+
+    .toggle-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+    }
+
+    .toggle-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .quiz-box {
+      margin-top: 6px;
+      padding: 8px 8px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      font-size: 12px;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .quiz-answer {
+      display: none;
+      font-size: 12px;
+      color: #d0e0ff;
+      margin-top: 4px;
+    }
+
+    .quiz-toggle {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     a {
       color: var(--accent);
     }
@@ -413,10 +533,10 @@
       <div class="top-row">
         <div class="brand">
           <div class="brand-title">Mortgage Strategy Training</div>
-          <div class="brand-tagline">Understand the theory behind your mortgage calculator decisions.</div>
+          <div class="brand-tagline">Turn the calculator into a plan, not just a number.</div>
         </div>
         <div class="header-actions">
-          <!-- Back to calculator -->
+          <!-- Back to calculator: update href to match your calc file -->
           <a href="mortgage.html" class="pill-button back">
             <span class="pill-button-icon">&#8592;</span>
             Back to mortgage calc
@@ -426,39 +546,122 @@
     </header>
 
     <main class="app-main">
-      <!-- High level context -->
-      <section class="panel">
+      <!-- Overview and learning goals -->
+      <section class="panel" id="overview">
         <div class="panel-header">
           <div>
             <div class="panel-title">
-              Strategic mortgages
-              <span class="panel-badge">Theory</span>
+              Overview
+              <span class="panel-badge">Start here</span>
             </div>
             <div class="panel-subtitle">
-              Use this page as a training guide to understand how rates, term, and surplus planning fit together.
+              Use this page like a mini‑course that pairs directly with the mortgage calculator and your main budget planner.[file:1][web:36]
             </div>
           </div>
         </div>
         <div class="panel-body">
           <p>
-            A mortgage is more than a repayment amount; it is a long‑term contract where small changes in rate, term, or extra repayments can shift total interest by tens of thousands.
+            A mortgage is a long contract to rent money, not just a single repayment number; small changes in rate, term, or extra repayments can shift total interest by tens of thousands over decades.[web:16][web:32]
           </p>
           <p>
-            This guide mirrors how the calculator works so you can see how the numbers connect to real‑world strategy, including your budget surplus and the impact of future rate changes.
+            By the end of this page, you will be able to choose a term, test rate rises, use your surplus as a safety buffer, and design extra repayments that fit inside your real budget.[web:11][file:1]
           </p>
+          <h3>How to use this with the calculator</h3>
+          <ul>
+            <li>Read one section below.</li>
+            <li>Jump back to the mortgage calc and change the matching inputs.</li>
+            <li>Watch how repayments, total interest, time saved, and the surplus coverage bar respond.[file:1]</li>
+          </ul>
         </div>
       </section>
 
-      <!-- Interactive sensitivity graph -->
-      <section class="panel">
+      <!-- Chapter 1: What a mortgage really is -->
+      <section class="panel" id="chapter-1">
         <div class="panel-header">
           <div>
             <div class="panel-title">
-              Interest rate sensitivity
+              1. What a mortgage really is
+              <span class="panel-badge">Concept</span>
+            </div>
+            <div class="panel-subtitle">
+              Turn “big scary debt” into a clear mental model you can control.[web:11]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            A mortgage is a deal where you borrow a lump sum now, then repay it in regular instalments that each contain two parts: interest (the rent on the money) and principal (actually buying the house).[web:16]
+          </p>
+          <p>
+            Early on, most of each payment goes to interest because the balance is still high, but as the principal falls more of each payment starts eating into the loan itself.[web:16][web:32]
+          </p>
+
+          <h3>What to do in the calculator</h3>
+          <ul>
+            <li>Enter a realistic property price and deposit to see your loan amount after deposit.[file:1]</li>
+            <li>Choose a term (for example 25 vs 30 years) and compare the repayment and total interest values in the results panel.[file:1][web:16]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 2: Repayment formula -->
+      <section class="panel" id="chapter-2">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              2. How repayments are built
+              <span class="panel-badge">Formula</span>
+            </div>
+            <div class="panel-subtitle">
+              Your calculator uses the same standard amortising loan formula used by lenders.[file:1][web:16]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            Most home loan calculators, including yours, use a standard amortising loan formula that sets a fixed repayment so the loan finishes exactly at the end of the term.[file:1][web:16]
+          </p>
+          <p>
+            The repayment is chosen so that the present value of all those future payments equals the starting loan amount once the interest rate and total number of payments are taken into account.[web:16]
+          </p>
+
+          <h3>Repayment formula (conceptual)</h3>
+          <div class="formula-box">
+            <code>
+Payment =
+  principal × r × (1 + r)^n
+  ----------------------------------
+         (1 + r)^n − 1
+
+Where:
+  principal = loan amount after deposit
+  r         = periodic interest rate (annual rate / payments per year)
+  n         = total payments (years × payments per year)
+            </code>
+          </div>
+
+          <p>
+            When the interest rate or term changes, the r or n part of the formula changes, which shifts the repayment and the total interest over the life of the loan.[web:16][web:32]
+          </p>
+
+          <h3>What to do in the calculator</h3>
+          <ul>
+            <li>Keep the loan amount the same and try different terms to see how shorter terms increase the repayment but cut total interest.[file:1][web:16]</li>
+            <li>Try the same term but tweak the rate slightly to see how sensitive your repayment and total interest are to rate changes.[file:1][web:32]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 3: Rate sensitivity + interactive graph -->
+      <section class="panel" id="chapter-3">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              3. How rate rises bite
               <span class="panel-badge">Graph</span>
             </div>
             <div class="panel-subtitle">
-              Move the rate slider to see how a small change in rates affects repayments and total interest.
+              Use this mini‑graph to feel how even 0.5–1.0% changes can add a “car” of interest.[web:16][web:32][web:40]
             </div>
           </div>
         </div>
@@ -473,12 +676,12 @@
                 <div class="bar-value" id="bar-future-label"></div>
               </div>
             </div>
-            <div class="chart-bars-labels">
+            <div class="bar-label-row">
               <div class="bar-label">Current rate</div>
               <div class="bar-label">Future rate</div>
             </div>
             <div class="note">
-              Bars show repayments on the same principal and remaining term at two different rates. The future bar grows as you move the slider up.
+              The same loan at two different rates; when the future bar jumps, imagine that extra amount leaving your bank account every month.[web:16][web:40]
             </div>
           </div>
           <div class="controls-row">
@@ -487,7 +690,7 @@
               <div class="field-inline">
                 <input id="loanAmountInput" type="number" min="50000" step="10000" value="600000" />
               </div>
-              <div class="note">This is a hypothetical balance, similar to what you might use in the main calculator.</div>
+              <div class="note">Pick a balance roughly similar to the “loan amount” you are testing in the main calculator.[file:1]</div>
             </div>
 
             <div class="field-group">
@@ -507,6 +710,9 @@
                 <span>Future rate used</span>
                 <span class="value" id="futureRateLabel"></span>
               </div>
+              <div class="note">
+                Many lenders test borrowing capacity with a few percent buffer above current rates to make sure you could still cope if rates rise.[web:30][web:32][web:33]
+              </div>
             </div>
 
             <div class="field-group">
@@ -517,7 +723,7 @@
             </div>
 
             <div class="field-group">
-              <div class="field-label">Monthly repayments and interest</div>
+              <div class="field-label">Monthly repayments and interest (example)</div>
               <div class="metric-row">
                 <span>Current repayment</span>
                 <span class="value" id="metricCurrentRepay"></span>
@@ -539,116 +745,187 @@
                 <span class="value" id="metricChange"></span>
               </div>
             </div>
+
+            <div class="quiz-box">
+              <div class="quiz-question">Quick question</div>
+              <div>Slide the future rate about 2–3% above current. Does that extra monthly amount still fit inside your surplus?</div>
+              <div class="quiz-toggle" data-target="quiz-answer-1">Show suggested answer</div>
+              <div class="quiz-answer" id="quiz-answer-1">
+                If the extra amount would eat most of your surplus or push you into negative, the loan is likely too tight for comfort at that rate level.[file:1][web:40]
+              </div>
+            </div>
           </div>
         </div>
         <div class="note">
-          Use this to build intuition for how sensitive a mortgage is to even 0.5–1.0% changes in interest rates.
+          In the main calculator, you can get a similar feel by putting your “future rate” in the dedicated box; the tool then compares future repayments and interest against your current settings.[file:1]
         </div>
       </section>
 
-      <!-- Formula explanation -->
-      <section class="panel">
+      <!-- Chapter 4: Surplus and buffers -->
+      <section class="panel" id="chapter-4">
         <div class="panel-header">
           <div>
             <div class="panel-title">
-              How the repayment formula works
-              <span class="panel-badge">Formula</span>
-            </div>
-            <div class="panel-subtitle">
-              The training uses the same standard amortising loan formula as the calculator.
-            </div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <p>
-            Most repayment calculators, including your main mortgage tool, use a standard amortising loan formula. This ensures each regular payment covers the interest due plus a slice of principal so the loan finishes on time.
-          </p>
-          <p>
-            The core idea is that the payment is set so that the present value of all payments equals the starting loan amount, given the interest rate and number of payments.
-          </p>
-
-          <h3>Repayment formula (conceptual)</h3>
-          <div class="formula-box">
-            <code>
-Payment =
-  principal × r × (1 + r)^n
-  ----------------------------------
-         (1 + r)^n − 1
-
-Where:
-  principal = loan amount after deposit
-  r         = periodic interest rate (e.g. annual rate / 12 for monthly)
-  n         = total number of payments (years × payments per year)
-            </code>
-          </div>
-
-          <p>
-            When rates rise, the r term increases, which pushes repayments higher and also raises total interest, because more of each payment goes to interest instead of principal at the start.
-          </p>
-        </div>
-      </section>
-
-      <!-- Strategy and surplus -->
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">
-              Strategy: using your surplus
+              4. Surplus, comfort zones, and buffers
               <span class="panel-badge">Planning</span>
             </div>
             <div class="panel-subtitle">
-              Link your mortgage to the budget surplus concept used in the main planner.
+              Your weekly surplus is your safety margin; the mortgage should live inside it, not consume it.[file:1][web:32]
             </div>
           </div>
         </div>
         <div class="panel-body">
           <p>
-            The main planner stores a weekly surplus, which represents the gap between income and regular spending. Your mortgage share is then compared against this surplus to show how comfortable the repayment is.
+            The main planner stores a weekly surplus, which is the difference between your income and your planned spending; the calculator compares your share of the mortgage repayment against this surplus to show comfort levels.[file:1]
           </p>
           <p>
-            A smaller ratio between your mortgage share and your surplus generally means more resilience to rate rises, job changes, or other shocks.
+            A lower ratio of repayment to surplus generally means more resilience to rate rises, income shocks, and other surprises, while a higher ratio indicates a tighter position.[file:1][web:32]
           </p>
 
-          <h3>Comfort zones (idea)</h3>
+          <h3>Comfort zones (idea, not advice)</h3>
           <ul>
-            <li><strong>Comfortable</strong>: mortgage share uses a relatively small slice of your surplus, leaving room for savings and buffers.</li>
-            <li><strong>OK</strong>: mortgage share uses a moderate part of the surplus, still workable but with less flexibility.</li>
-            <li><strong>Tight</strong>: most of the surplus is consumed by the mortgage, leaving limited room for changes.</li>
+            <li><strong>Comfortable</strong>: mortgage share uses a small slice of surplus, leaving plenty of room for savings, buffers, and lifestyle.</li>
+            <li><strong>OK</strong>: mortgage share takes a noticeable chunk of surplus, workable but you have less flexibility.</li>
+            <li><strong>Tight</strong>: most of the surplus is consumed by the mortgage, leaving limited room for changes or shocks.</li>
           </ul>
 
           <p class="note">
-            In the main calculator, this logic is expressed through coverage labels and a progress bar comparing your mortgage share to your stored surplus.
+            In your calculator this shows up as the coverage label, progress bar, and surplus after payment values in the “Mortgage vs planner surplus” section.[file:1]
+          </p>
+
+          <h3>What to do in the calculator</h3>
+          <ul>
+            <li>Save a realistic surplus in the main planner, then run a mortgage scenario and look at the comfort label and coverage bar.[file:1]</li>
+            <li>Change the loan amount or term until the coverage feels like a zone you could live with across good and bad years.[file:1][web:40]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 5: Extra repayments and strategy -->
+      <section class="panel" id="chapter-5">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              5. Extra repayments and time saved
+              <span class="panel-badge">Strategy</span>
+            </div>
+            <div class="panel-subtitle">
+              Use your surplus like a controlled “snowball” to eat the mortgage faster.[web:10][web:13]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            When you add regular extra repayments, more principal is paid off each period, which reduces the interest charged next period and speeds up the snowball of debt reduction.[web:10][web:13]
+          </p>
+          <p>
+            Your calculator simulates this by applying the extra amount to each payment and then measuring the new payoff time and total interest compared with the base scenario.[file:1]
+          </p>
+
+          <h3>Tips when playing with extras</h3>
+          <ul>
+            <li>Anchor extra repayments to a realistic slice of your surplus rather than an extreme number you cannot sustain.[file:1][web:34]</li>
+            <li>Check both time saved and total interest saved; the combination shows how powerfully consistent small extras compound over years.[web:10][web:13]</li>
+            <li>Test extras under a higher future rate as well to see whether your plan still fits inside your comfort zone.[file:1][web:40]</li>
+          </ul>
+
+          <div class="scenario-grid">
+            <div class="scenario-card">
+              <div class="scenario-title">Couple with no buffer</div>
+              <div class="scenario-tag">Before</div>
+              <p>
+                They borrow at the edge of their capacity, with the mortgage eating almost all of their surplus; a rate rise or job change would force hard cuts or a refinance under pressure.[web:32][web:40]
+              </p>
+            </div>
+            <div class="scenario-card">
+              <div class="scenario-title">Couple with planned buffer</div>
+              <div class="scenario-tag">After</div>
+              <p>
+                They choose a slightly smaller loan, keep their coverage in the “comfortable” range, and use part of the surplus for extra repayments while still keeping a cash buffer.[web:34][file:1]
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 6: Presets, myths, and rules -->
+      <section class="panel" id="chapter-6">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              6. Scenarios, myths, and your rules
+              <span class="panel-badge">Putting it together</span>
+            </div>
+            <div class="panel-subtitle">
+              Use simple presets and rules so the calculator reflects your own boundaries, not just lender limits.[web:11][web:36]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <h3>Perspective toggle</h3>
+          <div class="toggle-row" id="personaToggle">
+            <button type="button" class="toggle-btn active" data-persona="home">First home vibe</button>
+            <button type="button" class="toggle-btn" data-persona="investor">Investor vibe</button>
+          </div>
+          <p id="personaCopyHome">
+            First home buyers often focus on getting in as soon as possible; this tool nudges you to also check buffers, surplus coverage, and how rate rises would feel.[web:12][web:16]
+          </p>
+          <p id="personaCopyInvestor" style="display:none;">
+            Investors usually juggle multiple loans; this tool helps you see how each new mortgage interacts with your surplus and how rate changes could stress your wider portfolio.[web:32][web:34]
+          </p>
+
+          <h3>Myth vs reality (short list)</h3>
+          <ul>
+            <li><strong>Myth</strong>: “If the bank will lend it, it must be fine.” Reality: banks use serviceability buffers but still lend at aggressive levels; your comfort can sit well below your maximum borrowing.[web:30][web:32][web:33]</li>
+            <li><strong>Myth</strong>: “Longer term is always safer.” Reality: longer terms drop the repayment but increase total interest; safety should be measured against surplus and buffers, not just monthly cash flow.[web:16][web:32]</li>
+            <li><strong>Myth</strong>: “Small extra repayments do not matter.” Reality: regular small extras can shave years off the loan and save significant interest over time.[web:10][web:13]</li>
+          </ul>
+
+          <h3>Your simple rules (you can change later)</h3>
+          <ul class="my-rules-list">
+            <li>Rule idea: “Keep my mortgage share under a target percentage of my surplus.”</li>
+            <li>Rule idea: “Plan for rates at least a few percent above today when checking comfort.”[web:30][web:32][web:40]</li>
+            <li>Rule idea: “Keep a separate cash buffer instead of using every spare dollar as extra repayments.”[web:34]</li>
+          </ul>
+          <input class="my-rule-input" placeholder="Write your own rule of thumb (for example, ‘Coverage bar should stay green at my future rate scenario’)." />
+
+          <p class="note">
+            These rules are personal guidelines only, not advice; loans also involve fees, features, and policies that sit outside this calculator’s scope.[web:16][web:37]
           </p>
         </div>
       </section>
 
-      <!-- Extra repayments -->
-      <section class="panel">
+      <!-- Chapter 7: Reality checks and next steps -->
+      <section class="panel" id="chapter-7">
         <div class="panel-header">
           <div>
             <div class="panel-title">
-              Extra repayments and time saved
-              <span class="panel-badge">Tips</span>
+              7. Reality checks and next steps
+              <span class="panel-badge">Risk</span>
             </div>
             <div class="panel-subtitle">
-              Small regular extra payments can shorten the term and reduce total interest.
+              Use this knowledge to ask better questions, not to replace professional advice.[web:16][web:37]
             </div>
           </div>
         </div>
         <div class="panel-body">
-          <p>
-            When you add extra repayments, more principal is paid off each period, which reduces the interest charged next period, creating a compounding effect in your favour.
-          </p>
-          <p>
-            The main calculator simulates this by re‑running the repayment schedule with the extra amount added to each payment and then measuring the new payoff time and total interest.
-          </p>
-
-          <h3>Tips when using the main tool</h3>
+          <h3>Quick red flags</h3>
           <ul>
-            <li>Experiment with extra repayments that match realistic surplus, not just theoretical maximums.</li>
-            <li>Compare the “base” term against the “with extras” term to see time saved in years and months.</li>
-            <li>Use future rate scenarios to check if your extra repayments still keep the mortgage comfortable under higher rates.</li>
+            <li>Your coverage label is regularly in the “tight” range or the progress bar shows most of your surplus being consumed.[file:1]</li>
+            <li>You can only make the mortgage work by assuming extra repayments that use almost all of your surplus every month.[file:1][web:34]</li>
+            <li>Your comfort depends on rates staying unusually low, with no buffer for the kind of rate rises seen in past cycles.[web:32][web:40]</li>
           </ul>
+
+          <h3>Questions to ask a lender or broker</h3>
+          <ul>
+            <li>“What happens to this loan if rates rise by a few percent from here—could I still manage the repayments comfortably?”[web:30][web:32]</li>
+            <li>“How do offset accounts, redraw, or different loan types change my flexibility, not just my headline rate?”[web:16][web:34]</li>
+            <li>“Are there fees or conditions that are not captured in a simple repayment calculator that I should watch for?”[web:16][web:37]</li>
+          </ul>
+
+          <p class="note">
+            This page is general education, not personal advice; always consider your own circumstances and seek professional guidance before making big decisions about borrowing or repayments.[web:16][web:37]
+          </p>
         </div>
       </section>
     </main>
@@ -687,18 +964,26 @@ Where:
       const currentInterest = currentPayment * n - principal;
       const futureInterest = futurePayment * n - principal;
 
-      document.getElementById("futureRateLabel").textContent = futureRate.toFixed(2) + " % p.a.";
+      const futureRateLabel = document.getElementById("futureRateLabel");
+      if (futureRateLabel) {
+        futureRateLabel.textContent = futureRate.toFixed(2) + " % p.a.";
+      }
 
-      document.getElementById("metricCurrentRepay").textContent = formatCurrency(currentPayment);
-      document.getElementById("metricFutureRepay").textContent = formatCurrency(futurePayment);
-      document.getElementById("metricCurrentInterest").textContent = formatCurrency(currentInterest);
-      document.getElementById("metricFutureInterest").textContent = formatCurrency(futureInterest);
+      const currentRepayEl = document.getElementById("metricCurrentRepay");
+      const futureRepayEl = document.getElementById("metricFutureRepay");
+      const currentIntEl = document.getElementById("metricCurrentInterest");
+      const futureIntEl = document.getElementById("metricFutureInterest");
+      const changeEl = document.getElementById("metricChange");
+
+      if (currentRepayEl) currentRepayEl.textContent = formatCurrency(currentPayment);
+      if (futureRepayEl) futureRepayEl.textContent = formatCurrency(futurePayment);
+      if (currentIntEl) currentIntEl.textContent = formatCurrency(currentInterest);
+      if (futureIntEl) futureIntEl.textContent = formatCurrency(futureInterest);
 
       const diff = futurePayment - currentPayment;
       const changeLabel = diff >= 0 ? "+" + formatCurrency(diff) : "-" + formatCurrency(Math.abs(diff));
-      document.getElementById("metricChange").textContent = changeLabel + " per month";
+      if (changeEl) changeEl.textContent = changeLabel + " per month";
 
-      // Update bars
       const currentBar = document.getElementById("bar-current");
       const futureBar = document.getElementById("bar-future");
       const currentLabel = document.getElementById("bar-current-label");
@@ -708,25 +993,59 @@ Where:
       const currentHeight = (currentPayment / maxPayment) * 100;
       const futureHeight = (futurePayment / maxPayment) * 100;
 
-      currentBar.style.height = Math.max(currentHeight, 10) + "%";
-      futureBar.style.height = Math.max(futureHeight, 10) + "%";
+      if (currentBar) currentBar.style.height = Math.max(currentHeight, 10) + "%";
+      if (futureBar) futureBar.style.height = Math.max(futureHeight, 10) + "%";
 
-      currentLabel.textContent = formatCurrency(currentPayment);
-      futureLabel.textContent = formatCurrency(futurePayment);
+      if (currentLabel) currentLabel.textContent = formatCurrency(currentPayment);
+      if (futureLabel) futureLabel.textContent = formatCurrency(futurePayment);
     }
 
     ["loanAmountInput", "currentRateInput", "yearsInput"].forEach(id => {
       const el = document.getElementById(id);
+      if (!el) return;
       el.addEventListener("input", updateTrainingView);
       el.addEventListener("change", updateTrainingView);
     });
 
     const futureSlider = document.getElementById("futureRateSlider");
-    futureSlider.addEventListener("input", updateTrainingView);
-    futureSlider.addEventListener("change", updateTrainingView);
+    if (futureSlider) {
+      futureSlider.addEventListener("input", updateTrainingView);
+      futureSlider.addEventListener("change", updateTrainingView);
+    }
+
+    const personaToggle = document.getElementById("personaToggle");
+    if (personaToggle) {
+      personaToggle.addEventListener("click", e => {
+        const btn = e.target.closest(".toggle-btn");
+        if (!btn) return;
+        const persona = btn.dataset.persona || "home";
+        personaToggle.querySelectorAll(".toggle-btn").forEach(b => {
+          b.classList.toggle("active", b === btn);
+        });
+        const homeP = document.getElementById("personaCopyHome");
+        const invP = document.getElementById("personaCopyInvestor");
+        if (persona === "home") {
+          if (homeP) homeP.style.display = "";
+          if (invP) invP.style.display = "none";
+        } else {
+          if (homeP) homeP.style.display = "none";
+          if (invP) invP.style.display = "";
+        }
+      });
+    }
+
+    document.querySelectorAll(".quiz-toggle").forEach(toggle => {
+      toggle.addEventListener("click", () => {
+        const targetId = toggle.getAttribute("data-target");
+        const answer = targetId ? document.getElementById(targetId) : null;
+        if (!answer) return;
+        const isOpen = answer.style.display === "block";
+        answer.style.display = isOpen ? "none" : "block";
+        toggle.textContent = isOpen ? "Show suggested answer" : "Hide suggested answer";
+      });
+    });
 
     updateTrainingView();
   </script>
 </body>
 </html>
-
