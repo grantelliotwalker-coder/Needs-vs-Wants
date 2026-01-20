@@ -814,15 +814,13 @@
   const other = deductRate || 0;
 
   // 1) salary sacrifice on original gross, rounded to cents
-  const rawSacrifice = gross * (other / 100);
-  const sacrificeAmount = Math.round(rawSacrifice * 100) / 100;
+  const sacrificeAmount = gross * (other / 100);
 
   // 2) taxable income
   const taxable = gross - sacrificeAmount;
 
   // 3) tax on taxable only, rounded to cents
-  const rawTax = taxable * (tax / 100);
-  const taxAmount = Math.round(rawTax * 100) / 100;
+  const taxAmount = taxable * (tax / 100);
 
   // 4) net after sacrifice + tax (same frequency as gross)
   const netAfterBoth = taxable - taxAmount;
