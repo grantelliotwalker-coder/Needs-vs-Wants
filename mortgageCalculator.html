@@ -1664,7 +1664,12 @@
     }
   });
 
-  addToPlannerBtn.addEventListener("click", openSaveModal);
+  addToPlannerBtn.addEventListener("click", () => {
+  // Treat this as “add new” by default; selecting a row sets selectedLoanId again
+  selectedLoanId = null;
+  openSaveModal();
+});
+
 
   function renderSavedLoansList() {
     try {
@@ -1696,8 +1701,11 @@
         const div = document.createElement("div");
         div.className = "saved-loans-item";
         if (loan.id === selectedLoanId) {
-          div.classList.add("selected");
-        }
+  div.classList.add("selected");
+} else {
+  div.classList.remove("selected");
+}
+
         const left = document.createElement("div");
         left.className = "saved-loans-left";
         const labelEl = document.createElement("div");
@@ -1733,11 +1741,17 @@
         div.appendChild(right);
 
         div.addEventListener("click", () => {
-          selectedLoanId = loan.id;
-          // Load this loan into the calculator inputs
-          loadLoanIntoCalculator(loan);
-          renderSavedLoansList();
-        });
+  if (selectedLoanId === loan.id) {
+    // Click again to deselect this mortgage
+    selectedLoanId = null;
+  } else {
+    // Select this mortgage and load it into the calculator
+    selectedLoanId = loan.id;
+    loadLoanIntoCalculator(loan);
+  }
+  renderSavedLoansList();
+});
+
 
         savedLoansList.appendChild(div);
       });
