@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tax‑Deductible Rental Training</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Guided training on tax‑deductible rentals: rent vs expenses, tax base, profit vs loss, and how to use the calculator with your local rules." />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #11152a;
+      --accent: #00c2ff;
+      --accent-soft: rgba(0, 194, 255, 0.15);
+      --text: #e5f4ff;
+      --muted: #9aa6bd;
+      --danger: #ff4d6a;
+      --success: #32d788;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-button,
+    .summary-toggle-button {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.45);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .summary-toggle-button {
+      font-size: 11px;
+      padding: 4px 10px;
+      color: var(--muted);
+    }
+
+    .summary-toggle-button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0, 194, 255, 0.18);
+    }
+
+    .pill-button-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pill-button.back {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px 16px;
+      gap: 12px;
+    }
+
+    .panel {
+      padding: 12px 12px 14px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .panel-body h2 {
+      font-size: 14px;
+      margin: 10px 0 4px;
+    }
+
+    .panel-body h3 {
+      font-size: 13px;
+      margin: 8px 0 4px;
+    }
+
+    .panel-body p {
+      font-size: 13px;
+      color: #d0e0ff;
+    }
+
+    .panel-body ul {
+      margin-left: 1.1rem;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .panel-body li {
+      font-size: 13px;
+      color: #d0e0ff;
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .chart-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(5, 8, 22, 0.9);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .chart-title {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 120px;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, #35d5ff, #32d788);
+      min-width: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar.loss {
+      background: linear-gradient(180deg, #ff8aa8, #ff4d6a);
+    }
+
+    .bar-label-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      flex: 1;
+    }
+
+    .bar-value {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      font-size: 11px;
+      color: #02040a;
+      background: rgba(229, 244, 255, 0.8);
+      border-radius: 999px;
+      padding: 1px 6px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      background: #050816;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric-row span.value {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .pill-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .pill-tag.good {
+      border-color: rgba(50, 215, 136, 0.7);
+      color: var(--success);
+    }
+
+    .pill-tag.bad {
+      border-color: rgba(255, 77, 106, 0.7);
+      color: var(--danger);
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .scenario-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .scenario-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(5, 8, 22, 0.9);
+      padding: 8px 10px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .scenario-title {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .scenario-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .quiz-box {
+      margin-top: 6px;
+      padding: 8px 8px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      font-size: 12px;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .quiz-answer {
+      display: none;
+      font-size: 12px;
+      color: #d0e0ff;
+      margin-top: 4px;
+    }
+
+    .quiz-toggle {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .toggle-row {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+    }
+
+    .toggle-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+    }
+
+    .toggle-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .my-rules-list {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: #d0e0ff;
+    }
+
+    .my-rules-list li {
+      list-style: none;
+      position: relative;
+      padding-left: 14px;
+    }
+
+    .my-rules-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    .my-rule-input {
+      width: 100%;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: #050816;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="top-row">
+        <div class="brand">
+          <div class="brand-title">Tax‑Deductible Rental Training</div>
+          <div class="brand-tagline">Turn the tax‑deductible calculator into a simple plan for this property.</div>
+        </div>
+        <div class="header-actions">
+          <!-- Update href to match your tax‑deductible calculator file -->
+          <a href="taxDeductibleRental.html" class="pill-button back">
+            <span class="pill-button-icon">←</span>
+            Back to tax‑deductible calc
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Overview -->
+      <section class="panel" id="overview">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              Overview
+              <span class="panel-badge">Start here</span>
+            </div>
+            <div class="panel-subtitle">
+              Use this page like a mini‑course that pairs directly with the tax‑deductible rental calculator and your main budget planner.[file:1]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            A rental property has two moving parts for tax: rent coming in and deductible expenses going out; the gap between them is your tax base before local rules decide what actually happens.[file:1]
+          </p>
+          <p>
+            By the end of this page, you will be able to separate personal and rental costs, estimate a yearly tax base, test tax rates, and read whether this property is likely to show a profit or a loss in your system.[file:1]
+          </p>
+          <h3>How to use this with the calculator</h3>
+          <ul>
+            <li>Read one section below.</li>
+            <li>Jump back to the tax‑deductible calculator and change the matching inputs (rent, deductible expenses, or tax rate).[file:1]</li>
+            <li>Watch how the yearly rent, yearly expenses, tax base, and rough tax payable or saving respond.[file:1]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 1: What the calculator is really doing -->
+      <section class="panel" id="chapter-1">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              1. What this calculator really shows
+              <span class="panel-badge">Concept</span>
+            </div>
+            <div class="panel-subtitle">
+              Turn “random rent and bills” into a clear tax base for this property.[file:1]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            The calculator converts your chosen rent and deductible expenses into yearly amounts, then subtracts expenses from rent to show a single number: the estimated tax base for this rental.[file:1]
+          </p>
+          <p>
+            A positive base means the property is making a taxable profit on this simple view, while a negative base means the property is making a loss that your local rules may or may not let you deduct.[file:1]
+          </p>
+
+          <h3>What to do in the calculator</h3>
+          <ul>
+            <li>Enter rent using the same timing as your real lease (for example weekly rent from the tenancy agreement).[file:1]</li>
+            <li>Enter rental expenses that your local rules treat as deductible for this property (for example interest, rates, insurance) in a matching time frame.[file:1]</li>
+            <li>Click “Calculate tax base” and read whether the base is positive, negative, or roughly zero.[file:1]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 2: Yearly maths and frequencies -->
+      <section class="panel" id="chapter-2">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              2. Weekly, monthly, yearly maths
+              <span class="panel-badge">Global maths</span>
+            </div>
+            <div class="panel-subtitle">
+              The tool standardises everything to “per year” so you can compare rent and expenses fairly.[file:1]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            The tax‑deductible calculator multiplies weekly inputs by 52 and monthly inputs by 12 so that rent and expenses can be compared on the same yearly basis.[file:1]
+          </p>
+          <p>
+            This keeps the “tax base” simple: a single yearly figure that you can line up against your other income, your tax bracket, or your own mental comfort zone.[file:1]
+          </p>
+
+          <h3>What to check before entering numbers</h3>
+          <ul>
+            <li>For rent, decide whether it is easier to think weekly or yearly; if your tenancy agreement is weekly, the weekly preset is usually the cleanest.[file:1]</li>
+            <li>For expenses, consider whether they are billed yearly (for example council rates, insurance) or monthly (for example some interest statements); pick the preset that matches your paperwork.[file:1]</li>
+            <li>Try switching between weekly, monthly, and yearly presets while keeping the underlying amounts consistent to see how the yearly totals stay aligned.[file:1]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 3: Profit, loss, and the mini-graph -->
+      <section class="panel" id="chapter-3">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              3. Profit, loss, and “feel”
+              <span class="panel-badge">Graph</span>
+            </div>
+            <div class="panel-subtitle">
+              Use this mini‑graph to feel the gap between rent and expenses rather than just reading a number.[file:1]
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">Yearly rent vs yearly deductible expenses (example)</div>
+            <div class="chart-bars">
+              <div class="bar" id="bar-rent">
+                <div class="bar-value" id="bar-rent-label"></div>
+              </div>
+              <div class="bar loss" id="bar-expenses">
+                <div class="bar-value" id="bar-expenses-label"></div>
+              </div>
+            </div>
+            <div class="bar-label-row">
+              <div class="bar-label">Yearly rent</div>
+              <div class="bar-label">Yearly deductible expenses</div>
+            </div>
+            <div class="note">
+              This example uses a simple rent and expense pair to show how close the two bars sit; you can mirror the same idea with your real property in the main calculator.[file:1]
+            </div>
+          </div>
+
+          <div class="panel-body" style="gap:6px;">
+            <div class="field-group">
+              <div class="field-label">Example yearly rent</div>
+              <div class="field-inline">
+                <span class="note">$</span>
+                <input id="exampleRentInput" type="number" min="0" step="100" value="30000" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Example yearly deductible expenses</div>
+              <div class="field-inline">
+                <span class="note">$</span>
+                <input id="exampleExpenseInput" type="number" min="0" step="100" value="26000" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Example tax rate (optional)</div>
+              <div class="field-inline">
+                <input id="exampleRateInput" type="number" min="0" step="0.5" value="30" />
+                <span class="note">% p.a.</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Example yearly view</div>
+              <div class="metric-row">
+                <span>Estimated tax base</span>
+                <span class="value" id="metricExampleBase"></span>
+              </div>
+              <div class="metric-row">
+                <span>Rough tax payable / saving</span>
+                <span class="value" id="metricExampleTax"></span>
+              </div>
+              <div class="metric-row">
+                <span>Quick read</span>
+                <span class="value" id="metricExampleTag"></span>
+              </div>
+            </div>
+
+            <div class="quiz-box">
+              <div class="quiz-question">Quick question</div>
+              <div>
+                Slide the example expenses up and down. At what point does the property move from profit into loss on this simple view, and how does that feel against your wider budget?
+              </div>
+              <div class="quiz-toggle" data-target="quiz-answer-1">Show suggested answer</div>
+              <div class="quiz-answer" id="quiz-answer-1">
+                When expenses rise close to or above rent, the base shrinks towards zero or turns negative; that means the property is no longer pulling its weight and may need re‑thinking on price, rent, or structure, especially once your real‑world tax rules and cash flow are added on top.[file:1]
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="note">
+          In the main calculator, you get the same idea with your actual numbers: the tax base line shows whether this property is adding to your taxable income or potentially generating deductible losses, before any country‑specific limits.[file:1]
+        </div>
+      </section>
+
+      <!-- Chapter 4: Local rules and boundaries -->
+      <section class="panel" id="chapter-4">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              4. Local rules and boundaries
+              <span class="panel-badge">Planning</span>
+            </div>
+            <div class="panel-subtitle">
+              The calculator does maths, not law; your rules decide what counts as deductible.[file:1]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            The tax‑deductible rental calculator never decides what is deductible; it simply applies the arithmetic to the amounts you enter as “deductible expenses”.[file:1]
+          </p>
+          <p>
+            Deductibility rules can change by country, property use, and ownership structure, so this tool is designed to help you quickly test scenarios once you already know which expenses belong in the deductible bucket.[file:1]
+          </p>
+
+          <h3>Perspective toggle</h3>
+          <div class="toggle-row" id="personaToggle">
+            <button type="button" class="toggle-btn active" data-persona="home">Accidental landlord vibe</button>
+            <button type="button" class="toggle-btn" data-persona="investor">Deliberate investor vibe</button>
+          </div>
+          <p id="personaCopyHome">
+            Many accidental landlords start from a home they used to live in; this tool nudges you to separate personal costs from genuine rental expenses before feeding numbers into the tax base.[file:1]
+          </p>
+          <p id="personaCopyInvestor" style="display:none;">
+            Investors often juggle multiple properties; this tool helps you see how each rental’s tax base sits within your portfolio, without pretending to replace the specific rules of your tax system.[file:1]
+          </p>
+
+          <h3>What to do before relying on the results</h3>
+          <ul>
+            <li>Check official guidance or talk to a qualified tax professional about which expenses count as deductible for this property type.[file:1]</li>
+            <li>Use the calculator once with “strict” expenses only, then again with “maybe” expenses, to see how sensitive your base is to classification.[file:1]</li>
+            <li>Remember the disclaimer: this is general maths, not advice, and it does not include every real‑world tax rule or limit.[file:1]</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chapter 5: Tax rate and planning -->
+      <section class="panel" id="chapter-5">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              5. Tax rate and planning
+              <span class="panel-badge">Strategy</span>
+            </div>
+            <div class="panel-subtitle">
+              The optional tax rate box turns your base into a rough tax bill or saving.[file:1]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p>
+            When you enter an estimated tax rate, the calculator multiplies your tax base by that rate to show a rough tax payable if the base is positive or a rough tax saving if the base is negative.[file:1]
+          </p>
+          <p>
+            This does not replace real tax software or return forms, but it helps you feel whether this property is likely to push your total tax up or down on a straightforward reading.[file:1]
+          </p>
+
+          <h3>Tips when playing with the tax rate</h3>
+          <ul>
+            <li>Try a lower and higher rate around your expected bracket to see a range of possible tax outcomes for this property.[file:1]</li>
+            <li>If the property only looks attractive at unusually low tax rates, treat that as a flag to revisit price, rent, or structure with a professional.[file:1]</li>
+            <li>Remember that some systems limit how rental losses can be used; a negative base does not always mean an immediate cash saving.[file:1]</li>
+          </ul>
+
+          <div class="scenario-grid">
+            <div class="scenario-card">
+              <div class="scenario-title">Owner assuming every dollar is deductible</div>
+              <div class="scenario-tag">Before</div>
+              <p>
+                They type almost every property‑related cost into the deductible box, see a large loss, and mentally bank a big tax refund that may never actually arrive once real rules are applied.[file:1]
+              </p>
+            </div>
+            <div class="scenario-card">
+              <div class="scenario-title">Owner using strict deductibles</div>
+              <div class="scenario-tag">After</div>
+              <p>
+                They run the calculator with only clearly deductible expenses, then separately test “maybe” expenses and take both versions to a tax professional for confirmation before making big decisions.[file:1]
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 6: Myths, rules, and next steps -->
+      <section class="panel" id="chapter-6">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              6. Myths, rules, and next steps
+              <span class="panel-badge">Putting it together</span>
+            </div>
+            <div class="panel-subtitle">
+              Use simple rules so the calculator reflects your own boundaries, not only tax or lender limits.[file:1]
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <h3>Myth vs reality (short list)</h3>
+          <ul class="my-rules-list">
+            <li><strong>Myth</strong>: “If rent is close enough to the mortgage, the tax will sort itself out.” Reality: tax depends on deductible expenses, not just the loan repayment, and rules differ by country.[file:1]</li>
+            <li><strong>Myth</strong>: “A loss on paper is always good because of tax refunds.” Reality: real cash losses still leave your bank account, and some systems limit how losses can be used.[file:1]</li>
+            <li><strong>Myth</strong>: “The calculator’s result is the same as my final tax outcome.” Reality: the tool is a maths engine; official guidance and professional advice still decide the final numbers.[file:1]</li>
+          </ul>
+
+          <h3>Your simple rules (you can change later)</h3>
+          <ul class="my-rules-list">
+            <li>Rule idea: “Only enter expenses I am confident are deductible, and keep a separate list of ‘maybe’ items for my tax adviser.”[file:1]</li>
+            <li>Rule idea: “Check how the property looks at both my current tax rate and a slightly higher bracket.”[file:1]</li>
+            <li>Rule idea: “Do not rely on tax benefits alone to make a weak cash‑flow property feel OK.”[file:1]</li>
+          </ul>
+          <input class="my-rule-input" placeholder="Write your own rule of thumb (for example, ‘Run a strict and a generous deductibles scenario before buying a property’)." />
+
+          <p class="note">
+            This page is general education, not personal advice; always consider your own circumstances and speak with a qualified tax professional or adviser before relying on these numbers for real decisions.[file:1]
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function formatCurrencySimple(amount) {
+      if (!isFinite(amount)) return "";
+      return amount.toLocaleString("en-AU", {
+        style: "currency",
+        currency: "AUD",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+    }
+
+    function updateExampleView() {
+      const rent = parseFloat(document.getElementById("exampleRentInput").value) || 0;
+      const expenses = parseFloat(document.getElementById("exampleExpenseInput").value) || 0;
+      const rate = parseFloat(document.getElementById("exampleRateInput").value) || 0;
+
+      const base = rent - expenses;
+      const taxRateDecimal = rate > 0 ? rate / 100 : 0;
+      let taxAmount = 0;
+      let tagText = "";
+      let tagClass = "pill-tag";
+
+      if (taxRateDecimal > 0 && base !== 0) {
+        if (base > 0) {
+          taxAmount = base * taxRateDecimal;
+          tagText = "Positive base – rough extra tax payable at this rate.";
+          tagClass += " good";
+        } else {
+          taxAmount = Math.abs(base) * taxRateDecimal;
+          tagText = "Negative base – rough tax saving if your system allows this loss to be used.";
+          tagClass += " bad";
+        }
+      } else if (base > 0) {
+        tagText = "Positive base – rental profit on this simple view.";
+        tagClass += " good";
+      } else if (base < 0) {
+        tagText = "Negative base – rental loss on this simple view.";
+        tagClass += " bad";
+      } else {
+        tagText = "Zero base – rent and deductible expenses match.";
+        tagClass += " good";
+      }
+
+      const rentBar = document.getElementById("bar-rent");
+      const expBar = document.getElementById("bar-expenses");
+      const rentLabel = document.getElementById("bar-rent-label");
+      const expLabel = document.getElementById("bar-expenses-label");
+
+      const maxVal = Math.max(rent, expenses, 1);
+      const rentHeight = (rent / maxVal) * 100;
+      const expHeight = (expenses / maxVal) * 100;
+
+      if (rentBar) rentBar.style.height = Math.max(rentHeight, 10) + "%";
+      if (expBar) expBar.style.height = Math.max(expHeight, 10) + "%";
+      if (rentLabel) rentLabel.textContent = formatCurrencySimple(rent);
+      if (expLabel) expLabel.textContent = formatCurrencySimple(expenses);
+
+      const baseEl = document.getElementById("metricExampleBase");
+      const taxEl = document.getElementById("metricExampleTax");
+      const tagEl = document.getElementById("metricExampleTag");
+
+      if (baseEl) baseEl.textContent = formatCurrencySimple(base);
+      if (taxEl) {
+        if (taxRateDecimal > 0 && base !== 0) {
+          const label = base > 0 ? "Tax payable ~ " : "Possible tax saving ~ ";
+          taxEl.textContent = label + formatCurrencySimple(taxAmount);
+        } else {
+          taxEl.textContent = "No rate used";
+        }
+      }
+      if (tagEl) {
+        tagEl.textContent = tagText;
+        tagEl.className = tagClass;
+      }
+    }
+
+    ["exampleRentInput", "exampleExpenseInput", "exampleRateInput"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", updateExampleView);
+      el.addEventListener("change", updateExampleView);
+    });
+
+    const personaToggle = document.getElementById("personaToggle");
+    if (personaToggle) {
+      personaToggle.addEventListener("click", e => {
+        const btn = e.target.closest(".toggle-btn");
+        if (!btn) return;
+        const persona = btn.dataset.persona || "home";
+        personaToggle.querySelectorAll(".toggle-btn").forEach(b => {
+          b.classList.toggle("active", b === btn);
+        });
+        const homeP = document.getElementById("personaCopyHome");
+        const invP = document.getElementById("personaCopyInvestor");
+        if (persona === "home") {
+          if (homeP) homeP.style.display = "";
+          if (invP) invP.style.display = "none";
+        } else {
+          if (homeP) homeP.style.display = "none";
+          if (invP) invP.style.display = "";
+        }
+      });
+    }
+
+    document.querySelectorAll(".quiz-toggle").forEach(toggle => {
+      toggle.addEventListener("click", () => {
+        const targetId = toggle.getAttribute("data-target");
+        const answer = targetId ? document.getElementById(targetId) : null;
+        if (!answer) return;
+        const isOpen = answer.style.display === "block";
+        answer.style.display = isOpen ? "none" : "block";
+        toggle.textContent = isOpen ? "Show suggested answer" : "Hide suggested answer";
+      });
+    });
+
+    updateExampleView();
+  </script>
+</body>
+</html>
