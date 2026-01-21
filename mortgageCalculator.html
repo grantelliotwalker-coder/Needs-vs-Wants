@@ -1067,7 +1067,7 @@
 
   function loadPlannerSurplus() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_INCOME);
+      const raw = localStorage.getItem(STORAGE_KEY_SURPLUS);
       if (!raw) {
         plannerSurplusWeekly = 0;
         plannerSurplusEl.textContent = "0";
