@@ -1046,6 +1046,8 @@
     let currentColor = "default";
     let summaryFrequency = "fortnightly";
     let summaryVisible = true;
+    let currentSurplus = 0;
+
 
     function formatCurrency(amount) {
       if (!isFinite(amount)) return "$0";
@@ -1371,6 +1373,8 @@
       const totalDisplay = fromWeekly(totalWeekly, summaryFrequency);
       const incomeDisplay = fromWeekly(incomeWeekly, summaryFrequency);
       const surplusDisplay = incomeDisplay - totalDisplay;
+      // keep currentSurplus updated for storage
+currentSurplus = surplusDisplay;
 
       summaryTotalEl.textContent = formatCurrency(totalDisplay);
       summarySurplusEl.textContent = formatCurrency(Math.abs(surplusDisplay));
