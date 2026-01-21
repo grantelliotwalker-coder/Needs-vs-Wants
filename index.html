@@ -1282,8 +1282,9 @@
       if (editingId == null) return;
       const index = items.findIndex((i) => i.id === editingId);
       if (index !== -1) items.splice(index, 1);
-      persist();
+      
       render();
+      persist();
       closeModal();
     }
 
@@ -1436,8 +1437,9 @@ currentSurplus = surplusDisplay;
     itemFrequencyInput.addEventListener("change", updateBreakdownPreview);
 
     incomeAmountEl.addEventListener("input", () => {
-      persist();
+      
       render();
+      persist();
     });
 
     summaryFrequencyToggle.addEventListener("click", (e) => {
@@ -1445,8 +1447,9 @@ currentSurplus = surplusDisplay;
       if (!btn) return;
       summaryFrequency = btn.dataset.freq || "fortnightly";
       updateSummaryFrequencyButtons();
-      persist();
+      
       render();
+      persist();
     });
 
     summaryToggleBtn.addEventListener("click", () => {
