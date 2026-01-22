@@ -1121,17 +1121,44 @@
     return (principal * r * factor) / (factor - 1);
   }
 
-  function updateDepositUI() {
-    if (depositMode === "amount") {
-      depositModeToggle.textContent = "$";
-      depositNote.textContent =
-        "Enter deposit in dollars. Tap the toggle to switch to % of price.";
-    } else {
-      depositModeToggle.textContent = "%";
-      depositNote.textContent =
-        "Enter deposit as % of property price. The calculator will convert it to dollars.";
-    }
+  let depositMode = "amount"; // amount or percent
+
+function updateDepositUI() {
+  if (depositMode === "amount") {
+    depositModeToggle.textContent = "% of price";
+    depositNote.textContent =
+      "Enter deposit in dollars. Tap the toggle to switch to % of price.";
+  } else {
+    depositModeToggle.textContent = "$ amount";
+    depositNote.textContent =
+      "Enter deposit as % of property price. The calculator will convert it to dollars.";
   }
+}
+
+depositModeToggle.addEventListener("click", () => {
+  const price = parseFloat(priceInput.value || "0");
+  let dep = parseFloat(depositInput.value || "0");
+
+  if (depositMode === "amount") {
+    // going to percent
+    if (price > 0 && dep > 0) {
+      dep = (dep / price) * 100;
+      depositInput.value = dep.toFixed(2);
+    }
+    depositMode = "percent";
+  } else {
+    // going to amount
+    if (price > 0 && dep > 0) {
+      dep = (dep / 100) * price;
+      depositInput.value = dep.toFixed(0); // or toFixed(2) if you prefer cents
+    }
+    depositMode = "amount";
+  }
+
+  updateDepositUI();
+  persistMortgageState();
+});
+
 
   depositModeToggle.addEventListener("click", () => {
     depositMode = depositMode === "amount" ? "percent" : "amount";
@@ -1277,17 +1304,24 @@
   }
 
   function clearLoan() {
-  // Clear input fields
+  // NEW: deselect any saved mortgage row
+  selectedLoanId = null;
+
+  // Clear inputs
   priceInput.value = "";
   depositInput.value = "";
   rateInput.value = "";
   futureRateInput.value = "";
   termInput.value = "";
   extraInput.value = "";
-  freqInput.value = "monthly"; // or keep current: freqInput.value = freqInput.value;
+  freqInput.value = "monthly";
   calcSplitCheckbox.checked = false;
 
-  // Reset internal state that affects affordability snapshot
+  // Optional: reset deposit mode to dollars
+  depositMode = "amount";
+  updateDepositUI();
+
+  // Reset internal state
   lastPaymentPerFreq = 0;
   lastWholePaymentPerFreq = 0;
   lastFreq = "monthly";
@@ -1295,7 +1329,7 @@
   lastTermYears = 0;
   lastRate = 0;
 
-  // Clear result text
+  // Reset results area
   resultPaymentEl.textContent = "";
   resultPaymentLabelEl.textContent = "Per month";
   resultYourShareEl.textContent = "";
@@ -1307,21 +1341,28 @@
   coverageBarEl.style.width = "0";
   coverageNoteEl.textContent = "Run a calculation to compare.";
   coverageTagEl.textContent = "";
+  paymentDisplayEl.textContent = "0";
+  coverageLabelEl.textContent = "Run a calculation";
+  coverageLabelEl.classList.remove("deficit");
+  coverageLabelEl.classList.add("surplus");
+  afterPaymentEl.textContent = "0";
+
   futurePaymentEl.textContent = "";
   futureInterestEl.textContent = "";
   futureChangeEl.textContent = "";
-  futureNoteEl.textContent = "Enter a future interest rate to see how repayments and total interest could change.";
+  futureNoteEl.textContent =
+    "Enter a future interest rate to see how repayments and total interest could change.";
   futureBox.style.display = "none";
 
-  // Clear any input error message
   inputError.textContent = "";
 
-  // Persist the “empty” mortgage state so reload stays cleared
-  persistMortgageState();
+  // NEW: refresh saved-loans list so no item is visually selected
+  renderSavedLoansList();
 
-  // Recompute the affordability snapshot with 0 payment
+  persistMortgageState();
   updateAffordability();
 }
+
 
 
   function updateAffordability() {
@@ -1655,7 +1696,7 @@
     }
   });
 
-  saveConfirmBtn.addEventListener("click", () => {
+    saveConfirmBtn.addEventListener("click", () => {
     if (!lastPaymentPerFreq || lastPaymentPerFreq <= 0) {
       saveModalNote.textContent =
         "Run a calculation first before saving.";
@@ -1678,6 +1719,19 @@
 
     const amountToSave = lastPaymentPerFreq;
 
+    // NEW: capture full loan state for reload
+    const loanPayload = {
+      price: priceInput.value || "",
+      deposit: depositInput.value || "",
+      rate: rateInput.value || "",
+      futureRate: futureRateInput.value || "",
+      term: termInput.value || "",
+      extra: extraInput.value || "",
+      freq: freq,
+      split: !!calcSplitCheckbox.checked,
+      depositMode, // "amount" or "percent"
+    };
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
       const items = raw ? JSON.parse(raw) : [];
@@ -1697,6 +1751,7 @@
         targetItem.frequency = freq;
         targetItem.enabled = true;
         targetItem.color = targetItem.color || "blue";
+        targetItem.loanPayload = loanPayload; // NEW
       } else {
         const maxId = items.reduce(
           (max, i) => (i && typeof i.id === "number" ? Math.max(max, i.id) : max),
@@ -1709,7 +1764,8 @@
           amount: amountToSave,
           frequency: freq,
           enabled: true,
-          color: "blue"
+          color: "blue",
+          loanPayload, // NEW
         });
         selectedLoanId = maxId + 1;
       }
@@ -1735,6 +1791,7 @@
       }, 2500);
     }
   });
+
 
   addToPlannerBtn.addEventListener("click", () => {
     selectedLoanId = null; // new by default; selecting a row sets it again
@@ -1826,7 +1883,7 @@
     }
   }
 
-  function loadLoanIntoCalculator(loan) {
+    function loadLoanIntoCalculator(loan) {
     const freq =
       loan.frequency === "weekly" ||
       loan.frequency === "fortnightly" ||
@@ -1834,10 +1891,34 @@
       loan.frequency === "yearly"
         ? loan.frequency
         : "monthly";
+
+    // Default behaviour
     freqInput.value = freq;
     extraInput.value = "";
-    inputError.textContent = "Loaded saved amount. Re-enter loan details to recalc breakdown.";
+
+    // NEW: restore full loan details if present
+    const payload = loan.loanPayload;
+    if (payload && typeof payload === "object") {
+      if (payload.depositMode === "amount" || payload.depositMode === "percent") {
+        depositMode = payload.depositMode;
+        updateDepositUI();
+      }
+
+      priceInput.value = payload.price || "";
+      depositInput.value = payload.deposit || "";
+      rateInput.value = payload.rate || "";
+      futureRateInput.value = payload.futureRate || "";
+      termInput.value = payload.term || "";
+      extraInput.value = payload.extra || "";
+      freqInput.value = payload.freq || freq;
+      calcSplitCheckbox.checked = !!payload.split;
+    }
+
+    inputError.textContent =
+      "Loaded saved mortgage. Press Calculate to refresh breakdown.";
+    persistMortgageState();
   }
+
 
   toggleSavedLoansBtn.addEventListener("click", () => {
     savedLoansVisible = !savedLoansVisible;
