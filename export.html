@@ -86,6 +86,8 @@
     <button id="backBtn">Back to budget</button>
     <button id="refreshBtn">Build table from saved budget</button>
     <button id="copyBtn">Copy table to clipboard</button>
+    <input type="file" id="importFile" accept="application/json,.json,.txt">
+    <button id="importBtn">Import JSON</button>
     <span id="status"></span>
   </div>
 
@@ -237,6 +239,53 @@
     document.getElementById("backBtn").addEventListener("click", goBack);
 
     buildTable();
+
+  async function importBudgetFromFile() {
+  const statusEl = document.getElementById("status");
+  const fileInput = document.getElementById("importFile");
+  const file = fileInput.files && fileInput.files[0];
+
+  if (!file) {
+    statusEl.textContent = "Choose a JSON file first.";
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!Array.isArray(data)) {
+      statusEl.textContent = "Import failed: JSON must be an array.";
+      return;
+    }
+
+    // Optional: very light validation/normalisation
+    const cleaned = data
+      .filter(it => typeof it.amount === "number")
+      .map(it => ({
+        type: it.type === "want" ? "want" : "need",
+        label: typeof it.label === "string" ? it.label : "untitled",
+        amount: it.amount,
+        frequency: ["weekly","fortnightly","monthly","yearly"].includes(it.frequency)
+          ? it.frequency
+          : "weekly",
+        enabled: it.enabled !== false,
+        color: it.color || "default",
+        id: typeof it.id === "number" ? it.id : Date.now() + Math.random()
+      }));
+
+    localStorage.setItem("budgetNeedsWantsItems", JSON.stringify(cleaned));
+
+    statusEl.textContent = "Import complete. Table refreshed.";
+    buildTable();
+  } catch (e) {
+    statusEl.textContent = "Import failed: could not read or parse JSON.";
+  }
+}
+
+document.getElementById("importBtn").addEventListener("click", importBudgetFromFile);
+
+    
   </script>
 </body>
 </html>
