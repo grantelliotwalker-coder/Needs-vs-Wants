@@ -1070,25 +1070,43 @@
 
     function persist() {
   try {
-    localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
+    localStorage.setItem(STORAGEKEYITEMS, JSON.stringify(items));
 
     const incomeState = {
-      amount: incomeAmountEl.value || "0",
+      amount: incomeAmountEl.value || 0,
       frequency: summaryFrequency || "fortnightly",
       visible: summaryVisible,
     };
-    localStorage.setItem(STORAGE_KEY_INCOME, JSON.stringify(incomeState));
+    localStorage.setItem(STORAGEKEYINCOME, JSON.stringify(incomeState));
 
-    // NEW: save surplus for the mortgage calculator
+    // Save surplus for mortgage calculator: always store as weekly
+    const totalWeekly = (() => {
+      let needsWeekly = 0;
+      let wantsWeekly = 0;
+      items.forEach((item) => {
+        const weekly = toWeekly(item.amount, item.frequency);
+        if (item.enabled) {
+          if (item.type === "need") needsWeekly += weekly;
+          else wantsWeekly += weekly;
+        }
+      });
+      return needsWeekly + wantsWeekly;
+    })();
+
+    const incomeAmount = parseFloat(incomeAmountEl.value) || 0;
+    const incomeWeekly = toWeekly(incomeAmount, summaryFrequency);
+    const surplusWeekly = incomeWeekly - totalWeekly;
+
     const surplusState = {
-      amount: currentSurplus || 0,              // use your surplus variable here
-      frequency: summaryFrequency || "fortnightly",
+      amount: surplusWeekly || 0,
+      frequency: "weekly",
     };
-    localStorage.setItem(STORAGE_KEY_SURPLUS, JSON.stringify(surplusState));
+    localStorage.setItem(STORAGEKEYSURPLUS, JSON.stringify(surplusState));
   } catch (e) {
     console.warn("Unable to persist to localStorage", e);
   }
 }
+
 
 
     function restore() {
