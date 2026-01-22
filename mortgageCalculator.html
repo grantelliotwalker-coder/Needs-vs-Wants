@@ -1140,32 +1140,29 @@ depositModeToggle.addEventListener("click", () => {
   let dep = parseFloat(depositInput.value || "0");
 
   if (depositMode === "amount") {
-    // going to percent
+    // Going from dollars → percent
     if (price > 0 && dep > 0) {
       dep = (dep / price) * 100;
-      depositInput.value = dep.toFixed(2);
+    } else {
+      dep = 0;
     }
     depositMode = "percent";
+    depositInput.value = dep.toFixed(2);
   } else {
-    // going to amount
+    // Going from percent → dollars
     if (price > 0 && dep > 0) {
       dep = (dep / 100) * price;
-      depositInput.value = dep.toFixed(0); // or toFixed(2) if you want cents
+    } else {
+      dep = 0;
     }
     depositMode = "amount";
+    depositInput.value = dep.toFixed(0); // or toFixed(2) if you want cents
   }
 
   updateDepositUI();
   persistMortgageState();
 });
 
-
-
-  depositModeToggle.addEventListener("click", () => {
-    depositMode = depositMode === "amount" ? "percent" : "amount";
-    updateDepositUI();
-    calculate();
-  });
 
   function calculate() {
     const price = parseFloat(priceInput.value || "0");
