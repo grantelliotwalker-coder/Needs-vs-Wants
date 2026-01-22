@@ -1533,14 +1533,13 @@ depositModeToggle.addEventListener("click", () => {
         btn.classList.toggle("active", btn.dataset.view === viewMode);
       });
 
-      if (
-        state.price ||
-        state.deposit ||
-        state.rate ||
-        state.term
-      ) {
-        calculate();
-      }
+      // keep existing auto-calc behaviour
+    if (state.price && state.deposit && state.rate && state.term) {
+      calculate();
+    } else {
+      // no full calc, at least refresh the display using any stored payment
+      updateAffordability();
+    }
     } catch (e) {
       // ignore
     }
