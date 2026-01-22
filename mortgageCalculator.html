@@ -660,8 +660,8 @@
               <label>View as:</label>
               <div class="type-toggle" id="viewToggle">
                 <button class="type-option" data-view="weekly">W</button>
-                <button class="type-option" data-view="fortnightly">F</button>
-                <button class="type-option active" data-view="monthly">M</button>
+                <button class="type-option active" data-view="fortnightly">F</button>
+                <button class="type-option" data-view="monthly">M</button>
                 <button class="type-option" data-view="yearly">Y</button>
               </div>
             </div>
@@ -1230,14 +1230,13 @@ depositModeToggle.addEventListener("click", () => {
 
     // results: whole loan
     resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
-    resultPaymentLabelEl.textContent =
-      "Per " +
-      (viewMode === "weekly"
-        ? "week"
-        : viewMode === "fortnightly"
-        ? "fortnight"
-        : viewMode === "monthly"
-        ? "month"
+   resultPaymentLabelEl.textContent =
+  "Per " +
+  (freq === "weekly"
+    ? "week"
+    : freq === "fortnightly"
+    ? "fortnight"
+    : "month");
         : "year");
 
     // results: your share
@@ -1794,7 +1793,6 @@ depositModeToggle.addEventListener("click", () => {
 
 
   addToPlannerBtn.addEventListener("click", () => {
-    selectedLoanId = null; // new by default; selecting a row sets it again
     openSaveModal();
   });
 
