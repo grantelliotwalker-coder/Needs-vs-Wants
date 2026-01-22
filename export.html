@@ -139,7 +139,7 @@
       statusEl.textContent = "";
       tbody.innerHTML = "";
 
-      let raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
       if (!raw) {
         statusEl.textContent = "No saved budget found in this browser.";
         return;
@@ -201,7 +201,8 @@
         count++;
       });
 
-      statusEl.textContent = "Table built from " + count + " items. Copy and paste into Excel/Sheets.";
+      statusEl.textContent =
+        "Table built from " + count + " items. Copy and paste into Excel/Sheets.";
     }
 
     async function copyTable() {
@@ -214,10 +215,8 @@
       selection.addRange(range);
 
       try {
-        // Most browsers: execCommand copy will use the selected HTML table
         const ok = document.execCommand("copy");
         if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
-          // Fallback: plain-text copy (still pastes as cells in Sheets/Excel)
           const text = selection.toString();
           await navigator.clipboard.writeText(text);
         }
@@ -230,62 +229,58 @@
     }
 
     function goBack() {
-      // Back to main index on same origin
       window.location.href = "index.html";
+    }
+
+    async function importBudgetFromFile() {
+      const statusEl = document.getElementById("status");
+      const fileInput = document.getElementById("importFile");
+      const file = fileInput.files && fileInput.files[0];
+
+      if (!file) {
+        statusEl.textContent = "Choose a JSON file first.";
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (!Array.isArray(data)) {
+          statusEl.textContent = "Import failed: JSON must be an array.";
+          return;
+        }
+
+        const cleaned = data
+          .filter(it => typeof it.amount === "number")
+          .map(it => ({
+            type: it.type === "want" ? "want" : "need",
+            label: typeof it.label === "string" ? it.label : "untitled",
+            amount: it.amount,
+            frequency: ["weekly", "fortnightly", "monthly", "yearly"].includes(it.frequency)
+              ? it.frequency
+              : "weekly",
+            enabled: it.enabled !== false,
+            color: it.color || "default",
+            id: typeof it.id === "number" ? it.id : Date.now() + Math.random()
+          }));
+
+        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(cleaned));
+
+        statusEl.textContent = "Import complete. Table refreshed.";
+        buildTable();
+      } catch (e) {
+        console.error("Import error", e);
+        statusEl.textContent = "Import failed: could not read or parse JSON.";
+      }
     }
 
     document.getElementById("refreshBtn").addEventListener("click", buildTable);
     document.getElementById("copyBtn").addEventListener("click", copyTable);
     document.getElementById("backBtn").addEventListener("click", goBack);
+    document.getElementById("importBtn").addEventListener("click", importBudgetFromFile);
 
     buildTable();
-
-  async function importBudgetFromFile() {
-  const statusEl = document.getElementById("status");
-  const fileInput = document.getElementById("importFile");
-  const file = fileInput.files && fileInput.files[0];
-
-  if (!file) {
-    statusEl.textContent = "Choose a JSON file first.";
-    return;
-  }
-
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-
-    if (!Array.isArray(data)) {
-      statusEl.textContent = "Import failed: JSON must be an array.";
-      return;
-    }
-
-    // Optional: very light validation/normalisation
-    const cleaned = data
-      .filter(it => typeof it.amount === "number")
-      .map(it => ({
-        type: it.type === "want" ? "want" : "need",
-        label: typeof it.label === "string" ? it.label : "untitled",
-        amount: it.amount,
-        frequency: ["weekly","fortnightly","monthly","yearly"].includes(it.frequency)
-          ? it.frequency
-          : "weekly",
-        enabled: it.enabled !== false,
-        color: it.color || "default",
-        id: typeof it.id === "number" ? it.id : Date.now() + Math.random()
-      }));
-
-    localStorage.setItem("budgetNeedsWantsItems", JSON.stringify(cleaned));
-
-    statusEl.textContent = "Import complete. Table refreshed.";
-    buildTable();
-  } catch (e) {
-    statusEl.textContent = "Import failed: could not read or parse JSON.";
-  }
-}
-
-document.getElementById("importBtn").addEventListener("click", importBudgetFromFile);
-
-    
   </script>
 </body>
 </html>
