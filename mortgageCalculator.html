@@ -1276,6 +1276,54 @@
     persistMortgageState();
   }
 
+  function clearLoan() {
+  // Clear input fields
+  priceInput.value = "";
+  depositInput.value = "";
+  rateInput.value = "";
+  futureRateInput.value = "";
+  termInput.value = "";
+  extraInput.value = "";
+  freqInput.value = "monthly"; // or keep current: freqInput.value = freqInput.value;
+  calcSplitCheckbox.checked = false;
+
+  // Reset internal state that affects affordability snapshot
+  lastPaymentPerFreq = 0;
+  lastWholePaymentPerFreq = 0;
+  lastFreq = "monthly";
+  lastPrincipal = 0;
+  lastTermYears = 0;
+  lastRate = 0;
+
+  // Clear result text
+  resultPaymentEl.textContent = "";
+  resultPaymentLabelEl.textContent = "Per month";
+  resultYourShareEl.textContent = "";
+  resultShareLabelEl.textContent = "Not split";
+  resultInterestBaseEl.textContent = "";
+  resultInterestExtraEl.textContent = "";
+  resultTermBaseEl.textContent = "";
+  resultTermExtraEl.textContent = "";
+  coverageBarEl.style.width = "0";
+  coverageNoteEl.textContent = "Run a calculation to compare.";
+  coverageTagEl.textContent = "";
+  futurePaymentEl.textContent = "";
+  futureInterestEl.textContent = "";
+  futureChangeEl.textContent = "";
+  futureNoteEl.textContent = "Enter a future interest rate to see how repayments and total interest could change.";
+  futureBox.style.display = "none";
+
+  // Clear any input error message
+  inputError.textContent = "";
+
+  // Persist the “empty” mortgage state so reload stays cleared
+  persistMortgageState();
+
+  // Recompute the affordability snapshot with 0 payment
+  updateAffordability();
+}
+
+
   function updateAffordability() {
     const weeklyPayment = toWeekly(lastPaymentPerFreq, lastFreq);
     const paymentView = fromWeekly(weeklyPayment, viewMode);
@@ -1822,6 +1870,10 @@
       inputError.textContent = "Could not delete saved mortgage.";
     }
   });
+
+  // NEW: clear loan button
+  const clearLoanBtn = document.getElementById("clearLoanBtn");
+  clearLoanBtn.addEventListener("click", clearLoan);
 
   // Init
   updateDepositUI();
