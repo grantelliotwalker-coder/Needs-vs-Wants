@@ -1091,7 +1091,7 @@
         }
       });
       return needsWeekly + wantsWeekly;
-    })();
+    });
 
     const incomeAmount = parseFloat(incomeAmountEl.value) || 0;
     const incomeWeekly = toWeekly(incomeAmount, summaryFrequency);
