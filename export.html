@@ -40,12 +40,10 @@
       color: #02040a;
       font-weight: 600;
     }
-    #copyBtn {
-      background: transparent;
-      color: #e5f4ff;
-      border: 1px solid rgba(255,255,255,0.4);
-    }
-    #backBtn {
+    #copyBtn,
+    #backBtn,
+    #downloadBtn,
+    #importBtn {
       background: transparent;
       color: #e5f4ff;
       border: 1px solid rgba(255,255,255,0.4);
@@ -80,12 +78,13 @@
 </head>
 <body>
   <h1>Budget · Export</h1>
-  <p>This reads your saved budget in this browser and builds a table you can copy into Excel or Google Sheets.</p>
+  <p>This reads your saved budget in this browser and builds a table you can copy into Excel or Google Sheets, or export/import JSON between devices.</p>
 
   <div class="row">
     <button id="backBtn">Back to budget</button>
     <button id="refreshBtn">Build table from saved budget</button>
     <button id="copyBtn">Copy table to clipboard</button>
+    <button id="downloadBtn">Download JSON</button>
     <input type="file" id="importFile" accept="application/json,.json,.txt">
     <button id="importBtn">Import JSON</button>
     <span id="status"></span>
@@ -232,6 +231,35 @@
       window.location.href = "index.html";
     }
 
+    function downloadJson() {
+      const statusEl = document.getElementById("status");
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+
+      if (!raw) {
+        statusEl.textContent = "No saved budget found to download.";
+        return;
+      }
+
+      try {
+        JSON.parse(raw);
+      } catch (e) {
+        statusEl.textContent = "Saved data is not valid JSON.";
+        return;
+      }
+
+      const blob = new Blob([raw], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "budget-needs-wants.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      statusEl.textContent = "JSON downloaded. Move it to your other device to import.";
+    }
+
     async function importBudgetFromFile() {
       const statusEl = document.getElementById("status");
       const fileInput = document.getElementById("importFile");
@@ -278,6 +306,7 @@
     document.getElementById("refreshBtn").addEventListener("click", buildTable);
     document.getElementById("copyBtn").addEventListener("click", copyTable);
     document.getElementById("backBtn").addEventListener("click", goBack);
+    document.getElementById("downloadBtn").addEventListener("click", downloadJson);
     document.getElementById("importBtn").addEventListener("click", importBudgetFromFile);
 
     buildTable();
