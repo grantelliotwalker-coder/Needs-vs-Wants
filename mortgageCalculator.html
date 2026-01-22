@@ -1359,6 +1359,7 @@ depositModeToggle.addEventListener("click", () => {
   renderSavedLoansList();
 
   persistMortgageState();
+  loadPlannerSurplus();
   updateAffordability();
 }
 
@@ -1780,6 +1781,8 @@ depositModeToggle.addEventListener("click", () => {
       }, 2000);
 
       closeSaveModal();
+      loadPlannerSurplus();
+  updateAffordability();
       renderSavedLoansList();
     } catch (e) {
       addToPlannerBtn.classList.remove("good");
@@ -1947,6 +1950,8 @@ depositModeToggle.addEventListener("click", () => {
       selectedLoanId = null;
       renderSavedLoansList();
       inputError.textContent = "";
+      loadPlannerSurplus();
+    updateAffordability();
     } catch (e) {
       inputError.textContent = "Could not delete saved mortgage.";
     }
