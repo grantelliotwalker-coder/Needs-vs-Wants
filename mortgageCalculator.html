@@ -1236,8 +1236,10 @@ depositModeToggle.addEventListener("click", () => {
     ? "week"
     : freq === "fortnightly"
     ? "fortnight"
-    : "month");
-        : "year");
+    : freq === "monthly"
+    ? "month"
+    : "year");
+
 
     // results: your share
     resultYourShareEl.textContent = formatCurrency(effectivePayment);
