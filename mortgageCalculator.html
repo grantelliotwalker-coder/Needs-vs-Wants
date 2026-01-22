@@ -1150,7 +1150,7 @@ depositModeToggle.addEventListener("click", () => {
     // going to amount
     if (price > 0 && dep > 0) {
       dep = (dep / 100) * price;
-      depositInput.value = dep.toFixed(0); // or toFixed(2) if you prefer cents
+      depositInput.value = dep.toFixed(0); // or toFixed(2) if you want cents
     }
     depositMode = "amount";
   }
@@ -1158,6 +1158,7 @@ depositModeToggle.addEventListener("click", () => {
   updateDepositUI();
   persistMortgageState();
 });
+
 
 
   depositModeToggle.addEventListener("click", () => {
@@ -1696,7 +1697,7 @@ depositModeToggle.addEventListener("click", () => {
     }
   });
 
-    saveConfirmBtn.addEventListener("click", () => {
+      saveConfirmBtn.addEventListener("click", () => {
     if (!lastPaymentPerFreq || lastPaymentPerFreq <= 0) {
       saveModalNote.textContent =
         "Run a calculation first before saving.";
@@ -1776,7 +1777,8 @@ depositModeToggle.addEventListener("click", () => {
       addToPlannerBtn.textContent = "Saved / updated in planner";
       setTimeout(() => {
         addToPlannerBtn.classList.remove("good");
-        addToPlannerBtn.textContent = "Save / update mortgage in planner";
+        addToPlannerBtn.textContent =
+          "Save / update mortgage in planner";
       }, 2000);
 
       closeSaveModal();
@@ -1787,7 +1789,8 @@ depositModeToggle.addEventListener("click", () => {
       addToPlannerBtn.textContent = "Could not save to planner";
       setTimeout(() => {
         addToPlannerBtn.classList.remove("bad");
-        addToPlannerBtn.textContent = "Save / update mortgage in planner";
+        addToPlannerBtn.textContent =
+          "Save / update mortgage in planner";
       }, 2500);
     }
   });
