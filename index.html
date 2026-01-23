@@ -772,6 +772,57 @@
                 font-size: 17px;
             }
         }
+
+        /* Mobile header tweaks */
+        @media (max-width: 640px) {
+            .app-header {
+                padding: 10px 10px 8px;
+            }
+
+            /* Stack header rows vertically */
+            .top-row {
+                align-items: flex-start;
+            }
+
+            /* First row: title on its own line */
+            .top-row {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .brand {
+                width: 100%;
+            }
+
+            /* Put Skins + coffee in their own row under the title */
+            .top-row > div:last-child {
+                align-self: stretch;
+                justify-content: flex-start;
+            }
+
+            .top-row > div:last-child {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            /* Second line: tagline above Add, centered-ish */
+            .app-header > div:nth-of-type(2) {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+                .app-header > div:nth-of-type(2) .brand-tagline {
+                    max-width: 100%;
+                }
+
+                .app-header > div:nth-of-type(2) .header-actions {
+                    align-self: flex-start;
+                }
+        }
+
+
     </style>
 
 
