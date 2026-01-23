@@ -26,17 +26,19 @@
             --pill-pink: #d63384;
         }
 
-        /* Skins: strong theme changes */
+        /* Skins: Blue = original, others override more */
         html[data-skin="blue"] {
+            /* Original theme values */
             --accent: #00c2ff;
-            --accent-soft: rgba(0, 194, 255, 0.25);
+            --accent-soft: rgba(0, 194, 255, 0.15);
             --bg: #050816;
             --bg-elevated: #0b1020;
             --bg-soft: #11152a;
             --pill-need: #1b9c5b;
-            --pill-want: #2c7be5;
+            --pill-want: #cc7a1c;
         }
 
+        /* Purple skin – different background + pills */
         html[data-skin="purple"] {
             --accent: #b794ff;
             --accent-soft: rgba(183, 148, 255, 0.28);
@@ -47,6 +49,7 @@
             --pill-want: #e0aaff;
         }
 
+        /* Pink skin – warm background + pills */
         html[data-skin="pink"] {
             --accent: #ff6bba;
             --accent-soft: rgba(255, 107, 186, 0.3);
@@ -57,6 +60,7 @@
             --pill-want: #ffc078;
         }
 
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -65,7 +69,7 @@
         }
 
         body {
-            background: radial-gradient(circle at top, #101633 0, var(--bg) 40%, #02040a 100%);
+            background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
             color: var(--text);
             min-height: 100vh;
             display: flex;
@@ -471,12 +475,13 @@
                 box-shadow: 0 0 14px rgba(0, 0, 0, 0.7);
             }
 
+        /* Needs/Wants pill backgrounds – original look */
         .pill-need {
-            background: radial-gradient(circle at top left, rgba(0, 0, 0, 0.4), var(--pill-need));
+            background: radial-gradient(circle at top left, rgba(67, 181, 129, 0.35), rgba(10, 16, 30, 0.98));
         }
 
         .pill-want {
-            background: radial-gradient(circle at top left, rgba(0, 0, 0, 0.4), var(--pill-want));
+            background: radial-gradient(circle at top left, rgba(246, 180, 67, 0.35), rgba(10, 16, 30, 0.98));
         }
 
         .pill.disabled {
