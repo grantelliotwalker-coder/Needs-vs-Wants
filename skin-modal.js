@@ -32,9 +32,15 @@
         </div>
         <div class="modal-body">
           <div class="color-row" id="skinOptions">
-            <button class="color-dot" data-skin="blue"   title="Blue"></button>
-            <button class="color-dot" data-skin="purple" title="Purple"></button>
-            <button class="color-dot" data-skin="pink"   title="Pink"></button>
+            <button class="color-dot" data-skin="blue"
+                  title="Blue"
+                  style="background:#00c2ff;"></button>
+          <button class="color-dot" data-skin="purple"
+                  title="Purple"
+                  style="background:#845ef7;"></button>
+          <button class="color-dot" data-skin="pink"
+                  title="Pink"
+                  style="background:#d63384;"></button>
           </div>
         </div>
       </div>
