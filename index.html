@@ -1,754 +1,771 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Budget Needs vs Wants Calculator | Simple Spending Planner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description"
-        content="Free budget Needs vs Wants calculator. Enter your income and expenses, separate essential needs from optional wants, and see your surplus instantly." />
-
-  <style>
-    :root {
-      --bg: #050816;
-      --bg-elevated: #0b1020;
-      --bg-soft: #11152a;
-      --accent: #00c2ff;
-      --accent-soft: rgba(0, 194, 255, 0.15);
-      --text: #e5f4ff;
-      --muted: #9aa6bd;
-      --danger: #ff4d6a;
-      --success: #32d788;
-      --pill-need: #1b9c5b;
-      --pill-want: #cc7a1c;
-      --disabled: #555c72;
-      --pill-blue: #2c7be5;
-      --pill-purple: #845ef7;
-      --pill-pink: #d63384;
-    }
-
-      /* Skins: tweak accent + background per skin */
-      html[data-skin="blue"] {
-          --accent: #00c2ff;
-          --accent-soft: rgba(0, 194, 255, 0.15);
-      }
-
-      html[data-skin="purple"] {
-          --accent: #845ef7;
-          --accent-soft: rgba(132, 94, 247, 0.18);
-      }
-
-      html[data-skin="pink"] {
-          --accent: #d63384;
-          --accent-soft: rgba(214, 51, 132, 0.18);
-      }
-
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,
-        "SF Pro Text", "Segoe UI", sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-shell {
-      max-width: 960px;
-      margin: 0 auto;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    @media (min-width: 1200px) {
-  .app-shell {
-    max-width: 1200px;   /* or 1280 / 1400 if you like */
-  }
-
-  .app-main {
-    padding: 12px 24px 24px;  /* a bit more breathing room */
-  }
-}
-
-
-    .app-header {
-      padding: 10px 14px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(12px);
-    }
-
-    .top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .brand-title {
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .brand-tagline {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    @media (min-width: 1200px) {
-  .brand-tagline {
-    max-width: 80%;  /* instead of very narrow line breaks */
-  }
-}
-
-
-    .header-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pill-button {
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 13px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--text);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .pill-button-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    .pill-button.donate {
-      border-color: rgba(255, 255, 255, 0.32);
-    }
-
-    .pill-button.donate .pill-button-icon {
-      color: #ffcf66;
-    }
-
-    .add-btn {
-      background: var(--accent);
-      border: none;
-      color: #02040a;
-      padding: 7px 14px;
-      border-radius: 999px;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-
-    .add-btn span.icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: #02040a;
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .add-btn:hover {
-      background: #35d5ff;
-    }
-
-    .summary-toggle-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .summary-toggle-label {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .summary-toggle-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .summary-toggle-button {
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 11px;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--muted);
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .summary-toggle-button.active {
-      color: var(--text);
-      border-color: var(--accent);
-      background: rgba(0, 194, 255, 0.18);
-    }
-
-    .summary-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 8px;
-      align-items: center;
-      padding-bottom: 4px;
-    }
-
-    .summary-card {
-      background: rgba(5, 8, 22, 0.9);
-      border-radius: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .summary-card-title {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .income-main-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .income-label {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .income-input-wrap {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #02040a;
-      border-radius: 999px;
-      padding: 3px 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .income-input-wrap span {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    #incomeAmount {
-      width: 90px;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      text-align: right;
-    }
-
-    .type-toggle {
-      display: inline-flex;
-      padding: 3px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      gap: 3px;
-    }
-
-    .type-option {
-      border-radius: 999px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 11px;
-      padding: 4px 9px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .type-option.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text);
-    }
-
-    .mini-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .mini-label {
-      color: var(--muted);
-    }
-
-    .mini-value {
-      font-weight: 600;
-    }
-
-    .mini-value.accent {
-      color: var(--accent);
-    }
-
-    .mini-value.surplus {
-      color: var(--success);
-    }
-
-    .mini-value.deficit {
-      color: var(--danger);
-    }
-
-    .app-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 6px 12px 12px;
-      gap: 8px;
-    }
-
-    .panel {
-      flex: 1;
-      padding: 10px 10px 12px;
-      border-radius: 12px;
-      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      gap: 8px;
-    }
-
-    .panel-title {
-      font-size: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .panel-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .panel-totals {
-      text-align: right;
-      font-size: 11px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .panel-totals-row {
-      display: flex;
-      justify-content: flex-end;
-      gap: 6px;
-    }
-
-    .panel-totals label {
-      color: var(--muted);
-    }
-
-    .panel-totals span.amount {
-      font-weight: 600;
-      margin-left: 2px;
-    }
-
-    .panel-totals span.amount.weekly {
-      color: var(--accent);
-    }
-
-    .panel-totals span.amount.fortnightly,
-    .panel-totals span.amount.monthly,
-    .panel-totals span.amount.yearly {
-      color: var(--muted);
-    }
-
-    .items-area {
-      margin-top: 4px;
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 2px;
-      display: flex;
-      flex-wrap: wrap;
-      align-content: flex-start;
-      gap: 6px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(10, 16, 30, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text);
-      font-size: 12px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.45);
-      white-space: nowrap;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
-    }
-
-    .pill:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 14px rgba(0, 0, 0, 0.7);
-    }
-
-    .pill-need {
-      background: radial-gradient(circle at top left, rgba(67, 181, 129, 0.35), rgba(10, 16, 30, 0.98));
-    }
-
-    .pill-want {
-      background: radial-gradient(circle at top left, rgba(246, 180, 67, 0.35), rgba(10, 16, 30, 0.98));
-    }
-
-    .pill.disabled {
-      opacity: 0.45;
-      border-style: dashed;
-    }
-
-    .pill-color-blue {
-      border-color: rgba(44, 123, 229, 0.9);
-      box-shadow: 0 0 0 1px rgba(44, 123, 229, 0.7);
-    }
-
-    .pill-color-purple {
-      border-color: rgba(132, 94, 247, 0.9);
-      box-shadow: 0 0 0 1px rgba(132, 94, 247, 0.7);
-    }
-
-    .pill-color-pink {
-      border-color: rgba(214, 51, 132, 0.9);
-      box-shadow: 0 0 0 1px rgba(214, 51, 132, 0.7);
-    }
-
-    .pill-type-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-    }
-
-    .pill-type-dot.need {
-      background: var(--pill-need);
-    }
-
-    .pill-type-dot.want {
-      background: var(--pill-want);
-    }
-
-    .pill-label {
-      max-width: 110px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    @media (min-width: 640px) {
-      .pill-label {
-        max-width: 150px;
-      }
-    }
-
-    .pill-amount {
-      font-weight: 600;
-    }
-
-    .pill-frequency {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .pill-status {
-      font-size: 11px;
-      color: var(--disabled);
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-      padding: 14px;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal {
-      background: var(--bg-elevated);
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      width: min(380px, 100%);
-      max-width: 420px;
-      padding: 14px 14px 12px;
-      box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.8),
-        0 0 0 1px rgba(255, 255, 255, 0.02);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .modal-title {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .modal-close {
-      border: none;
-      background: transparent;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    .modal-close:hover {
-      color: #ffffff;
-    }
-
-    .modal-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .field-label {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 2px;
-    }
-
-    .field-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    select {
-      width: 100%;
-      background: #050816;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      padding: 7px 10px;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-    }
-
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
-    }
-
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .toggle-row input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-    }
-
-    .color-row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .color-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 2px solid transparent;
-      cursor: pointer;
-    }
-
-    .color-dot[data-color="default"] {
-      background: linear-gradient(135deg, var(--pill-need), var(--pill-want));
-    }
-
-    .color-dot[data-color="blue"] {
-      background: var(--pill-blue);
-    }
-
-    .color-dot[data-color="purple"] {
-      background: var(--pill-purple);
-    }
-
-    .color-dot[data-color="pink"] {
-      background: var(--pill-pink);
-    }
-
-    .color-dot.active {
-      border-color: #ffffff;
-    }
-
-    .breakdown-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px 10px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .breakdown-row span.value {
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      margin-top: 2px;
-    }
-
-    .btn-secondary,
-    .btn-primary,
-    .btn-danger {
-      border-radius: 999px;
-      font-size: 13px;
-      padding: 6px 12px;
-      cursor: pointer;
-    }
-
-    .btn-secondary {
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      background: transparent;
-      color: var(--muted);
-    }
-
-    .btn-secondary:hover {
-      color: var(--text);
-      border-color: rgba(255, 255, 255, 0.55);
-    }
-
-    .btn-primary {
-      border: none;
-      background: var(--accent);
-      color: #02040a;
-      font-weight: 600;
-    }
-
-    .btn-primary:hover {
-      background: #35d5ff;
-    }
-
-    .btn-danger {
-      border: none;
-      background: rgba(255, 77, 106, 0.15);
-      color: var(--danger);
-    }
-
-    .btn-danger:hover {
-      background: rgba(255, 77, 106, 0.3);
-    }
-
-    .error-text {
-      font-size: 11px;
-      color: var(--danger);
-      min-height: 14px;
-    }
-
-    /* iOS/Chrome-on-iOS zoom fix: ensure ≥16px on inputs on small screens */
-    @media (max-width: 768px) {
-      input[type="text"],
-      input[type="number"],
-      select {
-        font-size: 17px;
-      }
-    }
-  </style>
-
-<link rel="icon" type="image/png" href="/favicon.png">
-
-  
+    <meta charset="UTF-8" />
+    <title>Budget Needs vs Wants Calculator | Simple Spending Planner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description"
+          content="Free budget Needs vs Wants calculator. Enter your income and expenses, separate essential needs from optional wants, and see your surplus instantly." />
+
+    Paste this over your entire `
+    <style>
+        ...
+    </style>` block to get stronger skins in one go.
+
+    ```html
+    <style>
+        :root {
+            --bg: #050816;
+            --bg-elevated: #0b1020;
+            --bg-soft: #11152a;
+            --accent: #00c2ff;
+            --accent-soft: rgba(0, 194, 255, 0.15);
+            --text: #e5f4ff;
+            --muted: #9aa6bd;
+            --danger: #ff4d6a;
+            --success: #32d788;
+            --pill-need: #1b9c5b;
+            --pill-want: #cc7a1c;
+            --disabled: #555c72;
+            --pill-blue: #2c7be5;
+            --pill-purple: #845ef7;
+            --pill-pink: #d63384;
+        }
+
+        /* Skins: strong theme changes */
+        html[data-skin="blue"] {
+            --accent: #00c2ff;
+            --accent-soft: rgba(0, 194, 255, 0.25);
+            --bg: #050816;
+            --bg-elevated: #0b1020;
+            --bg-soft: #11152a;
+            --pill-need: #1b9c5b;
+            --pill-want: #2c7be5;
+        }
+
+        html[data-skin="purple"] {
+            --accent: #b794ff;
+            --accent-soft: rgba(183, 148, 255, 0.28);
+            --bg: #140a33;
+            --bg-elevated: #1d123f;
+            --bg-soft: #24184b;
+            --pill-need: #845ef7;
+            --pill-want: #e0aaff;
+        }
+
+        html[data-skin="pink"] {
+            --accent: #ff6bba;
+            --accent-soft: rgba(255, 107, 186, 0.3);
+            --bg: #260818;
+            --bg-elevated: #310b20;
+            --bg-soft: #3a1027;
+            --pill-need: #ff8787;
+            --pill-want: #ffc078;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #101633 0, var(--bg) 40%, #02040a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-shell {
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), var(--bg-soft));
+        }
+
+        @media (min-width: 1200px) {
+            .app-shell {
+                max-width: 1200px;
+            }
+
+            .app-main {
+                padding: 12px 24px 24px;
+            }
+        }
+
+        .app-header {
+            padding: 10px 14px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+        }
+
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .brand-title {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .brand-tagline {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        @media (min-width: 1200px) {
+            .brand-tagline {
+                max-width: 80%;
+            }
+        }
+
+        .header-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill-button {
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .pill-button-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .pill-button.donate {
+            border-color: rgba(255, 255, 255, 0.32);
+        }
+
+            .pill-button.donate .pill-button-icon {
+                color: #ffcf66;
+            }
+
+        .add-btn {
+            background: var(--accent);
+            border: none;
+            color: #02040a;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 0 14px rgba(0, 0, 0, 0.8), 0 0 18px rgba(0, 194, 255, 0.75);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+            .add-btn span.icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                border-radius: 999px;
+                background: #02040a;
+                color: var(--accent);
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .add-btn:hover {
+                background: var(--accent);
+                filter: brightness(1.15);
+            }
+
+        .summary-toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .summary-toggle-label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .summary-toggle-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .summary-toggle-button {
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--muted);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+            .summary-toggle-button.active {
+                color: var(--text);
+                border-color: var(--accent);
+                background: var(--accent-soft);
+            }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 8px;
+            align-items: center;
+            padding-bottom: 4px;
+        }
+
+        .summary-card {
+            background: rgba(5, 8, 22, 0.9);
+            border-radius: 10px;
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+        }
+
+        .summary-card-title {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .income-main-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .income-label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .income-input-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #02040a;
+            border-radius: 999px;
+            padding: 3px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+            .income-input-wrap span {
+                font-size: 12px;
+                color: var(--muted);
+            }
+
+        #incomeAmount {
+            width: 90px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            text-align: right;
+        }
+
+        .type-toggle {
+            display: inline-flex;
+            padding: 3px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            gap: 3px;
+        }
+
+        .type-option {
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 11px;
+            padding: 4px 9px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+            .type-option.active {
+                background: rgba(255, 255, 255, 0.1);
+                color: var(--text);
+            }
+
+        .mini-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .mini-label {
+            color: var(--muted);
+        }
+
+        .mini-value {
+            font-weight: 600;
+        }
+
+            .mini-value.accent {
+                color: var(--accent);
+            }
+
+            .mini-value.surplus {
+                color: var(--success);
+            }
+
+            .mini-value.deficit {
+                color: var(--danger);
+            }
+
+        .app-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 6px 12px 12px;
+            gap: 8px;
+        }
+
+        .panel {
+            flex: 1;
+            padding: 10px 10px 12px;
+            border-radius: 12px;
+            background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .panel-subtitle {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .panel-totals {
+            text-align: right;
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .panel-totals-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        .panel-totals label {
+            color: var(--muted);
+        }
+
+        .panel-totals span.amount {
+            font-weight: 600;
+            margin-left: 2px;
+        }
+
+            .panel-totals span.amount.weekly {
+                color: var(--accent);
+            }
+
+            .panel-totals span.amount.fortnightly,
+            .panel-totals span.amount.monthly,
+            .panel-totals span.amount.yearly {
+                color: var(--muted);
+            }
+
+        .items-area {
+            margin-top: 4px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 6px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(10, 16, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.45);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+        }
+
+            .pill:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 0 14px rgba(0, 0, 0, 0.7);
+            }
+
+        .pill-need {
+            background: radial-gradient(circle at top left, rgba(0, 0, 0, 0.4), var(--pill-need));
+        }
+
+        .pill-want {
+            background: radial-gradient(circle at top left, rgba(0, 0, 0, 0.4), var(--pill-want));
+        }
+
+        .pill.disabled {
+            opacity: 0.45;
+            border-style: dashed;
+        }
+
+        .pill-color-blue {
+            border-color: rgba(44, 123, 229, 0.9);
+            box-shadow: 0 0 0 1px rgba(44, 123, 229, 0.7);
+        }
+
+        .pill-color-purple {
+            border-color: rgba(132, 94, 247, 0.9);
+            box-shadow: 0 0 0 1px rgba(132, 94, 247, 0.7);
+        }
+
+        .pill-color-pink {
+            border-color: rgba(214, 51, 132, 0.9);
+            box-shadow: 0 0 0 1px rgba(214, 51, 132, 0.7);
+        }
+
+        .pill-type-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+        }
+
+            .pill-type-dot.need {
+                background: var(--pill-need);
+            }
+
+            .pill-type-dot.want {
+                background: var(--pill-want);
+            }
+
+        .pill-label {
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (min-width: 640px) {
+            .pill-label {
+                max-width: 150px;
+            }
+        }
+
+        .pill-amount {
+            font-weight: 600;
+        }
+
+        .pill-frequency {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .pill-status {
+            font-size: 11px;
+            color: var(--disabled);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 14px;
+        }
+
+            .modal-backdrop.open {
+                display: flex;
+            }
+
+        .modal {
+            background: var(--bg-elevated);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            width: min(380px, 100%);
+            max-width: 420px;
+            padding: 14px 14px 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+            .modal-close:hover {
+                color: #ffffff;
+            }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            background: #050816;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 7px 10px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+        }
+
+            input[type="text"]:focus,
+            input[type="number"]:focus,
+            select:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.4);
+            }
+
+            input[type="number"]::-webkit-inner-spin-button,
+            input[type="number"]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+            .toggle-row input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+            }
+
+        .color-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .color-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+            .color-dot[data-color="default"] {
+                background: linear-gradient(135deg, var(--pill-need), var(--pill-want));
+            }
+
+            .color-dot[data-color="blue"] {
+                background: var(--pill-blue);
+            }
+
+            .color-dot[data-color="purple"] {
+                background: var(--pill-purple);
+            }
+
+            .color-dot[data-color="pink"] {
+                background: var(--pill-pink);
+            }
+
+            .color-dot.active {
+                border-color: #ffffff;
+            }
+
+        .breakdown-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+            .breakdown-row span.value {
+                font-weight: 600;
+                color: var(--accent);
+            }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .btn-secondary,
+        .btn-primary,
+        .btn-danger {
+            border-radius: 999px;
+            font-size: 13px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: transparent;
+            color: var(--muted);
+        }
+
+            .btn-secondary:hover {
+                color: var(--text);
+                border-color: rgba(255, 255, 255, 0.55);
+            }
+
+        .btn-primary {
+            border: none;
+            background: var(--accent);
+            color: #02040a;
+            font-weight: 600;
+        }
+
+            .btn-primary:hover {
+                background: #35d5ff;
+            }
+
+        .btn-danger {
+            border: none;
+            background: rgba(255, 77, 106, 0.15);
+            color: var(--danger);
+        }
+
+            .btn-danger:hover {
+                background: rgba(255, 77, 106, 0.3);
+            }
+
+        .error-text {
+            font-size: 11px;
+            color: var(--danger);
+            min-height: 14px;
+        }
+
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="number"],
+            select {
+                font-size: 17px;
+            }
+        }
+    </style>
+    ```
+
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+
 </head>
   
 <body>
