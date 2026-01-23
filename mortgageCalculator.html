@@ -721,80 +721,93 @@
         </div>
 
         <div class="inputs-grid">
-          <div class="field-group">
-            <div class="field-label">Property price</div>
-            <div class="field-inline">
-              <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="priceInput" type="number" min="0" step="1000" placeholder="" />
+            <div class="field-group">
+                <div class="field-label">Property price</div>
+                <div class="field-inline">
+                    <span style="font-size:12px;color:var(--muted);">$</span>
+                    <input id="priceInput" type="number" min="0" step="1000" placeholder="" />
+                </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <div class="field-label">Deposit</div>
-            <div class="field-inline">
-              <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="depositInput" type="number" min="0" step="1000" placeholder="" />
-              <button type="button"
-                      id="depositModeToggle"
-                      style="font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);background:rgba(0,0,0,0.4);color:var(--muted);cursor:pointer;white-space:nowrap;">
-                $
-              </button>
+            <div class="field-group">
+                <div class="field-label">Deposit</div>
+                <div class="field-inline">
+                    <span style="font-size:12px;color:var(--muted);">$</span>
+                    <input id="depositInput" type="number" min="0" step="1000" placeholder="" />
+                    <button type="button"
+                            id="depositModeToggle"
+                            style="font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);background:rgba(0,0,0,0.4);color:var(--muted);cursor:pointer;white-space:nowrap;">
+                        $
+                    </button>
+                </div>
+                <div class="note" id="depositNote">
+                    Enter deposit in dollars. Tap the toggle to switch to % of price.
+                </div>
             </div>
-            <div class="note" id="depositNote">
-              Enter deposit in dollars. Tap the toggle to switch to % of price.
-            </div>
-          </div>
 
-          <div class="field-group">
-            <div class="field-label">Interest rate (p.a.)</div>
-            <div class="field-inline">
-              <input id="rateInput" type="number" min="0" step="0.01" placeholder="" />
-              <span style="font-size:12px;color:var(--muted);">%</span>
+            <div class="field-group">
+                <div class="field-label">Interest rate (p.a.)</div>
+                <div class="field-inline">
+                    <input id="rateInput" type="number" min="0" step="0.01" placeholder="" />
+                    <span style="font-size:12px;color:var(--muted);">%</span>
+                </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <div class="field-label">Future rate (optional)</div>
-            <div class="field-inline">
-              <input id="futureRateInput" type="number" min="0" step="0.01" placeholder="" />
-              <span style="font-size:12px;color:var(--muted);">%</span>
+            <div class="field-group">
+                <div class="field-label">Future rate (optional)</div>
+                <div class="field-inline">
+                    <input id="futureRateInput" type="number" min="0" step="0.01" placeholder="" />
+                    <span style="font-size:12px;color:var(--muted);">%</span>
+                </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <div class="field-label">Loan term</div>
-            <div class="field-inline">
-              <input id="termInput" type="number" min="1" max="40" step="1" placeholder="" />
-              <span style="font-size:12px;color:var(--muted);">years</span>
+            <div style="margin-top:10px;">
+                <div class="field-label">Loan type</div>
+                <div class="type-toggle" id="loanTypeToggle">
+                    <button class="type-option active" data-loan="pi">
+                        Principal &amp; Interest
+                    </button>
+                    <button class="type-option" data-loan="io">
+                        Interest Only
+                    </button>
+                </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <div class="field-label">Repayment frequency</div>
-            <select id="freqInput">
-              <option value="monthly" selected>Monthly</option>
-              <option value="fortnightly">Fortnightly</option>
-              <option value="weekly">Weekly</option>
-            </select>
-          </div>
 
-          <div class="field-group">
-            <div class="field-label">Extra repayment (optional)</div>
-            <div class="field-inline">
-              <span style="font-size:12px;color:var(--muted);">$</span>
-              <input id="extraInput" type="number" min="0" step="1" placeholder="" />
+            <div class="field-group">
+                <div class="field-label">Loan term</div>
+                <div class="field-inline">
+                    <input id="termInput" type="number" min="1" max="40" step="1" placeholder="" />
+                    <span style="font-size:12px;color:var(--muted);">years</span>
+                </div>
             </div>
-          </div>
 
-          <!-- Split for calculator / affordability -->
-          <div class="field-group">
-            <div class="field-inline">
-              <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
-              <span class="field-label" style="margin-left:2px;">
-                Split with partner for this calc (use half in affordability)
-              </span>
+            <div class="field-group">
+                <div class="field-label">Repayment frequency</div>
+                <select id="freqInput">
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="fortnightly">Fortnightly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
             </div>
-          </div>
+
+            <div class="field-group">
+                <div class="field-label">Extra repayment (optional)</div>
+                <div class="field-inline">
+                    <span style="font-size:12px;color:var(--muted);">$</span>
+                    <input id="extraInput" type="number" min="0" step="1" placeholder="" />
+                </div>
+            </div>
+
+            <!-- Split for calculator / affordability -->
+            <div class="field-group">
+                <div class="field-inline">
+                    <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
+                    <span class="field-label" style="margin-left:2px;">
+                        Split with partner for this calc (use half in affordability)
+                    </span>
+                </div>
+            </div>
         </div>
 
         <div class="error-text" id="inputError"></div>
@@ -1041,10 +1054,28 @@
   let lastPrincipal = 0;
   let lastTermYears = 0;
   let lastRate = 0;
+  let loanType = "pi"; // "pi" | "io"
+
 
   let savedLoansVisible = false;
   let selectedLoanId = null;
   let depositMode = "amount"; // "amount" or "percent"
+
+  // Loan type toggle (P&I vs Interest Only)
+document.querySelectorAll("#loanTypeToggle .type-option")
+  .forEach(btn => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll("#loanTypeToggle .type-option")
+        .forEach(b => b.classList.remove("active"));
+
+      btn.classList.add("active");
+      loanType = btn.dataset.loan; // "pi" or "io"
+
+      calculate(); // re-run results immediately
+    });
+  });
+
 
   function formatCurrency(amount) {
     if (!isFinite(amount)) return "—";
@@ -1221,7 +1252,25 @@ depositModeToggle.addEventListener("click", () => {
       freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
 
     // base + extra
-    const basePayment = annuityPayment(principal, rate, termYears, paymentsPerYear);
+    let basePayment;
+
+if (loanType === "io") {
+  // Interest Only: interest per period, principal unchanged
+  const r = rate / 100 / paymentsPerYear;
+  basePayment = principal * r;
+} else {
+  // Principal & Interest
+  basePayment = annuityPayment(
+    principal,
+    rate,
+    termYears,
+    paymentsPerYear
+  );
+}
+
+
+
+
     const paymentWithExtra = basePayment + extra;
 
     // split behaviour for your share
@@ -1230,7 +1279,8 @@ depositModeToggle.addEventListener("click", () => {
 
     // results: whole loan
     resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
-   resultPaymentLabelEl.textContent =
+  resultPaymentLabelEl.textContent =
+  (loanType === "io" ? "Interest-only · " : "P&I · ") +
   "Per " +
   (freq === "weekly"
     ? "week"
@@ -1239,6 +1289,7 @@ depositModeToggle.addEventListener("click", () => {
     : freq === "monthly"
     ? "month"
     : "year");
+
 
 
     // results: your share
