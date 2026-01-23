@@ -773,54 +773,70 @@
             }
         }
 
-        /* Mobile header tweaks */
+        /* Mobile-only header + summary layout */
         @media (max-width: 640px) {
-            .app-header {
-                padding: 10px 10px 8px;
-            }
-
-            /* Stack header rows vertically */
             .top-row {
-                align-items: flex-start;
-            }
-
-            /* First row: title on its own line */
-            .top-row {
-                flex-direction: column;
-                gap: 6px;
-            }
-
-            .brand {
-                width: 100%;
-            }
-
-            /* Put Skins + coffee in their own row under the title */
-            .top-row > div:last-child {
-                align-self: stretch;
-                justify-content: flex-start;
-            }
-
-            .top-row > div:last-child {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
             }
 
-            /* Second line: tagline above Add, centered-ish */
-            .app-header > div:nth-of-type(2) {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
+            .top-left {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
             }
 
-                .app-header > div:nth-of-type(2) .brand-tagline {
+            .top-right {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .second-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                margin-top: 6px;
+            }
+
+            .second-right {
+                flex: 0 0 auto;
+            }
+
+            .tagline-row {
+                margin-top: 6px;
+            }
+
+                .tagline-row .brand-tagline {
                     max-width: 100%;
                 }
 
-                .app-header > div:nth-of-type(2) .header-actions {
-                    align-self: flex-start;
-                }
+            .summary-toggle-row {
+                margin-top: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .summary-toggle-label {
+                flex: 0 0 auto;
+            }
+
+            .summary-toggle-actions {
+                flex: 1 1 auto;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                justify-content: flex-start;
+            }
         }
+
+
 
 
     </style>
@@ -832,44 +848,36 @@
 </head>
   
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-  <!-- Top line: title, tip, favicon -->
-        <div class="top-row" style="align-items:center;">
-            <button onclick="openInfoModal()"
-                    style="
-  border:none;
-  background:transparent;
-  padding:0;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-"
-                    aria-label="About these tools">
-                <img src="/favicon.png"
-                     alt=""
-                     style="width:32px; height:32px; border-radius:6px;" />
-            </button>
-            <div class="brand"
-                 onclick="openInfoModal()"
-                 style="cursor:pointer; flex:1 1 auto;">
-                <div class="brand-title">
-                    Budget
-                    <span style="display:inline;">Needs vs Wants</span>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="top-row">
+                <div class="top-left">
+                    <button onclick="openInfoModal()"
+                            class="favicon-btn"
+                            aria-label="About these tools">
+                        <img src="/favicon.png"
+                             alt=""
+                             style="width:32px; height:32px; border-radius:6px;" />
+                    </button>
+
+                    <div class="brand"
+                         onclick="openInfoModal()"
+                         style="cursor:pointer;">
+                        <div class="brand-title">
+                            Budget <span style="display:inline;">Needs vs Wants</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="top-right">
+                    <button id="skinToggleBtn" class="pill-button" type="button">
+                        <span class="pill-button-icon"></span>
+                        Skins
+                    </button>
                 </div>
             </div>
 
-            <div style="
-        display:inline-flex;
-        align-items:center;
-        gap:8px;
-        flex:0 0 auto;
-      ">
-                <button id="skinToggleBtn" class="pill-button" type="button">
-                    <span class="pill-button-icon"></span>
-                    Skins
-                </button>
-
+            <div class="second-row">
                 <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
                    class="pill-button donate"
                    id="donateLink"
@@ -879,154 +887,98 @@
                     Buy me a coffee
                 </a>
 
+                <div class="second-right">
+                    <button class="add-btn" id="openCreateModal">
+                        <span class="icon">＋</span>
+                        Add
+                    </button>
+                </div>
             </div>
-        </div>
 
-  <!-- Second line: tagline and Add, loosely centred together -->
-  <div
-    style="
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      margin-top:4px;
-    "
-  >
-    <div
-      class="brand-tagline"
-      style="flex:1 1 auto; max-width:60%;"
-    >
-      Quickly separate needs from wants and see your budget surplus at a glance.
-      <br />
-      <span style="opacity:0.30;">Data saved to this browser 🔒</span>
+            <div class="tagline-row">
+                <div class="brand-tagline">
+                    Quickly separate needs from wants and see your budget surplus at a glance.
+                    <br />
+                    <span style="opacity:0.30;">Data saved to this browser 🔒</span>
+                </div>
+            </div>
+
+            <div class="summary-toggle-row">
+                <div class="summary-toggle-label">Show income &amp; summary</div>
+                <div class="summary-toggle-actions">
+                    <button class="summary-toggle-button active" id="summaryToggleBtn">Hide</button>
+                    <button class="summary-toggle-button" onclick="openInfoModal()">Info</button>
+                    <a href="tools.html" class="summary-toggle-button" id="toolsLink">Tools</a>
+                    <a href="export.html" class="summary-toggle-button" id="exportLink">Export</a>
+                </div>
+            </div>
+        </header>
+
+
+        <main class="app-main">
+            <section class="panel" id="needsPanel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            Needs
+                            <span class="panel-badge">Essentials</span>
+                        </div>
+                        <div class="panel-subtitle">Rent, groceries, utilities, transport.</div>
+                    </div>
+                    <div class="panel-totals">
+                        <div class="panel-totals-row">
+                            <label>Weekly</label>
+                            <span class="amount weekly" id="needsWeekly">$0</span>
+                        </div>
+                        <div class="panel-totals-row">
+                            <label>Fortnightly</label>
+                            <span class="amount fortnightly" id="needsFortnightly">$0</span>
+                        </div>
+                        <div class="panel-totals-row">
+                            <label>Monthly</label>
+                            <span class="amount monthly" id="needsMonthly">$0</span>
+                        </div>
+                        <div class="panel-totals-row">
+                            <label>Yearly</label>
+                            <span class="amount yearly" id="needsYearly">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="items-area" id="needsItems"></div>
+            </section>
+
+            <section class="panel" id="wantsPanel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            Wants
+                            <span class="panel-badge">Optional</span>
+                        </div>
+                        <div class="panel-subtitle">Subscriptions, dining out, treats.</div>
+                    </div>
+                    <div class="panel-totals">
+                        <div class="panel-totals-row">
+                            <label>Weekly</label>
+                            <span class="amount weekly" id="wantsWeekly">$0</span>
+                        </div>
+                        <div class="panel-totals-row">
+                            <label>Fortnightly</label>
+                            <span class="amount fortnightly" id="wantsFortnightly">$0</span>
+                        </div>
+                        <div class="panel-totals-row">
+                            <label>Monthly</label>
+                            <span class="amount monthly" id="wantsMonthly">$0</span>
+                        </div>
+                        <div class="panel-totals-row">
+                            <label>Yearly</label>
+                            <span class="amount yearly" id="wantsYearly">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="items-area" id="wantsItems"></div>
+            </section>
+        </main>
     </div>
-
-    <div class="header-actions" style="flex:0 0 auto;">
-      <button class="add-btn" id="openCreateModal">
-        <span class="icon">＋</span>
-        Add
-      </button>
-    </div>
-  </div>
-
-
-<div class="summary-toggle-row">
-  <div class="summary-toggle-label">Show income &amp; summary</div>
-  <div class="summary-toggle-actions">
-    <button class="summary-toggle-button" onclick="openInfoModal()">
-      Info
-    </button>
-    <a href="tools.html" class="summary-toggle-button" id="toolsLink">Tools</a>
-    <a href="export.html" class="summary-toggle-button" id="exportLink">Export</a>
-    <button class="summary-toggle-button active" id="summaryToggleBtn">Hide</button>
-  </div>
-</div>
-
-
-      <div class="summary-row" id="summaryRow">
-        <div class="summary-card">
-          <div class="summary-card-title">Income & summary</div>
-
-          <div class="income-main-row">
-            <div class="income-label">Net income amount</div>
-            <div class="income-input-wrap">
-              <span>$</span>
-              <input id="incomeAmount" type="number" min="0" step="0.01" placeholder="0.00" />
-            </div>
-          </div>
-
-          <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-            <div class="income-label">Frequency for income & surplus</div>
-            <div class="type-toggle" id="summaryFrequencyToggle">
-              <button class="type-option" data-freq="weekly">Weekly</button>
-              <button class="type-option active" data-freq="fortnightly">Fortnightly</button>
-              <button class="type-option" data-freq="monthly">Monthly</button>
-              <button class="type-option" data-freq="yearly">Yearly</button>
-            </div>
-          </div>
-
-          <div style="margin-top:6px;">
-            <div class="mini-row">
-              <span class="mini-label">Expenses</span>
-              <span id="summaryTotal" class="mini-value accent">$0</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">Surplus</span>
-              <span id="summarySurplus" class="mini-value surplus">$0</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">Status</span>
-              <span id="summaryStatus" class="mini-value surplus">Enter values</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="app-main">
-      <section class="panel" id="needsPanel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">
-              Needs
-              <span class="panel-badge">Essentials</span>
-            </div>
-            <div class="panel-subtitle">Rent, groceries, utilities, transport.</div>
-          </div>
-          <div class="panel-totals">
-            <div class="panel-totals-row">
-              <label>Weekly</label>
-              <span class="amount weekly" id="needsWeekly">$0</span>
-            </div>
-            <div class="panel-totals-row">
-              <label>Fortnightly</label>
-              <span class="amount fortnightly" id="needsFortnightly">$0</span>
-            </div>
-            <div class="panel-totals-row">
-              <label>Monthly</label>
-              <span class="amount monthly" id="needsMonthly">$0</span>
-            </div>
-            <div class="panel-totals-row">
-              <label>Yearly</label>
-              <span class="amount yearly" id="needsYearly">$0</span>
-            </div>
-          </div>
-        </div>
-        <div class="items-area" id="needsItems"></div>
-      </section>
-
-      <section class="panel" id="wantsPanel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">
-              Wants
-              <span class="panel-badge">Optional</span>
-            </div>
-            <div class="panel-subtitle">Subscriptions, dining out, treats.</div>
-          </div>
-          <div class="panel-totals">
-            <div class="panel-totals-row">
-              <label>Weekly</label>
-              <span class="amount weekly" id="wantsWeekly">$0</span>
-            </div>
-            <div class="panel-totals-row">
-              <label>Fortnightly</label>
-              <span class="amount fortnightly" id="wantsFortnightly">$0</span>
-            </div>
-            <div class="panel-totals-row">
-              <label>Monthly</label>
-              <span class="amount monthly" id="wantsMonthly">$0</span>
-            </div>
-            <div class="panel-totals-row">
-              <label>Yearly</label>
-              <span class="amount yearly" id="wantsYearly">$0</span>
-            </div>
-          </div>
-        </div>
-        <div class="items-area" id="wantsItems"></div>
-      </section>
-    </main>
-  </div>
 
   <!-- Create/Edit Modal -->
   <div class="modal-backdrop" id="itemModalBackdrop">
