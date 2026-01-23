@@ -715,6 +715,7 @@
 
   
 </head>
+  
 <body>
   <div class="app-shell">
     <header class="app-header">
@@ -749,6 +750,11 @@
         <span class="pill-button-icon">☕</span>
         Buy me a coffee
       </a>
+
+      <button id="skinToggleBtn" class="pill-button" type="button">
+    <span class="pill-button-icon"></span>
+    Skins
+  </button>
 
       <button
         onclick="openInfoModal()"
@@ -1483,6 +1489,7 @@ currentSurplus = surplusDisplay;
     render();
     
   </script>
+  <script src="skin-modal.js"></script>
   <script src="modal-info.js?v=2"></script>
 <script>
   injectInfoModal();
