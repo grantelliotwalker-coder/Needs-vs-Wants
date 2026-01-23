@@ -76,6 +76,7 @@
             flex-direction: column;
         }
 
+        /* Default (Blue or no skin): no inner gradient */
         .app-shell {
             max-width: 960px;
             margin: 0 auto;
@@ -83,12 +84,18 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), var(--bg-soft));
         }
+
+        /* Any skin that is NOT blue: enable inner gradient */
+        html[data-skin="purple"] .app-shell,
+        html[data-skin="pink"] .app-shell {
+            background: radial-gradient( circle at top, rgba(255, 255, 255, 0.06), var(--bg-soft) );
+        }
+
 
         @media (min-width: 1200px) {
             .app-shell {
-                max-width: 1200px;
+                max-width: 1900px;
             }
 
             .app-main {
