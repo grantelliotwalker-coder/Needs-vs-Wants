@@ -26,6 +26,23 @@
       --pill-pink: #d63384;
     }
 
+      /* Skins: tweak accent + background per skin */
+      html[data-skin="blue"] {
+          --accent: #00c2ff;
+          --accent-soft: rgba(0, 194, 255, 0.15);
+      }
+
+      html[data-skin="purple"] {
+          --accent: #845ef7;
+          --accent-soft: rgba(132, 94, 247, 0.18);
+      }
+
+      html[data-skin="pink"] {
+          --accent: #d63384;
+          --accent-soft: rgba(214, 51, 132, 0.18);
+      }
+
+
     * {
       box-sizing: border-box;
       margin: 0;
