@@ -850,44 +850,70 @@
 <body>
     <div class="app-shell">
         <header class="app-header">
-            <div class="top-row">
-                <div class="top-left">
-                    <button onclick="openInfoModal()"
-                            class="favicon-btn"
-                            aria-label="About these tools">
-                        <img src="/favicon.png"
-                             alt=""
-                             style="width:32px; height:32px; border-radius:6px;" />
-                    </button>
+            <!-- Top line: favicon, title, Skins + coffee on the right -->
+            <div class="top-row" style="align-items:center;">
+                <button onclick="openInfoModal()"
+                        style="
+        border:none;
+        background:transparent;
+        padding:0;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+      "
+                        aria-label="About these tools">
+                    <img src="/favicon.png"
+                         alt=""
+                         style="width:32px; height:32px; border-radius:6px;" />
+                </button>
 
-                    <div class="brand"
-                         onclick="openInfoModal()"
-                         style="cursor:pointer;">
-                        <div class="brand-title">
-                            Budget <span style="display:inline;">Needs vs Wants</span>
-                        </div>
+                <div class="brand"
+                     onclick="openInfoModal()"
+                     style="cursor:pointer; flex:1 1 auto;">
+                    <div class="brand-title">
+                        Budget
+                        <span style="display:inline;">Needs vs Wants</span>
                     </div>
                 </div>
 
-                <div class="top-right">
+                <div style="
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        flex:0 0 auto;
+      ">
                     <button id="skinToggleBtn" class="pill-button" type="button">
                         <span class="pill-button-icon"></span>
                         Skins
                     </button>
+
+                    <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
+                       class="pill-button donate"
+                       id="donateLink"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <span class="pill-button-icon">☕</span>
+                        Buy me a coffee
+                    </a>
                 </div>
             </div>
 
-            <div class="second-row">
-                <a href="https://buy.stripe.com/5kQaEY0dReTA8fT5FsgnK00"
-                   class="pill-button donate"
-                   id="donateLink"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    <span class="pill-button-icon">☕</span>
-                    Buy me a coffee
-                </a>
+            <!-- Second line: tagline left, Add button right -->
+            <div style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-top:4px;
+    ">
+                <div class="brand-tagline"
+                     style="flex:1 1 auto; max-width:60%;">
+                    Quickly separate needs from wants and see your budget surplus at a glance.
+                    <br />
+                    <span style="opacity:0.30;">Data saved to this browser 🔒</span>
+                </div>
 
-                <div class="second-right">
+                <div class="header-actions" style="flex:0 0 auto;">
                     <button class="add-btn" id="openCreateModal">
                         <span class="icon">＋</span>
                         Add
@@ -895,24 +921,22 @@
                 </div>
             </div>
 
-            <div class="tagline-row">
-                <div class="brand-tagline">
-                    Quickly separate needs from wants and see your budget surplus at a glance.
-                    <br />
-                    <span style="opacity:0.30;">Data saved to this browser 🔒</span>
-                </div>
-            </div>
-
+            <!-- Summary row stays the same -->
             <div class="summary-toggle-row">
                 <div class="summary-toggle-label">Show income &amp; summary</div>
                 <div class="summary-toggle-actions">
-                    <button class="summary-toggle-button active" id="summaryToggleBtn">Hide</button>
-                    <button class="summary-toggle-button" onclick="openInfoModal()">Info</button>
+                    <button class="summary-toggle-button" onclick="openInfoModal()">
+                        Info
+                    </button>
                     <a href="tools.html" class="summary-toggle-button" id="toolsLink">Tools</a>
                     <a href="export.html" class="summary-toggle-button" id="exportLink">Export</a>
+                    <button class="summary-toggle-button active" id="summaryToggleBtn">
+                        Hide
+                    </button>
                 </div>
             </div>
         </header>
+
 
 
         <main class="app-main">
