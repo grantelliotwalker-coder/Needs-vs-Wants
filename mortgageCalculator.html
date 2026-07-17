@@ -848,8 +848,11 @@
                     <button class="type-option" data-mode="charge">
                         Amount charged
                     </button>
+                    <button class="type-option" data-mode="solve">
+                        Rate + charge → offset
+                    </button>
                 </div>
-                <div class="note">
+                <div class="note" id="rateModeNote">
                     "Amount charged" lets you enter the exact interest figure from a statement instead of guessing the rate.
                 </div>
             </div>
@@ -863,13 +866,21 @@
             </div>
 
             <div class="field-group" id="chargeFieldGroup" style="display:none;">
-                <div class="field-label">Interest charged last period ($)</div>
+                <div class="field-label" id="chargeFieldLabel">Interest charged last period ($)</div>
                 <div class="field-inline">
                     <span style="font-size:12px;color:var(--muted);">$</span>
                     <input id="chargeInput" type="number" min="0" step="0.01" placeholder="" />
                 </div>
                 <div class="note" id="impliedRateNote">
                     Enter the interest amount shown on your statement for one period (matching the repayment frequency below).
+                </div>
+                <div class="split-box" id="solveOffsetBox" style="display:none;">
+                    <div class="field-label">Implied offset balance</div>
+                    <div class="result-hero-value" id="solveOffsetValue" style="font-size:24px;">—</div>
+                    <div class="note" id="solveOffsetNote"></div>
+                    <button type="button" class="secondary-btn" id="useSolvedOffsetBtn" style="margin-top:4px;">
+                        Use this offset
+                    </button>
                 </div>
             </div>
 
@@ -1237,15 +1248,42 @@
   }
 
   function setRateMode(mode) {
-    rateMode = mode === "charge" ? "charge" : "rate";
+    rateMode = mode === "charge" ? "charge" : mode === "solve" ? "solve" : "rate";
     document.querySelectorAll("#rateModeToggle .type-option").forEach((b) => {
       b.classList.toggle("active", b.dataset.mode === rateMode);
     });
-    rateFieldGroup.style.display = rateMode === "rate" ? "flex" : "none";
-    chargeFieldGroup.style.display = rateMode === "charge" ? "flex" : "none";
-    if (rateMode === "charge") {
+
+    const chargeFieldLabelEl = document.getElementById("chargeFieldLabel");
+    const solveOffsetBoxEl = document.getElementById("solveOffsetBox");
+    const rateModeNoteEl = document.getElementById("rateModeNote");
+
+    if (rateMode === "rate") {
+      rateFieldGroup.style.display = "flex";
+      chargeFieldGroup.style.display = "none";
+      offsetInput.readOnly = false;
+      rateModeNoteEl.textContent =
+        "\"Amount charged\" lets you enter the exact interest figure from a statement instead of guessing the rate.";
+    } else if (rateMode === "charge") {
+      rateFieldGroup.style.display = "none";
+      chargeFieldGroup.style.display = "flex";
+      chargeFieldLabelEl.textContent = "Interest charged last period ($)";
+      solveOffsetBoxEl.style.display = "none";
+      offsetInput.readOnly = false;
       impliedRateNoteEl.textContent =
         "Enter the interest amount shown on your statement for one period (matching the repayment frequency below).";
+      rateModeNoteEl.textContent =
+        "\"Amount charged\" lets you enter the exact interest figure from a statement instead of guessing the rate.";
+    } else {
+      // solve: know both rate and charge, work out the offset
+      rateFieldGroup.style.display = "flex";
+      chargeFieldGroup.style.display = "flex";
+      chargeFieldLabelEl.textContent = "Interest actually charged last period ($)";
+      solveOffsetBoxEl.style.display = "flex";
+      offsetInput.readOnly = true;
+      impliedRateNoteEl.textContent =
+        "Enter both your known rate and the real interest charged — we'll work out the offset balance that explains the difference.";
+      rateModeNoteEl.textContent =
+        "Uses your entered rate and real statement charge to work out what offset balance would produce that charge. The offset field below becomes read-only in this mode.";
     }
   }
 
@@ -1404,7 +1442,7 @@ depositModeToggle.addEventListener("click", () => {
     const termYears = parseFloat(termInput.value || "0");
     const freq = freqInput.value;
     const extra = parseFloat(extraInput.value || "0");
-    const offsetBalance = parseFloat(offsetInput.value || "0");
+    let offsetBalance = parseFloat(offsetInput.value || "0");
     const paymentsPerYear =
       freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
 
@@ -1433,14 +1471,14 @@ depositModeToggle.addEventListener("click", () => {
       extraInput.focus();
       return;
     }
-    if (!isFinite(offsetBalance) || offsetBalance < 0) {
+    if (rateMode !== "solve" && (!isFinite(offsetBalance) || offsetBalance < 0)) {
       inputError.textContent = "Offset balance cannot be negative.";
       offsetInput.focus();
       return;
     }
 
     const principal = price - deposit;
-    const interestPrincipal = Math.max(principal - offsetBalance, 0);
+    let interestPrincipal = Math.max(principal - (isFinite(offsetBalance) ? offsetBalance : 0), 0);
 
     // Determine the interest rate to use, either directly or backed out
     // from a real statement amount.
@@ -1465,6 +1503,51 @@ depositModeToggle.addEventListener("click", () => {
         (offsetBalance > 0
           ? " Note: with an offset entered, your repayment stays exactly what you typed — the offset only adjusts the implied rate, since your entered charge already reflects the real, offset-adjusted amount."
           : "");
+    } else if (rateMode === "solve") {
+      rate = parseFloat(rateInput.value || "0");
+      if (!isFinite(rate) || rate <= 0) {
+        inputError.textContent = "Enter a positive interest rate.";
+        rateInput.focus();
+        return;
+      }
+      const chargedAmount = parseFloat(chargeInput.value || "0");
+      if (!isFinite(chargedAmount) || chargedAmount <= 0) {
+        inputError.textContent = "Enter the interest amount actually charged last period.";
+        chargeInput.focus();
+        return;
+      }
+
+      const r = rate / 100 / paymentsPerYear;
+      const solvedOffsetRaw = principal - chargedAmount / r;
+
+      const solveOffsetValueEl = document.getElementById("solveOffsetValue");
+      const solveOffsetNoteEl = document.getElementById("solveOffsetNote");
+      const useSolvedOffsetBtnEl = document.getElementById("useSolvedOffsetBtn");
+
+      let solvedOffset = solvedOffsetRaw;
+      if (solvedOffsetRaw < 0) {
+        solveOffsetNoteEl.textContent =
+          "That charge is higher than a $0-offset loan at this rate would produce. Check your rate and charge figures — showing $0.";
+        solvedOffset = 0;
+      } else if (solvedOffsetRaw >= principal) {
+        solveOffsetNoteEl.textContent =
+          "That charge is too low to be explained even by fully offsetting the loan. Check your rate and charge figures — showing the full loan balance.";
+        solvedOffset = principal;
+      } else {
+        solveOffsetNoteEl.textContent =
+          "This is the offset balance that would explain " + formatCurrency(chargedAmount) +
+          " charged at " + rate.toFixed(2) + "% p.a. on a " + formatCurrency(principal) + " loan.";
+      }
+
+      offsetBalance = solvedOffset;
+      interestPrincipal = Math.max(principal - offsetBalance, 0);
+      offsetInput.value = solvedOffset.toFixed(2);
+      solveOffsetValueEl.textContent = formatCurrency(solvedOffset);
+      useSolvedOffsetBtnEl.onclick = () => {
+        setRateMode("rate");
+        persistMortgageState();
+        calculate();
+      };
     } else {
       rate = parseFloat(rateInput.value || "0");
       if (!isFinite(rate) || rate <= 0) {
@@ -1923,7 +2006,7 @@ if (loanType === "io") {
       if (typeof state.offset === "string") offsetInput.value = state.offset;
       if (typeof state.charge === "string") chargeInput.value = state.charge;
       if (state.loanType === "pi" || state.loanType === "io") setLoanType(state.loanType);
-      if (state.rateMode === "rate" || state.rateMode === "charge") setRateMode(state.rateMode);
+      if (["rate","charge","solve"].includes(state.rateMode)) setRateMode(state.rateMode);
       if (typeof state.selectedLoanId === "number") selectedLoanId = state.selectedLoanId;
       if (typeof state.freq === "string") freqInput.value = state.freq;
       if (typeof state.calcSplit === "boolean") calcSplitCheckbox.checked = state.calcSplit;
@@ -2080,13 +2163,17 @@ if (loanType === "io") {
       "Deposit: " + deposit + " (" + depositLabel + ")",
       rateMode === "charge"
         ? "Interest charged last period: $" + (chargeInput.value || "0") + " (implied rate " + rate + "% p.a.)"
+        : rateMode === "solve"
+        ? "Interest rate: " + rate + "% p.a., interest actually charged: $" + (chargeInput.value || "0")
         : "Interest rate: " + rate + "% p.a.",
       futureRate ? "Future rate: " + futureRate + "% p.a." : null,
       "Loan type: " + loanTypeLabel,
       "Loan term: " + term + " years",
       "Repayment frequency: " + freqLabel,
       extra && parseFloat(extra) > 0 ? "Extra repayment: $" + extra + " per " + freqLabel.toLowerCase() : null,
-      offsetVal && parseFloat(offsetVal) > 0 ? "Offset account balance: $" + offsetVal : null,
+      offsetVal && parseFloat(offsetVal) > 0
+        ? "Offset account balance: $" + offsetVal + (rateMode === "solve" ? " (solved for)" : "")
+        : null,
       calcSplitCheckbox.checked
         ? "Split with partner: yes (your share " + (splitPercentInput.value || "50") + "%)"
         : "Split with partner: no",
@@ -2463,7 +2550,7 @@ if (loanType === "io") {
       splitPercentInput.value = payload.splitPercent || "50";
       updateSplitBoxVisibility();
       if (payload.loanType === "pi" || payload.loanType === "io") setLoanType(payload.loanType);
-      if (payload.rateMode === "rate" || payload.rateMode === "charge") setRateMode(payload.rateMode);
+      if (["rate","charge","solve"].includes(payload.rateMode)) setRateMode(payload.rateMode);
     }
 
     inputError.textContent =
