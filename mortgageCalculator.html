@@ -2534,10 +2534,43 @@ if (loanType === "io") {
     mortgageObserver.observe(mortgageHeroEl);
   }
 
+  function autoSelectMostRecentLoan() {
+    if (selectedLoanId != null) return; // respect whatever the session already had selected
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      if (!raw) return;
+      const items = JSON.parse(raw);
+      if (!Array.isArray(items)) return;
+
+      const loans = items.filter(
+        (i) =>
+          i &&
+          typeof i.label === "string" &&
+          (i.label.toLowerCase().includes("mortgage") ||
+            i.label.toLowerCase().includes("loan"))
+      );
+      if (!loans.length) return;
+
+      // No timestamp is stored per item, so the highest id (most recently
+      // created) is the best available proxy for "most recent".
+      const mostRecent = loans.reduce((best, loan) =>
+        typeof loan.id === "number" && (best === null || loan.id > best.id) ? loan : best
+      , null);
+      if (!mostRecent) return;
+
+      selectedLoanId = mostRecent.id;
+      loadLoanIntoCalculator(mostRecent);
+      calculate();
+    } catch (e) {
+      // ignore — leave the calculator blank if anything goes wrong
+    }
+  }
+
   // Init
   updateDepositUI();
   loadPlannerSurplus();
   restoreMortgageState();
+  autoSelectMostRecentLoan();
   snapshotLoanContribution();
   restoreMortgageSummaryVisibility();
   updateAffordability();
