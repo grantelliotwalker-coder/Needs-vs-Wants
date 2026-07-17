@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Budget · Export</title>
+  <title>Budget · Export &amp; Backup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -15,6 +15,11 @@
     h1 {
       font-size: 18px;
       margin-bottom: 4px;
+    }
+    h2 {
+      font-size: 14px;
+      margin: 18px 0 6px;
+      color: #cfe6ff;
     }
     p {
       font-size: 13px;
@@ -35,7 +40,8 @@
       font-size: 13px;
       cursor: pointer;
     }
-    #refreshBtn {
+    #refreshBtn,
+    #backupBtn {
       background: #00c2ff;
       color: #02040a;
       font-weight: 600;
@@ -74,19 +80,42 @@
       font-size: 11px;
       color: #9aa6bd;
     }
+    .summary {
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-top: 6px;
+    }
+    .summary div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 0;
+    }
+    .yes { color: #7CFFB2; }
+    .no  { color: #6a768d; }
   </style>
 </head>
 <body>
-  <h1>Budget · Export</h1>
-  <p>This reads your saved budget in this browser and builds a table you can copy into Excel or Google Sheets, or export/import JSON between devices.</p>
+  <h1>Budget · Export &amp; Backup</h1>
+  <p>Full backup of everything this app saves in your browser — budget items, income, savings goals, mortgage &amp; tax tools, and your theme. Download one file, then import it on another device to restore everything.</p>
 
+  <h2>Full backup (recommended)</h2>
   <div class="row">
-    <button id="backBtn">Back to budget</button>
-    <button id="refreshBtn">Build table from saved budget</button>
-    <button id="copyBtn">Copy table to clipboard</button>
-    <button id="downloadBtn">Download JSON</button>
+    <button id="backupBtn">Download full backup</button>
     <input type="file" id="importFile" accept="application/json,.json,.txt">
-    <button id="importBtn">Import JSON</button>
+    <button id="importBtn">Import backup</button>
+    <button id="backBtn">Back to budget</button>
+  </div>
+  <div class="summary" id="summaryBox"></div>
+
+  <h2>Spreadsheet view (budget items only)</h2>
+  <p>Reads your saved needs/wants and builds a table you can copy into Excel or Google Sheets.</p>
+  <div class="row">
+    <button id="refreshBtn">Build table</button>
+    <button id="copyBtn">Copy table to clipboard</button>
+    <button id="downloadBtn">Download items only (JSON)</button>
     <span id="status"></span>
   </div>
 
@@ -111,20 +140,36 @@
   <p><small>Copy button selects the whole table for you; you can also select rows manually.</small></p>
 
   <script>
+    /* ---- Every key this app saves in the browser ---- */
     const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
 
+    /* Key -> friendly label shown in the backup summary */
+    const ALL_KEYS = {
+      budgetNeedsWantsItems:      "Budget items (needs vs wants)",
+      budgetNeedsWantsIncome:     "Income",
+      budgetNeedsWantsSurplus:    "Surplus",
+      budgetSavingsGoals:         "Savings goals",
+      budgetIncomeAnalyserState:  "Income analyser",
+      budgetMortgageCalcState:    "Mortgage calculator",
+      budgetMortgageAffordVisible:"Mortgage affordability toggle",
+      budgetTaxDeductibleState:   "Tax deductible tool",
+      budgetSkin:                 "Theme / skin"
+    };
+
+    const BACKUP_APP = "needs-vs-wants";
+    const BACKUP_VERSION = 2;
+
+    /* ---------- helpers ---------- */
     function formatNumber(n) {
       if (!isFinite(n)) return "";
       return n.toFixed(2).replace(/\.00$/, "");
     }
-
     function toWeekly(amount, frequency) {
       if (frequency === "fortnightly") return amount / 2;
       if (frequency === "monthly") return amount * (12 / 52);
       if (frequency === "yearly") return amount / 52;
       return amount;
     }
-
     function fromWeekly(weekly, target) {
       if (target === "fortnightly") return weekly * 2;
       if (target === "monthly") return weekly * (52 / 12);
@@ -132,15 +177,155 @@
       return weekly;
     }
 
+    /* ---------- summary of what's currently saved ---------- */
+    function renderSummary() {
+      const box = document.getElementById("summaryBox");
+      box.innerHTML = "";
+      Object.keys(ALL_KEYS).forEach((key) => {
+        const has = localStorage.getItem(key) !== null;
+        const line = document.createElement("div");
+        const name = document.createElement("span");
+        name.textContent = ALL_KEYS[key];
+        const state = document.createElement("span");
+        state.textContent = has ? "saved" : "empty";
+        state.className = has ? "yes" : "no";
+        line.appendChild(name);
+        line.appendChild(state);
+        box.appendChild(line);
+      });
+    }
+
+    /* ---------- FULL BACKUP: download every key in one file ---------- */
+    function downloadFullBackup() {
+      const statusEl = document.getElementById("status");
+      const data = {};
+      let saved = 0;
+
+      Object.keys(ALL_KEYS).forEach((key) => {
+        const raw = localStorage.getItem(key);
+        if (raw === null) return;
+        // Store parsed JSON where possible; keep plain strings (e.g. skin) as-is.
+        try {
+          data[key] = JSON.parse(raw);
+        } catch (e) {
+          data[key] = raw;
+        }
+        saved++;
+      });
+
+      if (saved === 0) {
+        statusEl.textContent = "Nothing saved in this browser to back up yet.";
+        return;
+      }
+
+      const backup = {
+        app: BACKUP_APP,
+        version: BACKUP_VERSION,
+        exportedAt: new Date().toISOString(),
+        data: data
+      };
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "needs-vs-wants-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      statusEl.textContent = "Full backup downloaded (" + saved + " section" + (saved === 1 ? "" : "s") + "). Move it to your other device to restore.";
+    }
+
+    /* ---------- clean the items array (shared by legacy import) ---------- */
+    function cleanItems(arr) {
+      return arr
+        .filter(it => it && typeof it.amount === "number")
+        .map(it => ({
+          type: it.type === "want" ? "want" : "need",
+          label: typeof it.label === "string" ? it.label : "untitled",
+          amount: it.amount,
+          frequency: ["weekly", "fortnightly", "monthly", "yearly"].includes(it.frequency)
+            ? it.frequency
+            : "weekly",
+          enabled: it.enabled !== false,
+          color: it.color || "default",
+          id: typeof it.id === "number" ? it.id : Date.now() + Math.random()
+        }));
+    }
+
+    /* ---------- IMPORT: handles new full backups AND old items-only files ---------- */
+    async function importBackupFromFile() {
+      const statusEl = document.getElementById("status");
+      const fileInput = document.getElementById("importFile");
+      const file = fileInput.files && fileInput.files[0];
+
+      if (!file) {
+        statusEl.textContent = "Choose a backup file first.";
+        return;
+      }
+
+      let parsed;
+      try {
+        const text = await file.text();
+        parsed = JSON.parse(text);
+      } catch (e) {
+        console.error("Import error", e);
+        statusEl.textContent = "Import failed: could not read or parse the file.";
+        return;
+      }
+
+      // Case 1: OLD format — a bare array of budget items.
+      if (Array.isArray(parsed)) {
+        const cleaned = cleanItems(parsed);
+        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(cleaned));
+        statusEl.textContent = "Imported an old-style items file (" + cleaned.length + " items). Other sections were left as they are.";
+        renderSummary();
+        buildTable();
+        return;
+      }
+
+      // Case 2: NEW full backup — object with a `data` map of keys.
+      if (parsed && typeof parsed === "object" && parsed.data && typeof parsed.data === "object") {
+        let restored = 0;
+        Object.keys(parsed.data).forEach((key) => {
+          if (!(key in ALL_KEYS)) return; // ignore anything unexpected
+          let value = parsed.data[key];
+
+          // Re-clean items for safety; everything else is stored verbatim.
+          if (key === STORAGE_KEY_ITEMS && Array.isArray(value)) {
+            value = cleanItems(value);
+          }
+
+          const toStore = typeof value === "string" ? value : JSON.stringify(value);
+          localStorage.setItem(key, toStore);
+          restored++;
+        });
+
+        if (restored === 0) {
+          statusEl.textContent = "That file didn't contain any recognised data.";
+          return;
+        }
+
+        statusEl.textContent = "Full backup restored (" + restored + " section" + (restored === 1 ? "" : "s") + "). Reopen the app to see everything.";
+        renderSummary();
+        buildTable();
+        return;
+      }
+
+      statusEl.textContent = "Import failed: this doesn't look like a Needs-vs-Wants backup.";
+    }
+
+    /* ---------- items table (spreadsheet view) ---------- */
     function buildTable() {
       const statusEl = document.getElementById("status");
       const tbody = document.querySelector("#dataTable tbody");
-      statusEl.textContent = "";
       tbody.innerHTML = "";
 
       const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
       if (!raw) {
-        statusEl.textContent = "No saved budget found in this browser.";
+        statusEl.textContent = "No saved budget items found in this browser.";
         return;
       }
 
@@ -148,7 +333,7 @@
       try {
         parsed = JSON.parse(raw);
       } catch (e) {
-        statusEl.textContent = "Could not read saved data (JSON error).";
+        statusEl.textContent = "Could not read saved items (JSON error).";
         return;
       }
 
@@ -158,7 +343,6 @@
       }
 
       let count = 0;
-
       parsed.forEach((it) => {
         if (typeof it.amount !== "number") return;
 
@@ -178,30 +362,21 @@
 
         const tr = document.createElement("tr");
         const cells = [
-          type,
-          label,
-          formatNumber(amount),
-          freq,
-          enabled ? "1" : "0",
-          color,
-          formatNumber(weekly),
-          formatNumber(fortnightly),
-          formatNumber(monthly),
-          formatNumber(yearly)
+          type, label, formatNumber(amount), freq,
+          enabled ? "1" : "0", color,
+          formatNumber(weekly), formatNumber(fortnightly),
+          formatNumber(monthly), formatNumber(yearly)
         ];
-
         cells.forEach((val) => {
           const td = document.createElement("td");
           td.textContent = val;
           tr.appendChild(td);
         });
-
         tbody.appendChild(tr);
         count++;
       });
 
-      statusEl.textContent =
-        "Table built from " + count + " items. Copy and paste into Excel/Sheets.";
+      statusEl.textContent = "Table built from " + count + " items. Copy and paste into Excel/Sheets.";
     }
 
     async function copyTable() {
@@ -212,12 +387,10 @@
       const selection = window.getSelection();
       selection.removeAllRanges();
       selection.addRange(range);
-
       try {
         const ok = document.execCommand("copy");
         if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
-          const text = selection.toString();
-          await navigator.clipboard.writeText(text);
+          await navigator.clipboard.writeText(selection.toString());
         }
         statusEl.textContent = "Table copied. Paste into Excel or Google Sheets.";
       } catch (e) {
@@ -227,25 +400,16 @@
       }
     }
 
-    function goBack() {
-      window.location.href = "index.html";
-    }
-
-    function downloadJson() {
+    /* ---------- items-only download (kept for backward compatibility) ---------- */
+    function downloadItemsJson() {
       const statusEl = document.getElementById("status");
       const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
-
       if (!raw) {
-        statusEl.textContent = "No saved budget found to download.";
+        statusEl.textContent = "No saved items to download.";
         return;
       }
-
-      try {
-        JSON.parse(raw);
-      } catch (e) {
-        statusEl.textContent = "Saved data is not valid JSON.";
-        return;
-      }
+      try { JSON.parse(raw); }
+      catch (e) { statusEl.textContent = "Saved data is not valid JSON."; return; }
 
       const blob = new Blob([raw], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -256,59 +420,22 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
-      statusEl.textContent = "JSON downloaded. Move it to your other device to import.";
+      statusEl.textContent = "Items-only JSON downloaded.";
     }
 
-    async function importBudgetFromFile() {
-      const statusEl = document.getElementById("status");
-      const fileInput = document.getElementById("importFile");
-      const file = fileInput.files && fileInput.files[0];
-
-      if (!file) {
-        statusEl.textContent = "Choose a JSON file first.";
-        return;
-      }
-
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-
-        if (!Array.isArray(data)) {
-          statusEl.textContent = "Import failed: JSON must be an array.";
-          return;
-        }
-
-        const cleaned = data
-          .filter(it => typeof it.amount === "number")
-          .map(it => ({
-            type: it.type === "want" ? "want" : "need",
-            label: typeof it.label === "string" ? it.label : "untitled",
-            amount: it.amount,
-            frequency: ["weekly", "fortnightly", "monthly", "yearly"].includes(it.frequency)
-              ? it.frequency
-              : "weekly",
-            enabled: it.enabled !== false,
-            color: it.color || "default",
-            id: typeof it.id === "number" ? it.id : Date.now() + Math.random()
-          }));
-
-        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(cleaned));
-
-        statusEl.textContent = "Import complete. Table refreshed.";
-        buildTable();
-      } catch (e) {
-        console.error("Import error", e);
-        statusEl.textContent = "Import failed: could not read or parse JSON.";
-      }
+    function goBack() {
+      window.location.href = "index.html";
     }
 
+    /* ---------- wire up ---------- */
+    document.getElementById("backupBtn").addEventListener("click", downloadFullBackup);
+    document.getElementById("importBtn").addEventListener("click", importBackupFromFile);
+    document.getElementById("backBtn").addEventListener("click", goBack);
     document.getElementById("refreshBtn").addEventListener("click", buildTable);
     document.getElementById("copyBtn").addEventListener("click", copyTable);
-    document.getElementById("backBtn").addEventListener("click", goBack);
-    document.getElementById("downloadBtn").addEventListener("click", downloadJson);
-    document.getElementById("importBtn").addEventListener("click", importBudgetFromFile);
+    document.getElementById("downloadBtn").addEventListener("click", downloadItemsJson);
 
+    renderSummary();
     buildTable();
   </script>
 </body>
