@@ -769,71 +769,6 @@
   </header>
 
   <main class="app-main">
-    <!-- Affordability snapshot -->
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <div class="panel-title">
-            Affordability snapshot
-            <span class="panel-badge">Linked to planner</span>
-          </div>
-          <div class="panel-subtitle" id="affordSubtitle">
-            Your share vs your planner surplus.
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          <button class="summary-toggle-button" id="mortgageSummaryToggle">
-            Show
-          </button>
-          <div class="panel-totals" id="affordViewWrapper">
-            <div class="panel-totals-row">
-              <label>View as:</label>
-              <div class="type-toggle" id="viewToggle">
-                <button class="type-option" data-view="weekly">W</button>
-                <button class="type-option active" data-view="fortnightly">F</button>
-                <button class="type-option" data-view="monthly">M</button>
-                <button class="type-option" data-view="yearly">Y</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="affordBody">
-        <div class="summary-row">
-          <div class="summary-card">
-            <div class="summary-card-title">Planner surplus (est)</div>
-            <div class="mini-row">
-              <span class="mini-label">From main planner</span>
-              <span id="plannerSurplus" class="mini-value surplus">0</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">Basis</span>
-              <span id="plannerBasis" class="mini-value">—</span>
-            </div>
-            <div class="note" id="surplusAdjustmentNote" style="display:none;"></div>
-          </div>
-
-          <div class="summary-card">
-            <div class="summary-card-title">Your mortgage share</div>
-            <div class="mini-row">
-              <span class="mini-label">Payment used here</span>
-              <span id="paymentDisplay" class="mini-value">0</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">Coverage</span>
-              <span id="coverageLabel" class="mini-value surplus">Run a calculation</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">Surplus after payment</span>
-              <span id="afterPayment" class="mini-value surplus">0</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <div class="app-grid">
       <!-- Inputs -->
       <section class="panel">
@@ -1097,8 +1032,33 @@
           </div>
 
           <div>
-            <div class="field-label">Mortgage vs planner surplus</div>
-            <div class="progress-shell">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="field-label">Mortgage vs planner surplus</div>
+              <div class="type-toggle" id="viewToggle">
+                <button class="type-option" data-view="weekly">W</button>
+                <button class="type-option active" data-view="fortnightly">F</button>
+                <button class="type-option" data-view="monthly">M</button>
+                <button class="type-option" data-view="yearly">Y</button>
+              </div>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Planner surplus (<span id="plannerBasis">—</span>)</span>
+              <span id="plannerSurplus" class="mini-value surplus">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Payment used here</span>
+              <span id="paymentDisplay" class="mini-value">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Surplus after payment</span>
+              <span id="afterPayment" class="mini-value surplus">0</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Coverage</span>
+              <span id="coverageLabel" class="mini-value surplus">Run a calculation</span>
+            </div>
+            <div class="note" id="surplusAdjustmentNote" style="display:none;"></div>
+            <div class="progress-shell" style="margin-top:6px;">
               <div class="progress-fill" id="coverageBar"></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
@@ -1238,11 +1198,6 @@
 
   const detailsToggle = document.getElementById("detailsToggle");
   const detailsBox = document.getElementById("detailsBox");
-
-  const mortgageSummaryToggleBtn = document.getElementById("mortgageSummaryToggle");
-  const affordBody = document.getElementById("affordBody");
-  const affordSubtitle = document.getElementById("affordSubtitle");
-  const affordViewWrapper = document.getElementById("affordViewWrapper");
 
   const toggleSavedLoansBtn = document.getElementById("toggleSavedLoansBtn");
   const deleteMortgageBtn = document.getElementById("deleteMortgageBtn");
@@ -2085,58 +2040,6 @@ if (loanType === "io") {
     }
   }
 
-  // Affordability snapshot visibility
-  let mortgageSummaryVisible = false;
-  function restoreMortgageSummaryVisibility() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_MORTGAGE_VIS);
-      if (!raw) {
-        mortgageSummaryVisible = false;
-        updateMortgageSummaryVisibility();
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      mortgageSummaryVisible = !!parsed.visible;
-      updateMortgageSummaryVisibility();
-    } catch (e) {
-      mortgageSummaryVisible = false;
-      updateMortgageSummaryVisibility();
-    }
-  }
-
-  function persistMortgageSummaryVisibility() {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY_MORTGAGE_VIS,
-        JSON.stringify({ visible: mortgageSummaryVisible })
-      );
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  function updateMortgageSummaryVisibility() {
-    if (mortgageSummaryVisible) {
-      affordBody.style.display = "";
-      affordSubtitle.style.display = "";
-      affordViewWrapper.style.display = "";
-      mortgageSummaryToggleBtn.textContent = "Hide";
-      mortgageSummaryToggleBtn.classList.add("active");
-    } else {
-      affordBody.style.display = "none";
-      affordSubtitle.style.display = "none";
-      affordViewWrapper.style.display = "none";
-      mortgageSummaryToggleBtn.textContent = "Show";
-      mortgageSummaryToggleBtn.classList.remove("active");
-    }
-  }
-
-  mortgageSummaryToggleBtn.addEventListener("click", () => {
-    mortgageSummaryVisible = !mortgageSummaryVisible;
-    updateMortgageSummaryVisibility();
-    persistMortgageSummaryVisibility();
-  });
-
   viewToggle.addEventListener("click", (e) => {
     const btn = e.target.closest(".type-option");
     if (!btn) return;
@@ -2707,7 +2610,6 @@ if (loanType === "io") {
   restoreMortgageState();
   autoSelectMostRecentLoan();
   snapshotLoanContribution();
-  restoreMortgageSummaryVisibility();
   updateAffordability();
 </script>
 </body>
