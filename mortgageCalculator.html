@@ -294,12 +294,6 @@
       .app-grid {
         grid-template-columns: minmax(0, 1fr);
       }
-
-      input[type="text"],
-      input[type="number"],
-      select {
-        font-size: 16px;
-      }
     }
 
     .inputs-grid {
@@ -346,8 +340,13 @@
       border: 1px solid rgba(255, 255, 255, 0.18);
       padding: 7px 10px;
       color: var(--text);
-      font-size: 13px;
+      font-size: 16px;
       outline: none;
+      touch-action: manipulation;
+    }
+
+    button {
+      touch-action: manipulation;
     }
 
     input[type="text"]:focus,
@@ -926,7 +925,7 @@
                     <input id="offsetInput" type="number" min="0" step="1" placeholder="" />
                 </div>
                 <div class="note">
-                    Money sitting in a linked offset account. Interest is calculated only on your loan balance minus this amount.
+                    Money sitting in a linked offset account. Interest is calculated only on your loan balance minus this amount. In "Amount charged" mode, this adjusts the implied rate rather than the payment — see note below the charge field.
                 </div>
             </div>
 
@@ -1452,7 +1451,10 @@ depositModeToggle.addEventListener("click", () => {
       rateInput.value = rate.toFixed(2);
       impliedRateNoteEl.textContent =
         "Implied rate: " + rate.toFixed(2) + "% p.a., based on " +
-        formatCurrency(chargedAmount) + " charged on " + formatCurrency(interestPrincipal) + ".";
+        formatCurrency(chargedAmount) + " charged on " + formatCurrency(interestPrincipal) + "." +
+        (offsetBalance > 0
+          ? " Note: with an offset entered, your repayment stays exactly what you typed — the offset only adjusts the implied rate, since your entered charge already reflects the real, offset-adjusted amount."
+          : "");
     } else {
       rate = parseFloat(rateInput.value || "0");
       if (!isFinite(rate) || rate <= 0) {
