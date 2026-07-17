@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Budget Needs vs Wants Calculator | Simple Spending Planner</title>
+    <meta name="theme-color" content="#050816" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description"
           content="Free budget Needs vs Wants calculator. Enter your income and expenses, separate essential needs from optional wants, and see your surplus instantly." />
@@ -286,6 +287,96 @@
             font-size: 11px;
         }
 
+        /* --- Surplus hero: the one number people open the app for --- */
+        .surplus-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            padding: 6px 2px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 2px;
+        }
+
+        .surplus-hero-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .surplus-hero-value {
+            font-size: 34px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+            .surplus-hero-value.surplus { color: var(--success); }
+            .surplus-hero-value.deficit { color: var(--danger); }
+
+        .surplus-hero-status {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+            .surplus-hero-status.surplus { color: var(--success); }
+            .surplus-hero-status.deficit { color: var(--danger); }
+
+        /* --- Sticky mini bar shown once the summary card scrolls away --- */
+        #stickyBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            background: rgba(5, 8, 22, 0.96);
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            font-weight: 600;
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+            #stickyBar.visible {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            #stickyBar .surplus { color: var(--success); }
+            #stickyBar .deficit { color: var(--danger); }
+
+        /* --- Floating Add button --- */
+        .fab-add {
+            position: fixed;
+            right: 18px;
+            bottom: 22px;
+            z-index: 600;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent, #00c2ff);
+            color: #02040a;
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 194, 255, 0.35), 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+            .fab-add:active {
+                transform: scale(0.94);
+            }
+
         .income-main-row {
             display: flex;
             align-items: center;
@@ -431,6 +522,39 @@
             white-space: nowrap;
         }
 
+        .panel-totals-primary {
+            display: flex;
+            justify-content: flex-end;
+            align-items: baseline;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+            .panel-totals-primary .amount {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--accent);
+            }
+
+            .panel-totals-primary .chevron {
+                font-size: 10px;
+                color: var(--muted);
+                transition: transform 0.15s ease;
+            }
+
+            .panel-totals-primary.expanded .chevron {
+                transform: rotate(180deg);
+            }
+
+        .panel-totals-extra {
+            display: none;
+            margin-top: 4px;
+        }
+
+            .panel-totals-extra.expanded {
+                display: block;
+            }
+
         .panel-totals-row {
             display: flex;
             justify-content: flex-end;
@@ -461,11 +585,17 @@
             flex: 1;
             overflow-y: auto;
             padding-right: 2px;
-            display: flex;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: 6px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            align-content: start;
+            gap: 8px;
         }
+
+            .items-area .pill {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
 
         .pill {
             display: inline-flex;
@@ -897,25 +1027,11 @@
                 </div>
             </div>
 
-            <!-- Second line: tagline + Add -->
-            <div style="
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      margin-top:4px;
-    ">
-                <div class="brand-tagline" style="flex:1 1 auto; max-width:60%;">
-                    Quickly separate needs from wants and see your budget surplus at a glance.
-                    <br />
-                    <span style="opacity:0.30;">Data saved to this browser 🔒</span>
-                </div>
-
-                <div class="header-actions" style="flex:0 0 auto;">
-                    <button class="add-btn" id="openCreateModal">
-                        <span class="icon">＋</span>
-                        Add
-                    </button>
+            <!-- Second line: tagline -->
+            <div style="margin-top:4px;">
+                <div class="brand-tagline">
+                    Separate needs from wants, see your surplus at a glance.
+                    <span style="opacity:0.30;"> · Saved to this browser 🔒</span>
                 </div>
             </div>
 
@@ -939,9 +1055,15 @@
                 </div>
             </div>
 
-            <!-- Summary content (THIS WAS MISSING BEFORE) -->
+            <!-- Summary content -->
             <div class="summary-row" id="summaryRow">
                 <div class="summary-card">
+                    <div class="surplus-hero">
+                        <span class="surplus-hero-label">Surplus</span>
+                        <span id="surplusHeroValue" class="surplus-hero-value surplus">$0</span>
+                        <span id="surplusHeroStatus" class="surplus-hero-status surplus">Enter values</span>
+                    </div>
+
                     <div class="summary-card-title">Income &amp; summary</div>
 
                     <div class="income-main-row">
@@ -952,6 +1074,7 @@
                                    type="number"
                                    min="0"
                                    step="0.01"
+                                   inputmode="decimal"
                                    placeholder="0.00" />
                         </div>
                     </div>
@@ -982,19 +1105,22 @@
                             <span id="summaryTotal" class="mini-value accent">$0</span>
                         </div>
                         <div class="mini-row">
-                            <span class="mini-label">Surplus</span>
-                            <span id="summarySurplus" class="mini-value surplus">$0</span>
-                        </div>
-                        <div class="mini-row">
-                            <span class="mini-label">Status</span>
-                            <span id="summaryStatus" class="mini-value surplus">
-                                Enter values
-                            </span>
+                            <span class="mini-label">Needs vs income</span>
+                            <span id="summaryNeedsPct" class="mini-value">–</span>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
+
+        <!-- Sticky mini summary bar, shown once the main summary scrolls off -->
+        <div id="stickyBar">
+            <span>Surplus</span>
+            <span id="stickyBarValue" class="surplus">$0</span>
+        </div>
+
+        <!-- Floating Add button -->
+        <button class="fab-add" id="openCreateModal" aria-label="Add item">＋</button>
 
 
 
@@ -1010,21 +1136,28 @@
                         <div class="panel-subtitle">Rent, groceries, utilities, transport.</div>
                     </div>
                     <div class="panel-totals">
-                        <div class="panel-totals-row">
-                            <label>Weekly</label>
-                            <span class="amount weekly" id="needsWeekly">$0</span>
+                        <div class="panel-totals-primary">
+                            <span id="needsPrimaryLabel">Weekly</span>
+                            <span class="amount" id="needsPrimaryAmount">$0</span>
+                            <span class="chevron">▾</span>
                         </div>
-                        <div class="panel-totals-row">
-                            <label>Fortnightly</label>
-                            <span class="amount fortnightly" id="needsFortnightly">$0</span>
-                        </div>
-                        <div class="panel-totals-row">
-                            <label>Monthly</label>
-                            <span class="amount monthly" id="needsMonthly">$0</span>
-                        </div>
-                        <div class="panel-totals-row">
-                            <label>Yearly</label>
-                            <span class="amount yearly" id="needsYearly">$0</span>
+                        <div class="panel-totals-extra">
+                            <div class="panel-totals-row">
+                                <label>Weekly</label>
+                                <span class="amount weekly" id="needsWeekly">$0</span>
+                            </div>
+                            <div class="panel-totals-row">
+                                <label>Fortnightly</label>
+                                <span class="amount fortnightly" id="needsFortnightly">$0</span>
+                            </div>
+                            <div class="panel-totals-row">
+                                <label>Monthly</label>
+                                <span class="amount monthly" id="needsMonthly">$0</span>
+                            </div>
+                            <div class="panel-totals-row">
+                                <label>Yearly</label>
+                                <span class="amount yearly" id="needsYearly">$0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1041,21 +1174,28 @@
                         <div class="panel-subtitle">Subscriptions, dining out, treats.</div>
                     </div>
                     <div class="panel-totals">
-                        <div class="panel-totals-row">
-                            <label>Weekly</label>
-                            <span class="amount weekly" id="wantsWeekly">$0</span>
+                        <div class="panel-totals-primary">
+                            <span id="wantsPrimaryLabel">Weekly</span>
+                            <span class="amount" id="wantsPrimaryAmount">$0</span>
+                            <span class="chevron">▾</span>
                         </div>
-                        <div class="panel-totals-row">
-                            <label>Fortnightly</label>
-                            <span class="amount fortnightly" id="wantsFortnightly">$0</span>
-                        </div>
-                        <div class="panel-totals-row">
-                            <label>Monthly</label>
-                            <span class="amount monthly" id="wantsMonthly">$0</span>
-                        </div>
-                        <div class="panel-totals-row">
-                            <label>Yearly</label>
-                            <span class="amount yearly" id="wantsYearly">$0</span>
+                        <div class="panel-totals-extra">
+                            <div class="panel-totals-row">
+                                <label>Weekly</label>
+                                <span class="amount weekly" id="wantsWeekly">$0</span>
+                            </div>
+                            <div class="panel-totals-row">
+                                <label>Fortnightly</label>
+                                <span class="amount fortnightly" id="wantsFortnightly">$0</span>
+                            </div>
+                            <div class="panel-totals-row">
+                                <label>Monthly</label>
+                                <span class="amount monthly" id="wantsMonthly">$0</span>
+                            </div>
+                            <div class="panel-totals-row">
+                                <label>Yearly</label>
+                                <span class="amount yearly" id="wantsYearly">$0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1083,7 +1223,7 @@
 
         <div>
           <div class="field-label">Label</div>
-          <input id="itemLabelInput" type="text" placeholder="e.g. Rent, Spotify, Groceries" />
+          <input id="itemLabelInput" type="text" maxlength="40" placeholder="e.g. Rent, Spotify, Groceries" />
         </div>
 
         <div class="field-row">
@@ -1162,8 +1302,8 @@
 
     const incomeAmountEl = document.getElementById("incomeAmount");
     const summaryTotalEl = document.getElementById("summaryTotal");
-    const summarySurplusEl = document.getElementById("summarySurplus");
-    const summaryStatusEl = document.getElementById("summaryStatus");
+    const surplusHeroValueEl = document.getElementById("surplusHeroValue");
+    const surplusHeroStatusEl = document.getElementById("surplusHeroStatus");
 
     const openCreateModalBtn = document.getElementById("openCreateModal");
     const itemModalBackdrop = document.getElementById("itemModalBackdrop");
@@ -1196,9 +1336,17 @@
     let currentSurplus = 0;
 
 
+    const currencyFmt = new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "AUD",
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+
     function formatCurrency(amount) {
       if (!isFinite(amount)) return "$0";
-      return "$" + amount.toFixed(2).replace(/\.00$/, "");
+      return currencyFmt.format(amount);
     }
 
     function toWeekly(amount, frequency) {
@@ -1222,7 +1370,7 @@
 
     // Save income block
     const incomeState = {
-      amount: incomeAmountEl.value || 0,
+      amount: parseFloat(incomeAmountEl.value) || 0,
       frequency: summaryFrequency || "fortnightly",
       visible: summaryVisible,
     };
@@ -1446,14 +1594,61 @@
       closeModal();
     }
 
+    let lastDeleted = null;
+    let undoTimer = null;
+
+    function showUndoToast(label) {
+      const existing = document.getElementById("undoToast");
+      if (existing) existing.remove();
+
+      const toast = document.createElement("div");
+      toast.id = "undoToast";
+      toast.style.cssText =
+        "position:fixed;left:50%;bottom:20px;transform:translateX(-50%);" +
+        "background:#11152a;color:#e5f4ff;border:1px solid rgba(255,255,255,0.25);" +
+        "border-radius:999px;padding:10px 16px;font-size:13px;display:flex;" +
+        "gap:12px;align-items:center;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);";
+
+      const msg = document.createElement("span");
+      msg.textContent = 'Deleted "' + label + '"';
+      toast.appendChild(msg);
+
+      const undoBtn = document.createElement("button");
+      undoBtn.textContent = "Undo";
+      undoBtn.style.cssText =
+        "background:#00c2ff;color:#02040a;border:none;border-radius:999px;" +
+        "padding:4px 12px;font-size:13px;font-weight:600;cursor:pointer;";
+      undoBtn.addEventListener("click", () => {
+        if (lastDeleted) {
+          items.splice(Math.min(lastDeleted.index, items.length), 0, lastDeleted.item);
+          lastDeleted = null;
+          render();
+          persist();
+        }
+        clearTimeout(undoTimer);
+        toast.remove();
+      });
+      toast.appendChild(undoBtn);
+
+      document.body.appendChild(toast);
+      undoTimer = setTimeout(() => {
+        lastDeleted = null;
+        toast.remove();
+      }, 6000);
+    }
+
     function deleteItem() {
       if (editingId == null) return;
       const index = items.findIndex((i) => i.id === editingId);
-      if (index !== -1) items.splice(index, 1);
-      
+      if (index === -1) return;
+
+      lastDeleted = { item: items[index], index };
+      items.splice(index, 1);
+
       render();
       persist();
       closeModal();
+      showUndoToast(lastDeleted.item.label || "item");
     }
 
     function render() {
@@ -1519,6 +1714,20 @@
         else wantsItemsEl.appendChild(pill);
       });
 
+      // Empty states: gentle hint instead of a blank panel
+      function addEmptyState(el, text) {
+        const hint = document.createElement("div");
+        hint.style.cssText = "opacity:0.45;font-size:13px;padding:10px 4px;grid-column:1/-1;";
+        hint.textContent = text;
+        el.appendChild(hint);
+      }
+      if (needsItemsEl.children.length === 0) {
+        addEmptyState(needsItemsEl, "No needs yet — tap Add to enter rent, groceries, bills…");
+      }
+      if (wantsItemsEl.children.length === 0) {
+        addEmptyState(wantsItemsEl, "No wants yet — tap Add for subscriptions, dining out, treats…");
+      }
+
       const needsFortnightly = fromWeekly(needsWeekly, "fortnightly");
       const needsMonthly = fromWeekly(needsWeekly, "monthly");
       const needsYearly = fromWeekly(needsWeekly, "yearly");
@@ -1535,6 +1744,15 @@
       wantsMonthlyEl.textContent = formatCurrency(wantsMonthly);
       wantsYearlyEl.textContent = formatCurrency(wantsYearly);
 
+      const FREQ_LABEL = { weekly: "Weekly", fortnightly: "Fortnightly", monthly: "Monthly", yearly: "Yearly" };
+      const needsPrimaryByFreq = { weekly: needsWeekly, fortnightly: needsFortnightly, monthly: needsMonthly, yearly: needsYearly };
+      const wantsPrimaryByFreq = { weekly: wantsWeekly, fortnightly: wantsFortnightly, monthly: wantsMonthly, yearly: wantsYearly };
+
+      document.getElementById("needsPrimaryLabel").textContent = FREQ_LABEL[summaryFrequency];
+      document.getElementById("needsPrimaryAmount").textContent = formatCurrency(needsPrimaryByFreq[summaryFrequency]);
+      document.getElementById("wantsPrimaryLabel").textContent = FREQ_LABEL[summaryFrequency];
+      document.getElementById("wantsPrimaryAmount").textContent = formatCurrency(wantsPrimaryByFreq[summaryFrequency]);
+
       const totalWeekly = needsWeekly + wantsWeekly;
 
       const incomeAmount = parseFloat(incomeAmountEl.value) || 0;
@@ -1546,20 +1764,36 @@
 currentSurplus = surplusDisplay;
 
       summaryTotalEl.textContent = formatCurrency(totalDisplay);
-      summarySurplusEl.textContent = formatCurrency(Math.abs(surplusDisplay));
 
       const isSurplus = surplusDisplay >= 0;
-      summarySurplusEl.classList.toggle("surplus", isSurplus);
-      summarySurplusEl.classList.toggle("deficit", !isSurplus);
+      const isEmpty = incomeAmount === 0 && totalWeekly === 0;
 
-      summaryStatusEl.textContent =
-        incomeAmount === 0 && totalWeekly === 0
-          ? "Enter values"
-          : isSurplus
-          ? "Surplus"
-          : "Shortfall";
-      summaryStatusEl.classList.toggle("surplus", isSurplus);
-      summaryStatusEl.classList.toggle("deficit", !isSurplus);
+      surplusHeroValueEl.textContent = formatCurrency(Math.abs(surplusDisplay));
+      surplusHeroValueEl.classList.toggle("surplus", isSurplus);
+      surplusHeroValueEl.classList.toggle("deficit", !isSurplus);
+
+      surplusHeroStatusEl.textContent = isEmpty
+        ? "Enter values"
+        : isSurplus
+        ? "Surplus"
+        : "Shortfall";
+      surplusHeroStatusEl.classList.toggle("surplus", isSurplus);
+      surplusHeroStatusEl.classList.toggle("deficit", !isSurplus);
+
+      updateStickyBar(surplusDisplay, isSurplus, isEmpty);
+
+      // 50/30/20 guide: needs as a share of income
+      const needsPctEl = document.getElementById("summaryNeedsPct");
+      if (incomeWeekly > 0 && needsWeekly > 0) {
+        const pct = Math.round((needsWeekly / incomeWeekly) * 100);
+        const note = pct <= 50 ? " (guide: 50%)" : " (above 50% guide)";
+        needsPctEl.textContent = pct + "%" + note;
+        needsPctEl.classList.toggle("surplus", pct <= 50);
+        needsPctEl.classList.toggle("deficit", pct > 50);
+      } else {
+        needsPctEl.textContent = "–";
+        needsPctEl.classList.remove("surplus", "deficit");
+      }
     }
 
     itemTypeToggle.addEventListener("click", (e) => {
@@ -1591,6 +1825,23 @@ currentSurplus = surplusDisplay;
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeModal();
+
+      if (e.key === "Tab" && itemModalBackdrop.classList.contains("open")) {
+        const focusable = itemModalBackdrop.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     });
 
     itemLabelInput.addEventListener("keydown", (e) => {
@@ -1605,7 +1856,9 @@ currentSurplus = surplusDisplay;
     itemFrequencyInput.addEventListener("change", updateBreakdownPreview);
 
     incomeAmountEl.addEventListener("input", () => {
-      
+      if (incomeAmountEl.value !== "" && parseFloat(incomeAmountEl.value) < 0) {
+        incomeAmountEl.value = 0;
+      }
       render();
       persist();
     });
@@ -1613,9 +1866,18 @@ currentSurplus = surplusDisplay;
     summaryFrequencyToggle.addEventListener("click", (e) => {
       const btn = e.target.closest(".type-option");
       if (!btn) return;
-      summaryFrequency = btn.dataset.freq || "fortnightly";
+      const prevFrequency = summaryFrequency;
+      const nextFrequency = btn.dataset.freq || "fortnightly";
+      // Convert the entered income so it represents the same real amount
+      // in the newly selected period (mirrors how expenses convert).
+      const prevIncome = parseFloat(incomeAmountEl.value);
+      if (isFinite(prevIncome) && prevFrequency !== nextFrequency) {
+        const converted = fromWeekly(toWeekly(prevIncome, prevFrequency), nextFrequency);
+        incomeAmountEl.value = converted.toFixed(2).replace(/\.00$/, "");
+      }
+      summaryFrequency = nextFrequency;
       updateSummaryFrequencyButtons();
-      
+
       render();
       persist();
     });
@@ -1625,6 +1887,46 @@ currentSurplus = surplusDisplay;
       updateSummaryVisibility();
       persist();
     });
+
+    // --- Sticky summary bar: mirrors the hero surplus once it scrolls away ---
+    const stickyBarEl = document.getElementById("stickyBar");
+    const stickyBarValueEl = document.getElementById("stickyBarValue");
+    let lastStickyState = null;
+
+    function updateStickyBar(surplusDisplay, isSurplus, isEmpty) {
+      lastStickyState = { surplusDisplay, isSurplus, isEmpty };
+      stickyBarValueEl.textContent = isEmpty ? "–" : formatCurrency(Math.abs(surplusDisplay));
+      stickyBarValueEl.classList.toggle("surplus", isSurplus);
+      stickyBarValueEl.classList.toggle("deficit", !isSurplus);
+    }
+
+    const heroEl = document.querySelector(".surplus-hero");
+    if (heroEl && "IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            stickyBarEl.classList.toggle("visible", !entry.isIntersecting && summaryVisible);
+          });
+        },
+        { threshold: 0 }
+      );
+      observer.observe(heroEl);
+    }
+
+    // --- Collapsible panel totals: show the active frequency, tap for the rest ---
+    function setupPanelTotalsToggle(panelId) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      const primary = panel.querySelector(".panel-totals-primary");
+      const extra = panel.querySelector(".panel-totals-extra");
+      if (!primary || !extra) return;
+      primary.addEventListener("click", () => {
+        const expanded = extra.classList.toggle("expanded");
+        primary.classList.toggle("expanded", expanded);
+      });
+    }
+    setupPanelTotalsToggle("needsPanel");
+    setupPanelTotalsToggle("wantsPanel");
 
     restore();
     render();
