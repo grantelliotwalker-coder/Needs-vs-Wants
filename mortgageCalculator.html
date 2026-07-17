@@ -774,6 +774,7 @@
               <span class="mini-label">Basis</span>
               <span id="plannerBasis" class="mini-value">—</span>
             </div>
+            <div class="note" id="surplusAdjustmentNote" style="display:none;"></div>
           </div>
 
           <div class="summary-card">
@@ -1063,15 +1064,19 @@
             </div>
             <div class="hidden-box" id="futureBox">
               <div class="mini-row">
-                <span class="mini-label">Repayment at future rate</span>
+                <span class="mini-label">Repayment at future rate (whole loan)</span>
                 <span class="mini-value" id="futurePayment">—</span>
+              </div>
+              <div class="mini-row" id="futureShareRow" style="display:none;">
+                <span class="mini-label">Your share at future rate</span>
+                <span class="mini-value" id="futureSharePayment">—</span>
               </div>
               <div class="mini-row">
                 <span class="mini-label">Total interest at future rate</span>
                 <span class="mini-value" id="futureInterest">—</span>
               </div>
               <div class="mini-row">
-                <span class="mini-label">Change vs current</span>
+                <span class="mini-label" id="futureChangeLabel">Change vs current</span>
                 <span class="mini-value" id="futureChange">—</span>
               </div>
             </div>
@@ -1213,6 +1218,9 @@
   let lastTermYears = 0;
   let lastRate = 0;
   let lastLoanType = "pi";
+  let lastSplitForCalc = false;
+  let lastSplitPercent = 100;
+  let lockedLoanWeeklyContribution = 0;
   let loanType = "pi"; // "pi" | "io"
   let rateMode = "rate"; // "rate" | "charge"
 
@@ -1607,6 +1615,8 @@ if (loanType === "io") {
     lastTermYears = termYears;
     lastRate = rate;
     lastLoanType = loanType;
+    lastSplitForCalc = splitForCalc;
+    lastSplitPercent = splitPercent;
 
     updateAffordability();
     updateFutureRateView();
@@ -1616,6 +1626,7 @@ if (loanType === "io") {
   function clearLoan() {
   // NEW: deselect any saved mortgage row
   selectedLoanId = null;
+  lockedLoanWeeklyContribution = 0;
 
   // Clear inputs
   priceInput.value = "";
@@ -1646,6 +1657,8 @@ if (loanType === "io") {
   lastTermYears = 0;
   lastRate = 0;
   lastLoanType = "pi";
+  lastSplitForCalc = false;
+  lastSplitPercent = 100;
 
   // Reset results area
   resultPaymentEl.textContent = "";
@@ -1686,10 +1699,57 @@ if (loanType === "io") {
 
 
 
+  function getThisLoanWeeklyContribution() {
+    if (selectedLoanId == null) return 0;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ITEMS);
+      if (!raw) return 0;
+      const items = JSON.parse(raw);
+      if (!Array.isArray(items)) return 0;
+      const item = items.find((i) => i && i.id === selectedLoanId);
+      if (!item || item.enabled === false || typeof item.amount !== "number") return 0;
+      const itemFreq = ["weekly", "fortnightly", "monthly", "yearly"].includes(item.frequency)
+        ? item.frequency
+        : "monthly";
+      return toWeekly(item.amount, itemFreq);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Snapshot this loan's already-budgeted contribution. Deliberately only
+  // called at genuine "load" moments (page load, or actively selecting a
+  // saved loan) — not after every Save — because the cached planner surplus
+  // itself only updates when you revisit the main planner. Re-snapshotting
+  // right after a Save would pair a fresh contribution figure with a stale
+  // surplus figure and produce a new, smaller inconsistency.
+  function snapshotLoanContribution() {
+    lockedLoanWeeklyContribution = getThisLoanWeeklyContribution();
+  }
+
   function updateAffordability() {
     const weeklyPayment = toWeekly(lastPaymentPerFreq, lastFreq);
     const paymentView = fromWeekly(weeklyPayment, viewMode);
-    const surplusView = fromWeekly(plannerSurplusWeekly, viewMode);
+
+    // If this loan is already saved into the budget, it's already been
+    // subtracted out of the planner surplus. Add back the locked snapshot
+    // of its contribution before comparing, otherwise we'd be measuring
+    // the payment against a surplus that already has this same payment
+    // removed from it.
+    const comparisonSurplusWeekly = plannerSurplusWeekly + lockedLoanWeeklyContribution;
+    const surplusView = fromWeekly(comparisonSurplusWeekly, viewMode);
+
+    const adjustmentNoteEl = document.getElementById("surplusAdjustmentNote");
+    if (lockedLoanWeeklyContribution > 0 && adjustmentNoteEl) {
+      adjustmentNoteEl.style.display = "block";
+      adjustmentNoteEl.textContent =
+        "This loan is already saved in your budget as a Need, so its saved payment (" +
+        formatCurrency(fromWeekly(lockedLoanWeeklyContribution, viewMode)) +
+        ") has been added back to the surplus below before comparing — otherwise it'd be counted twice. " +
+        "This baseline is fixed for this session; it refreshes when you reload the page or reselect the loan.";
+    } else if (adjustmentNoteEl) {
+      adjustmentNoteEl.style.display = "none";
+    }
 
     if (!isFinite(paymentView) || paymentView <= 0) {
       paymentDisplayEl.textContent = "0";
@@ -1754,6 +1814,7 @@ if (loanType === "io") {
       futurePaymentEl.textContent = "—";
       futureInterestEl.textContent = "—";
       futureChangeEl.textContent = "—";
+      document.getElementById("futureShareRow").style.display = "none";
       futureNoteEl.textContent =
         "Enter a future interest rate to see how repayments and total interest could change.";
       return;
@@ -1787,7 +1848,24 @@ if (loanType === "io") {
     futurePaymentEl.textContent = formatCurrency(futurePayment);
     futureInterestEl.textContent = formatCurrency(futureInterest);
 
-    const diff = futurePayment - currentPayment;
+    const futureShareRowEl = document.getElementById("futureShareRow");
+    const futureSharePaymentEl = document.getElementById("futureSharePayment");
+    const futureChangeLabelEl = document.getElementById("futureChangeLabel");
+
+    let diff;
+    if (lastSplitForCalc) {
+      const currentShare = currentPayment * (lastSplitPercent / 100);
+      const futureShare = futurePayment * (lastSplitPercent / 100);
+      futureShareRowEl.style.display = "flex";
+      futureSharePaymentEl.textContent = formatCurrency(futureShare) + " (" + lastSplitPercent + "%)";
+      diff = futureShare - currentShare;
+      futureChangeLabelEl.textContent = "Change vs current (your share)";
+    } else {
+      futureShareRowEl.style.display = "none";
+      diff = futurePayment - currentPayment;
+      futureChangeLabelEl.textContent = "Change vs current";
+    }
+
     const sign = diff >= 0 ? "+" : "–";
     futureChangeEl.textContent =
       sign + formatCurrency(Math.abs(diff)) + " per " +
@@ -1818,7 +1896,8 @@ if (loanType === "io") {
       rateMode,
       charge: chargeInput.value || "",
       viewMode,
-      depositMode
+      depositMode,
+      selectedLoanId
     };
     try {
       localStorage.setItem(STORAGE_KEY_MORTGAGE, JSON.stringify(state));
@@ -1845,6 +1924,7 @@ if (loanType === "io") {
       if (typeof state.charge === "string") chargeInput.value = state.charge;
       if (state.loanType === "pi" || state.loanType === "io") setLoanType(state.loanType);
       if (state.rateMode === "rate" || state.rateMode === "charge") setRateMode(state.rateMode);
+      if (typeof state.selectedLoanId === "number") selectedLoanId = state.selectedLoanId;
       if (typeof state.freq === "string") freqInput.value = state.freq;
       if (typeof state.calcSplit === "boolean") calcSplitCheckbox.checked = state.calcSplit;
       if (typeof state.splitPercent === "string" || typeof state.splitPercent === "number") {
@@ -2019,9 +2099,12 @@ if (loanType === "io") {
       "Base term: " + (resultTermBaseEl.textContent || "—"),
       "Term with extra repayments: " + (resultTermExtraEl.textContent || "—"),
       "Mortgage vs planner surplus: " + (coverageNoteEl.textContent || "—") + " (" + (coverageTagEl.textContent || "") + ")",
-      futureRate ? "Repayment at future rate: " + (futurePaymentEl.textContent || "—") : null,
+      futureRate ? "Repayment at future rate (whole loan): " + (futurePaymentEl.textContent || "—") : null,
+      futureRate && calcSplitCheckbox.checked
+        ? "Your share at future rate: " + (document.getElementById("futureSharePayment").textContent || "—")
+        : null,
       futureRate ? "Total interest at future rate: " + (futureInterestEl.textContent || "—") : null,
-      futureRate ? "Change vs current: " + (futureChangeEl.textContent || "—") : null,
+      futureRate ? (document.getElementById("futureChangeLabel").textContent || "Change vs current") + ": " + (futureChangeEl.textContent || "—") : null,
       "",
       "Rough guide only. Does not include fees, changing rates, or lender-specific rules.",
     ].filter((line) => line !== null);
@@ -2328,11 +2411,15 @@ if (loanType === "io") {
         div.addEventListener("click", () => {
           if (selectedLoanId === loan.id) {
             selectedLoanId = null;
+            lockedLoanWeeklyContribution = 0;
           } else {
             selectedLoanId = loan.id;
             loadLoanIntoCalculator(loan);
+            snapshotLoanContribution();
           }
+          persistMortgageState();
           renderSavedLoansList();
+          updateAffordability();
         });
 
         savedLoansList.appendChild(div);
@@ -2410,6 +2497,7 @@ if (loanType === "io") {
       const filtered = items.filter((i) => !i || i.id !== selectedLoanId);
       localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(filtered));
       selectedLoanId = null;
+      lockedLoanWeeklyContribution = 0;
       renderSavedLoansList();
       inputError.textContent = "";
       loadPlannerSurplus();
@@ -2450,6 +2538,7 @@ if (loanType === "io") {
   updateDepositUI();
   loadPlannerSurplus();
   restoreMortgageState();
+  snapshotLoanContribution();
   restoreMortgageSummaryVisibility();
   updateAffordability();
 </script>
