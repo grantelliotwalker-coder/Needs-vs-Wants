@@ -326,6 +326,17 @@
       align-items: center;
     }
 
+    .split-box {
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(0, 194, 255, 0.06);
+      border: 1px solid rgba(0, 194, 255, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
     input[type="text"],
     input[type="number"],
     select {
@@ -412,6 +423,79 @@
       font-size: 18px;
       font-weight: 600;
     }
+
+    /* --- Result hero: the number people actually open this tool for --- */
+    .result-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 6px 2px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 8px;
+    }
+
+    .result-hero-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .result-hero-value {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--accent);
+    }
+
+    .result-hero-sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .result-hero-secondary {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+      .result-hero-secondary .amount {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+    /* --- Sticky mini bar: shown once the hero scrolls off-screen --- */
+    #mortgageStickyBar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: rgba(5, 8, 22, 0.96);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 13px;
+      font-weight: 600;
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+      #mortgageStickyBar.visible {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      #mortgageStickyBar .value {
+        color: var(--accent);
+      }
 
     .result-tag {
       font-size: 11px;
@@ -804,8 +888,22 @@
                 <div class="field-inline">
                     <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
                     <span class="field-label" style="margin-left:2px;">
-                        Split with partner for this calc (use half in affordability)
+                        Split with partner for this calc
                     </span>
+                </div>
+                <div class="split-box" id="splitBox" style="display:none;">
+                    <div class="field-label">Your share of the repayment</div>
+                    <div class="field-inline" style="align-items:center;gap:8px;">
+                        <input id="splitPercentInput" type="number" min="0" max="100" step="1" value="50"
+                               style="width:70px;" />
+                        <span style="font-size:13px;color:var(--muted);">%</span>
+                        <button type="button" class="pill-option" id="splitEvenBtn" style="margin-left:auto;">
+                            Reset to 50/50
+                        </button>
+                    </div>
+                    <div class="note" id="splitNote">
+                        50% is an even split. Adjust if you and your partner are covering different shares.
+                    </div>
                 </div>
             </div>
         </div>
@@ -844,6 +942,12 @@
         </div>
       </section>
 
+      <!-- Sticky mini bar for the results hero -->
+      <div id="mortgageStickyBar">
+        <span>Your share</span>
+        <span class="value" id="mortgageStickyValue">$0</span>
+      </div>
+
       <!-- Results -->
       <section class="panel">
         <div class="panel-header">
@@ -855,25 +959,22 @@
           </div>
         </div>
 
+        <div class="result-hero">
+          <span class="result-hero-label" id="resultShareHeroLabel">Your share</span>
+          <span class="result-hero-value" id="resultYourShare">—</span>
+          <span class="result-hero-sub" id="resultShareLabel">Not split</span>
+          <div class="result-hero-secondary">
+            Whole loan repayment: <span class="amount" id="resultPayment">—</span>
+            <span id="resultPaymentLabel">Per month</span>
+          </div>
+        </div>
+
+        <button class="secondary-btn" id="copySummaryBtn" style="margin-bottom:8px;">
+          📋 Copy summary as text
+        </button>
+        <div class="note" id="copySummaryStatus"></div>
+
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <div>
-            <div class="field-label">Whole loan repayment (including extra)</div>
-            <div class="result-big" id="resultPayment">—</div>
-            <div class="field-label" id="resultPaymentLabel">Per month</div>
-          </div>
-
-          <div>
-            <div class="field-label">Your share used in affordability</div>
-            <div class="mini-row">
-              <span class="mini-label">Amount</span>
-              <span class="mini-value" id="resultYourShare">—</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">Status</span>
-              <span class="mini-value" id="resultShareLabel">Not split</span>
-            </div>
-          </div>
-
           <div>
             <div class="field-label">Total interest over life of loan</div>
             <div class="mini-row">
@@ -1004,6 +1105,9 @@
   const freqInput = document.getElementById("freqInput");
   const extraInput = document.getElementById("extraInput");
   const calcSplitCheckbox = document.getElementById("calcSplitCheckbox");
+  const splitBox = document.getElementById("splitBox");
+  const splitPercentInput = document.getElementById("splitPercentInput");
+  const splitEvenBtn = document.getElementById("splitEvenBtn");
   const inputError = document.getElementById("inputError");
   const calcBtn = document.getElementById("calcBtn");
   const addToPlannerBtn = document.getElementById("addToPlannerBtn");
@@ -1275,7 +1379,12 @@ if (loanType === "io") {
 
     // split behaviour for your share
     const splitForCalc = !!calcSplitCheckbox.checked;
-    const effectivePayment = splitForCalc ? paymentWithExtra / 2 : paymentWithExtra;
+    let splitPercent = parseFloat(splitPercentInput.value);
+    if (!isFinite(splitPercent) || splitPercent < 0) splitPercent = 0;
+    if (splitPercent > 100) splitPercent = 100;
+    const effectivePayment = splitForCalc
+      ? paymentWithExtra * (splitPercent / 100)
+      : paymentWithExtra;
 
     // results: whole loan
     resultPaymentEl.textContent = formatCurrency(paymentWithExtra);
@@ -1295,8 +1404,13 @@ if (loanType === "io") {
     // results: your share
     resultYourShareEl.textContent = formatCurrency(effectivePayment);
     resultShareLabelEl.textContent = splitForCalc
-      ? "Split with partner – this is your half"
+      ? "Split with partner – your share (" + splitPercent + "%)"
       : "Not split – you are covering the full repayment";
+
+    const heroFreqWord =
+      freq === "weekly" ? "week" : freq === "fortnightly" ? "fortnight" : freq === "monthly" ? "month" : "year";
+    document.getElementById("resultShareHeroLabel").textContent = "Your share · per " + heroFreqWord;
+    updateMortgageStickyBar(effectivePayment);
 
     // interest / term based on whole loan
     const n = termYears * paymentsPerYear;
@@ -1305,6 +1419,10 @@ if (loanType === "io") {
     let totalInterestBase;
     if (r === 0) {
       totalInterestBase = 0;
+    } else if (loanType === "io") {
+      // Interest Only: principal is never repaid via these payments,
+      // so every dollar paid over the term is interest.
+      totalInterestBase = basePayment * n;
     } else {
       totalInterestBase = basePayment * n - principal;
     }
@@ -1329,8 +1447,14 @@ if (loanType === "io") {
     }
 
     const totalPaidExtra = paymentWithExtra * periodsExtra;
+    const noExtraPrincipalPaydown =
+      loanType === "io" && paymentWithExtra <= basePayment;
     const totalInterestExtra =
-      r === 0 ? 0 : Math.max(totalPaidExtra - principal, 0);
+      r === 0
+        ? 0
+        : noExtraPrincipalPaydown
+        ? totalPaidExtra
+        : Math.max(totalPaidExtra - principal, 0);
 
     const baseYears = n / paymentsPerYear;
     const extraYears = periodsExtra / paymentsPerYear;
@@ -1366,6 +1490,8 @@ if (loanType === "io") {
   extraInput.value = "";
   freqInput.value = "monthly";
   calcSplitCheckbox.checked = false;
+  splitPercentInput.value = 50;
+  updateSplitBoxVisibility();
 
   // Optional: reset deposit mode to dollars
   depositMode = "amount";
@@ -1384,6 +1510,8 @@ if (loanType === "io") {
   resultPaymentLabelEl.textContent = "Per month";
   resultYourShareEl.textContent = "";
   resultShareLabelEl.textContent = "Not split";
+  document.getElementById("resultShareHeroLabel").textContent = "Your share";
+  updateMortgageStickyBar(0);
   resultInterestBaseEl.textContent = "";
   resultInterestExtraEl.textContent = "";
   resultTermBaseEl.textContent = "";
@@ -1538,6 +1666,7 @@ if (loanType === "io") {
       freq: freqInput.value || "monthly",
       extra: extraInput.value || "",
       calcSplit: !!calcSplitCheckbox.checked,
+      splitPercent: splitPercentInput.value || "50",
       viewMode,
       depositMode
     };
@@ -1564,6 +1693,10 @@ if (loanType === "io") {
       if (typeof state.extra === "string") extraInput.value = state.extra;
       if (typeof state.freq === "string") freqInput.value = state.freq;
       if (typeof state.calcSplit === "boolean") calcSplitCheckbox.checked = state.calcSplit;
+      if (typeof state.splitPercent === "string" || typeof state.splitPercent === "number") {
+        splitPercentInput.value = state.splitPercent;
+      }
+      updateSplitBoxVisibility();
 
       if (
         state.viewMode === "weekly" ||
@@ -1660,7 +1793,116 @@ if (loanType === "io") {
     persistMortgageState();
   });
 
+  function updateSplitBoxVisibility() {
+    splitBox.style.display = calcSplitCheckbox.checked ? "flex" : "none";
+  }
+
+  calcSplitCheckbox.addEventListener("change", () => {
+    updateSplitBoxVisibility();
+    persistMortgageState();
+  });
+
+  splitPercentInput.addEventListener("input", () => {
+    let v = parseFloat(splitPercentInput.value);
+    if (isFinite(v)) {
+      if (v < 0) splitPercentInput.value = 0;
+      if (v > 100) splitPercentInput.value = 100;
+    }
+    persistMortgageState();
+  });
+
+  splitEvenBtn.addEventListener("click", () => {
+    splitPercentInput.value = 50;
+    persistMortgageState();
+  });
+
+  updateSplitBoxVisibility();
+
   calcBtn.addEventListener("click", calculate);
+
+  const copySummaryBtn = document.getElementById("copySummaryBtn");
+  const copySummaryStatusEl = document.getElementById("copySummaryStatus");
+
+  function buildSummaryText() {
+    const price = priceInput.value || "—";
+    const deposit = depositInput.value || "0";
+    const depositLabel = depositMode === "percent" ? "% of price" : "$";
+    const rate = rateInput.value || "—";
+    const futureRate = futureRateInput.value;
+    const term = termInput.value || "—";
+    const freq = freqInput.value;
+    const extra = extraInput.value || "0";
+    const loanTypeLabel = loanType === "io" ? "Interest Only" : "Principal & Interest";
+    const freqLabel =
+      freq === "weekly" ? "Weekly" : freq === "fortnightly" ? "Fortnightly" : "Monthly";
+
+    const lines = [
+      "MORTGAGE CALCULATOR SUMMARY",
+      "",
+      "-- Inputs --",
+      "Property price: $" + price,
+      "Deposit: " + deposit + " (" + depositLabel + ")",
+      "Interest rate: " + rate + "% p.a.",
+      futureRate ? "Future rate: " + futureRate + "% p.a." : null,
+      "Loan type: " + loanTypeLabel,
+      "Loan term: " + term + " years",
+      "Repayment frequency: " + freqLabel,
+      extra && parseFloat(extra) > 0 ? "Extra repayment: $" + extra + " per " + freqLabel.toLowerCase() : null,
+      calcSplitCheckbox.checked
+        ? "Split with partner: yes (your share " + (splitPercentInput.value || "50") + "%)"
+        : "Split with partner: no",
+      "",
+      "-- Results --",
+      "Whole loan repayment: " + (resultPaymentEl.textContent || "—") + " (" + (resultPaymentLabelEl.textContent || "") + ")",
+      "Your share: " + (resultYourShareEl.textContent || "—") + " (" + (resultShareLabelEl.textContent || "") + ")",
+      "Total interest over life of loan (current rate): " + (resultInterestBaseEl.textContent || "—"),
+      "Total interest with extra repayments: " + (resultInterestExtraEl.textContent || "—"),
+      "Base term: " + (resultTermBaseEl.textContent || "—"),
+      "Term with extra repayments: " + (resultTermExtraEl.textContent || "—"),
+      "Mortgage vs planner surplus: " + (coverageNoteEl.textContent || "—") + " (" + (coverageTagEl.textContent || "") + ")",
+      futureRate ? "Repayment at future rate: " + (futurePaymentEl.textContent || "—") : null,
+      futureRate ? "Total interest at future rate: " + (futureInterestEl.textContent || "—") : null,
+      futureRate ? "Change vs current: " + (futureChangeEl.textContent || "—") : null,
+      "",
+      "Rough guide only. Does not include fees, changing rates, or lender-specific rules.",
+    ].filter((line) => line !== null);
+
+    return lines.join("\n");
+  }
+
+  copySummaryBtn.addEventListener("click", async () => {
+    const hasResult = resultPaymentEl.textContent && resultPaymentEl.textContent !== "—";
+    if (!hasResult) {
+      copySummaryStatusEl.textContent = "Run \"Calculate repayments\" first, then copy.";
+      return;
+    }
+
+    const text = buildSummaryText();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        copySummaryStatusEl.textContent = "Copied! Paste it wherever you need it.";
+      } else {
+        throw new Error("Clipboard API unavailable");
+      }
+    } catch (e) {
+      // Fallback for browsers/contexts that block the clipboard API
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        copySummaryStatusEl.textContent = "Copied! Paste it wherever you need it.";
+      } catch (e2) {
+        copySummaryStatusEl.textContent = "Couldn't copy automatically — select the text manually.";
+      }
+      document.body.removeChild(textarea);
+    }
+  });
 
   [priceInput, depositInput, rateInput, futureRateInput, termInput, extraInput, freqInput, calcSplitCheckbox].forEach(
     (el) => {
@@ -1779,6 +2021,7 @@ if (loanType === "io") {
       extra: extraInput.value || "",
       freq: freq,
       split: !!calcSplitCheckbox.checked,
+      splitPercent: splitPercentInput.value || "50",
       depositMode, // "amount" or "percent"
     };
 
@@ -1965,6 +2208,8 @@ if (loanType === "io") {
       extraInput.value = payload.extra || "";
       freqInput.value = payload.freq || freq;
       calcSplitCheckbox.checked = !!payload.split;
+      splitPercentInput.value = payload.splitPercent || "50";
+      updateSplitBoxVisibility();
     }
 
     inputError.textContent =
@@ -2010,6 +2255,27 @@ if (loanType === "io") {
   // NEW: clear loan button
   const clearLoanBtn = document.getElementById("clearLoanBtn");
   clearLoanBtn.addEventListener("click", clearLoan);
+
+  // --- Sticky bar: mirrors "Your share" once the results hero scrolls away ---
+  const mortgageStickyBarEl = document.getElementById("mortgageStickyBar");
+  const mortgageStickyValueEl = document.getElementById("mortgageStickyValue");
+
+  function updateMortgageStickyBar(amount) {
+    mortgageStickyValueEl.textContent = amount ? formatCurrency(amount) : "$0";
+  }
+
+  const mortgageHeroEl = document.querySelector(".result-hero");
+  if (mortgageHeroEl && "IntersectionObserver" in window) {
+    const mortgageObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          mortgageStickyBarEl.classList.toggle("visible", !entry.isIntersecting);
+        });
+      },
+      { threshold: 0 }
+    );
+    mortgageObserver.observe(mortgageHeroEl);
+  }
 
   // Init
   updateDepositUI();
