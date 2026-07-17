@@ -1862,7 +1862,8 @@ if (loanType === "io") {
       });
 
       // keep existing auto-calc behaviour
-    if (state.price && state.deposit && state.rate && state.term) {
+    const hasRateInfo = state.rateMode === "charge" ? !!state.charge : !!state.rate;
+    if (state.price && hasRateInfo && state.term) {
       calculate();
     } else {
       // no full calc, at least refresh the display using any stored payment
