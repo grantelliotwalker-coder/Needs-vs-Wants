@@ -94,7 +94,8 @@
 
     .pill-button {
       border-radius: 999px;
-      padding: 6px 12px;
+      padding: 7px 12px;
+      min-height: 32px;
       font-size: 13px;
       border: 1px solid rgba(255, 255, 255, 0.16);
       background: rgba(0, 0, 0, 0.4);
@@ -128,8 +129,11 @@
 
     .summary-toggle-button {
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 11px;
+      padding: 6px 11px;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
       border: 1px solid rgba(255, 255, 255, 0.22);
       background: rgba(0, 0, 0, 0.4);
       color: var(--muted);
@@ -213,28 +217,53 @@
     }
 
     .type-toggle {
-      display: inline-flex;
-      padding: 2px;
-      border-radius: 999px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+      width: 100%;
+      padding: 3px;
+      border-radius: 12px;
       background: rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      gap: 2px;
+      gap: 3px;
+    }
+
+    /* Narrow, single-letter toggles (W/F/M/Y) don't need to stretch full
+       width or wrap - keep them compact and pill-shaped. */
+    .type-toggle.type-toggle-compact {
+      display: inline-grid;
+      grid-template-columns: repeat(4, minmax(30px, 1fr));
+      width: auto;
+      border-radius: 999px;
     }
 
     .type-option {
-      border-radius: 999px;
+      border-radius: 9px;
       border: none;
       background: transparent;
       color: var(--muted);
-      font-size: 10px;
-      padding: 3px 7px;
+      font-size: 11.5px;
+      line-height: 1.25;
+      padding: 6px 6px;
+      min-height: 32px;
       cursor: pointer;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: normal;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .type-toggle-compact .type-option {
+      border-radius: 999px;
+      min-height: 28px;
+      padding: 5px 4px;
     }
 
     .type-option.active {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
       color: var(--text);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     }
 
     .summary-row {
@@ -338,7 +367,8 @@
       background: #050816;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.18);
-      padding: 7px 10px;
+      padding: 9px 10px;
+      min-height: 38px;
       color: var(--text);
       font-size: 16px;
       outline: none;
@@ -368,14 +398,16 @@
       background: var(--accent);
       border: none;
       color: #02040a;
-      padding: 7px 14px;
+      padding: 10px 14px;
+      min-height: 42px;
       border-radius: 999px;
       font-weight: 600;
-      font-size: 13px;
+      font-size: 14px;
       cursor: pointer;
       box-shadow: 0 0 14px rgba(0, 194, 255, 0.5);
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       white-space: nowrap;
     }
@@ -399,13 +431,16 @@
       border: 1px solid rgba(255, 255, 255, 0.25);
       background: rgba(0, 0, 0, 0.4);
       color: var(--muted);
-      padding: 6px 10px;
-      font-size: 11px;
+      padding: 8px 12px;
+      min-height: 36px;
+      font-size: 12px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
     }
 
     .secondary-btn.good {
@@ -416,6 +451,28 @@
     .secondary-btn.bad {
       border-color: rgba(255, 77, 106, 0.7);
       color: var(--danger);
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .action-row .secondary-btn {
+      margin-top: 0;
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+
+    .secondary-btn.danger-outline {
+      border-color: rgba(255, 77, 106, 0.4);
+      color: #ff90a3;
+    }
+
+    .secondary-btn.danger-outline:active {
+      border-color: rgba(255, 77, 106, 0.8);
     }
 
     .result-big {
@@ -726,6 +783,26 @@
       font-size: 11px;
       text-align: right;
     }
+
+    .results-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-block {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 8px 10px 10px;
+    }
+
+    .result-block .field-label {
+      font-weight: 600;
+      color: var(--text);
+      opacity: 0.85;
+      margin-bottom: 2px;
+    }
   </style>
 </head>
 <body>
@@ -919,12 +996,12 @@
 
             <!-- Split for calculator / affordability -->
             <div class="field-group">
-                <div class="field-inline">
-                    <input id="calcSplitCheckbox" type="checkbox" style="width:14px;height:14px;" />
+                <label class="field-inline" for="calcSplitCheckbox" style="cursor:pointer;padding:4px 0;">
+                    <input id="calcSplitCheckbox" type="checkbox" style="width:18px;height:18px;flex-shrink:0;" />
                     <span class="field-label" style="margin-left:2px;">
                         Split with partner for this calc
                     </span>
-                </div>
+                </label>
                 <div class="split-box" id="splitBox" style="display:none;">
                     <div class="field-label">Your share of the repayment</div>
                     <div class="field-inline" style="align-items:center;gap:8px;">
@@ -949,17 +1026,19 @@
           Calculate repayments
         </button>
 
-        <button class="secondary-btn" id="addToPlannerBtn">
-          Save / update mortgage in planner
-        </button>
+        <div class="action-row">
+          <button class="secondary-btn" id="addToPlannerBtn">
+            Save / update mortgage in planner
+          </button>
 
-        <button class="secondary-btn" id="toggleSavedLoansBtn" style="margin-left:4px;">
-          Show saved mortgages
-        </button>
+          <button class="secondary-btn" id="toggleSavedLoansBtn">
+            Show saved mortgages
+          </button>
 
-        <button class="secondary-btn" id="deleteMortgageBtn" style="margin-left:4px;">
-          Delete selected mortgage
-        </button>
+          <button class="secondary-btn danger-outline" id="deleteMortgageBtn">
+            Delete selected mortgage
+          </button>
+        </div>
 
         <div class="hidden-box" id="savedLoansBox">
           <div class="field-label">Mortgages saved into your planner from this tool</div>
@@ -1005,8 +1084,8 @@
         </button>
         <div class="note" id="copySummaryStatus"></div>
 
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div>
+        <div class="results-stack">
+          <div class="result-block">
             <div class="field-label">Total interest over life of loan</div>
             <div class="mini-row">
               <span class="mini-label">Current rate</span>
@@ -1019,7 +1098,7 @@
             <div class="note" id="offsetNote" style="display:none;"></div>
           </div>
 
-          <div>
+          <div class="result-block">
             <div class="field-label">Estimated time saved with extra</div>
             <div class="mini-row">
               <span class="mini-label">Base term</span>
@@ -1031,10 +1110,10 @@
             </div>
           </div>
 
-          <div>
+          <div class="result-block">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
               <div class="field-label">Mortgage vs planner surplus</div>
-              <div class="type-toggle" id="viewToggle">
+              <div class="type-toggle type-toggle-compact" id="viewToggle">
                 <button class="type-option" data-view="weekly">W</button>
                 <button class="type-option active" data-view="fortnightly">F</button>
                 <button class="type-option" data-view="monthly">M</button>
@@ -1067,7 +1146,7 @@
             </div>
           </div>
 
-          <div>
+          <div class="result-block">
             <div class="field-label">
               Future rate comparison (if you fill the future rate box)
             </div>
@@ -1100,9 +1179,9 @@
               <strong>How this calculator works</strong>
               <ul>
                 <li>Loan amount = property price minus your deposit.</li>
-                <li>Repayments use a standard amortising loan formula based on your rate, term, and chosen frequency.</li>
+                <li>Repayments use a standard amortising loan formula for Principal &amp; Interest, based on your rate, term, and chosen frequency. Interest Only repayments are calculated as simple interest on the balance each period instead.</li>
                 <li>Extra repayments are added on top of the base repayment and then used to simulate an earlier payoff.</li>
-                <li>“Your mortgage share” uses half the repayment if the split box is ticked.</li>
+                <li>“Your mortgage share” uses your entered split percentage (50/50 by default, adjustable) if the split box is ticked.</li>
                 <li>“Mortgage vs planner surplus” compares your share to the surplus stored in your main planner for W/F/M/Y.</li>
                 <li>The future rate view re-runs the same formula at the alternative rate so you can see how sensitive the loan is to rate changes.</li>
               </ul>
