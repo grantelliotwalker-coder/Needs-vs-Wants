@@ -1451,6 +1451,8 @@
   let lastLoanType = "pi";
   let lastSplitForCalc = false;
   let lastSplitPercent = 100;
+  let lastSolvedOffset = 0;
+  let lastSolvedOffsetValid = false;
   let lockedLoanWeeklyContribution = 0;
   let loanType = "pi"; // "pi" | "io"
   let rateMode = "rate"; // "rate" | "charge"
@@ -1900,7 +1902,6 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
 
       const solveOffsetValueEl = document.getElementById("solveOffsetValue");
       const solveOffsetNoteEl = document.getElementById("solveOffsetNote");
-      const useSolvedOffsetBtnEl = document.getElementById("useSolvedOffsetBtn");
 
       let solvedOffset = solvedOffsetRaw;
       if (solvedOffsetRaw < 0) {
@@ -1919,13 +1920,13 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
 
       offsetBalance = solvedOffset;
       interestPrincipal = Math.max(principal - offsetBalance, 0);
-      offsetInput.value = formatMoneyString(solvedOffset.toFixed(2));
+      // Note: the actual "Offset account balance" field is deliberately
+      // NOT written here — only the dedicated preview display is. The
+      // person must press "Use this offset" to commit it (see that
+      // button's listener, wired once during init).
       solveOffsetValueEl.textContent = formatCurrency(solvedOffset);
-      useSolvedOffsetBtnEl.onclick = () => {
-        setRateMode("rate");
-        persistMortgageState();
-        calculate();
-      };
+      lastSolvedOffset = solvedOffset;
+      lastSolvedOffsetValid = true;
     } else {
       rate = parseFloat(rateInput.value || "0");
       if (!isFinite(rate) || rate <= 0) {
@@ -2328,6 +2329,7 @@ if (loanType === "io") {
       solveOffsetValueEl.textContent = "—";
       solveOffsetNoteEl.textContent =
         "Enter your loan amount, interest rate, and the interest actually charged to see the implied offset.";
+      lastSolvedOffsetValid = false;
       return;
     }
 
@@ -2349,14 +2351,31 @@ if (loanType === "io") {
         " charged at " + rate.toFixed(2) + "% p.a. on a " + formatCurrency(principal) + " loan.";
     }
 
-    offsetInput.value = formatMoneyString(solvedOffset.toFixed(2));
+    // Only the dedicated preview display updates live. The actual
+    // "Offset account balance" field is left untouched until the person
+    // explicitly presses "Use this offset" — otherwise a value they never
+    // committed to could silently end up sitting in an editable field.
     solveOffsetValueEl.textContent = formatCurrency(solvedOffset);
+    lastSolvedOffset = solvedOffset;
+    lastSolvedOffsetValid = true;
   }
 
   [rateInput, chargeInput, priceInput, depositInput, loanAmountInput].forEach((el) => {
     el.addEventListener("input", updateSolveOffsetPreview);
   });
   freqInput.addEventListener("change", updateSolveOffsetPreview);
+
+  document.getElementById("useSolvedOffsetBtn").addEventListener("click", () => {
+    if (!lastSolvedOffsetValid) {
+      inputError.textContent =
+        "Enter your loan amount, interest rate, and the interest actually charged first, so there's an offset to use.";
+      return;
+    }
+    offsetInput.value = formatMoneyString(lastSolvedOffset.toFixed(2));
+    setRateMode("rate");
+    persistMortgageState();
+    calculate();
+  });
 
   function updateFutureRateView() {
     const futureBlockEl = document.getElementById("resultBlockFuture");
