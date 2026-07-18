@@ -862,7 +862,19 @@
         </div>
 
         <div class="inputs-grid">
-            <div class="field-group">
+            <div class="field-group" style="grid-column: 1 / -1;">
+                <div class="field-label">Loan entry</div>
+                <div class="type-toggle" id="loanEntryModeToggle">
+                    <button class="type-option active" data-entry-mode="pricedeposit">
+                        I'm buying (price &amp; deposit)
+                    </button>
+                    <button class="type-option" data-entry-mode="loanamount">
+                        I already have the loan (enter loan amount)
+                    </button>
+                </div>
+            </div>
+
+            <div class="field-group" id="priceFieldGroup">
                 <div class="field-label">Property price</div>
                 <div class="field-inline">
                     <span style="font-size:12px;color:var(--muted);">$</span>
@@ -870,7 +882,7 @@
                 </div>
             </div>
 
-            <div class="field-group">
+            <div class="field-group" id="depositFieldGroup">
                 <div class="field-label">Deposit
                     <button type="button" class="hint-btn" data-hint="depositNote">i</button>
                 </div>
@@ -885,6 +897,17 @@
                 </div>
                 <div class="note hint" id="depositNote">
                     Enter deposit in dollars. Tap the toggle to switch to % of price.
+                </div>
+            </div>
+
+            <div class="field-group" id="loanAmountFieldGroup" style="display:none;">
+                <div class="field-label">Loan amount (outstanding balance)</div>
+                <div class="field-inline">
+                    <span style="font-size:12px;color:var(--muted);">$</span>
+                    <input id="loanAmountInput" type="number" min="0" step="1000" placeholder="" />
+                </div>
+                <div class="note hint">
+                    Already have the loan? Enter the current balance directly — no need to re-enter property price or deposit.
                 </div>
             </div>
 
@@ -1112,13 +1135,18 @@
 
           <div class="result-block">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-              <div class="field-label">Mortgage vs planner surplus</div>
+              <div class="field-label">Mortgage vs planner surplus
+                <button type="button" class="hint-btn" data-hint="fortnightlyBufferNote">i</button>
+              </div>
               <div class="type-toggle type-toggle-compact" id="viewToggle">
                 <button class="type-option" data-view="weekly">W</button>
                 <button class="type-option active" data-view="fortnightly">F</button>
                 <button class="type-option" data-view="monthly">M</button>
                 <button class="type-option" data-view="yearly">Y</button>
               </div>
+            </div>
+            <div class="note hint" id="fortnightlyBufferNote">
+              These per-fortnight/per-week figures are the true annualised equivalent of the monthly amount (e.g. monthly ÷ 12 × 26 for fortnightly) — not simply "half the monthly bill". This is the correct steady-state amount to set aside each pay cycle over a full year. However, if your bill is deducted monthly and you're saving fortnightly, keep a small buffer of about one fortnight's contribution sitting in the account before you start relying on it — some months only have one payday before the bill lands (since 26 fortnights ≠ 24 half-months), so a bare $0 starting balance can dip temporarily negative even though the year balances out to zero.
             </div>
             <div class="mini-row">
               <span class="mini-label">Planner surplus (<span id="plannerBasis">—</span>)</span>
@@ -1238,6 +1266,11 @@
   const priceInput = document.getElementById("priceInput");
   const depositInput = document.getElementById("depositInput");
   const depositModeToggle = document.getElementById("depositModeToggle");
+  const loanAmountInput = document.getElementById("loanAmountInput");
+  const loanEntryModeToggle = document.getElementById("loanEntryModeToggle");
+  const priceFieldGroup = document.getElementById("priceFieldGroup");
+  const depositFieldGroup = document.getElementById("depositFieldGroup");
+  const loanAmountFieldGroup = document.getElementById("loanAmountFieldGroup");
   const depositNote = document.getElementById("depositNote");
   const rateInput = document.getElementById("rateInput");
   const chargeInput = document.getElementById("chargeInput");
@@ -1311,6 +1344,7 @@
   let savedLoansVisible = false;
   let selectedLoanId = null;
   let depositMode = "amount"; // "amount" or "percent"
+  let loanEntryMode = "pricedeposit"; // "pricedeposit" or "loanamount"
 
   function setLoanType(type) {
     loanType = type === "io" ? "io" : "pi";
@@ -1496,21 +1530,55 @@ depositModeToggle.addEventListener("click", () => {
   persistMortgageState();
 });
 
+function setLoanEntryMode(mode) {
+  loanEntryMode = mode;
+  loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.entryMode === mode);
+  });
+  const isLoanAmount = mode === "loanamount";
+  priceFieldGroup.style.display = isLoanAmount ? "none" : "";
+  depositFieldGroup.style.display = isLoanAmount ? "none" : "";
+  loanAmountFieldGroup.style.display = isLoanAmount ? "" : "none";
+}
 
-  function calculate() {
-    const price = parseFloat(priceInput.value || "0");
-    let depositRaw = parseFloat(depositInput.value || "0");
-    let deposit;
-    if (depositMode === "percent") {
-      if (price > 0 && depositRaw > 0) {
-        deposit = (depositRaw / 100) * price;
+loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const mode = btn.dataset.entryMode;
+    if (mode === loanEntryMode) return;
+
+    if (mode === "loanamount") {
+      // Switching from price+deposit -> loan amount: prefill with the
+      // currently implied principal so nothing is lost.
+      const price = parseFloat(priceInput.value || "0");
+      let depositRaw = parseFloat(depositInput.value || "0");
+      let deposit;
+      if (depositMode === "percent") {
+        deposit = price > 0 && depositRaw > 0 ? (depositRaw / 100) * price : 0;
       } else {
-        deposit = 0;
+        deposit = depositRaw;
+      }
+      const impliedPrincipal = price - deposit;
+      if (isFinite(impliedPrincipal) && impliedPrincipal > 0 && !loanAmountInput.value) {
+        loanAmountInput.value = impliedPrincipal.toFixed(0);
       }
     } else {
-      deposit = depositRaw;
+      // Switching from loan amount -> price+deposit: prefill price with
+      // the loan amount and zero the deposit, only if price is empty.
+      const amt = parseFloat(loanAmountInput.value || "0");
+      if (isFinite(amt) && amt > 0 && !priceInput.value) {
+        priceInput.value = amt.toFixed(0);
+        depositInput.value = "0";
+      }
     }
 
+    setLoanEntryMode(mode);
+    persistMortgageState();
+    calculate();
+  });
+});
+
+
+  function calculate() {
     const termYears = parseFloat(termInput.value || "0");
     const freq = freqInput.value;
     const extra = parseFloat(extraInput.value || "0");
@@ -1518,21 +1586,48 @@ depositModeToggle.addEventListener("click", () => {
     const paymentsPerYear =
       freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
 
-    if (!isFinite(price) || price <= 0) {
-      inputError.textContent = "Enter a property price above 0.";
-      priceInput.focus();
-      return;
+    let principal;
+
+    if (loanEntryMode === "loanamount") {
+      principal = parseFloat(loanAmountInput.value || "0");
+      if (!isFinite(principal) || principal <= 0) {
+        inputError.textContent = "Enter your loan amount above 0.";
+        loanAmountInput.focus();
+        return;
+      }
+    } else {
+      const price = parseFloat(priceInput.value || "0");
+      let depositRaw = parseFloat(depositInput.value || "0");
+      let deposit;
+      if (depositMode === "percent") {
+        if (price > 0 && depositRaw > 0) {
+          deposit = (depositRaw / 100) * price;
+        } else {
+          deposit = 0;
+        }
+      } else {
+        deposit = depositRaw;
+      }
+
+      if (!isFinite(price) || price <= 0) {
+        inputError.textContent = "Enter a property price above 0.";
+        priceInput.focus();
+        return;
+      }
+      if (!isFinite(deposit) || deposit < 0) {
+        inputError.textContent = "Deposit cannot be negative.";
+        depositInput.focus();
+        return;
+      }
+      if (deposit >= price) {
+        inputError.textContent = "Deposit must be less than the property price.";
+        depositInput.focus();
+        return;
+      }
+
+      principal = price - deposit;
     }
-    if (!isFinite(deposit) || deposit < 0) {
-      inputError.textContent = "Deposit cannot be negative.";
-      depositInput.focus();
-      return;
-    }
-    if (deposit >= price) {
-      inputError.textContent = "Deposit must be less than the property price.";
-      depositInput.focus();
-      return;
-    }
+
     if (!isFinite(termYears) || termYears <= 0 || termYears > 40) {
       inputError.textContent = "Enter a loan term greater than 0 and up to 40 years.";
       termInput.focus();
@@ -1549,7 +1644,6 @@ depositModeToggle.addEventListener("click", () => {
       return;
     }
 
-    const principal = price - deposit;
     let interestPrincipal = Math.max(principal - (isFinite(offsetBalance) ? offsetBalance : 0), 0);
 
     // Determine the interest rate to use, either directly or backed out
@@ -1786,6 +1880,7 @@ if (loanType === "io") {
   // Clear inputs
   priceInput.value = "";
   depositInput.value = "";
+  loanAmountInput.value = "";
   rateInput.value = "";
   futureRateInput.value = "";
   termInput.value = "";
@@ -1802,6 +1897,7 @@ if (loanType === "io") {
   // Optional: reset deposit mode to dollars
   depositMode = "amount";
   updateDepositUI();
+  setLoanEntryMode("pricedeposit");
 
   // Reset internal state
   lastPaymentPerFreq = 0;
@@ -2039,6 +2135,8 @@ if (loanType === "io") {
     const state = {
       price: priceInput.value || "",
       deposit: depositInput.value || "",
+      loanAmount: loanAmountInput.value || "",
+      loanEntryMode,
       rate: rateInput.value || "",
       futureRate: futureRateInput.value || "",
       term: termInput.value || "",
@@ -2070,6 +2168,10 @@ if (loanType === "io") {
 
       if (typeof state.price === "string") priceInput.value = state.price;
       if (typeof state.deposit === "string") depositInput.value = state.deposit;
+      if (typeof state.loanAmount === "string") loanAmountInput.value = state.loanAmount;
+      if (state.loanEntryMode === "pricedeposit" || state.loanEntryMode === "loanamount") {
+        setLoanEntryMode(state.loanEntryMode);
+      }
       if (typeof state.rate === "string") rateInput.value = state.rate;
       if (typeof state.futureRate === "string")
         futureRateInput.value = state.futureRate;
@@ -2108,7 +2210,9 @@ if (loanType === "io") {
 
       // keep existing auto-calc behaviour
     const hasRateInfo = state.rateMode === "charge" ? !!state.charge : !!state.rate;
-    if (state.price && hasRateInfo && state.term) {
+    const hasPrincipalInfo =
+      state.loanEntryMode === "loanamount" ? !!state.loanAmount : !!state.price;
+    if (hasPrincipalInfo && hasRateInfo && state.term) {
       calculate();
     } else {
       // no full calc, at least refresh the display using any stored payment
@@ -2189,8 +2293,10 @@ if (loanType === "io") {
       "MORTGAGE CALCULATOR SUMMARY",
       "",
       "-- Inputs --",
-      "Property price: $" + price,
-      "Deposit: " + deposit + " (" + depositLabel + ")",
+      loanEntryMode === "loanamount"
+        ? "Loan amount (outstanding balance): $" + (loanAmountInput.value || "—")
+        : "Property price: $" + price,
+      loanEntryMode === "loanamount" ? null : "Deposit: " + deposit + " (" + depositLabel + ")",
       rateMode === "charge"
         ? "Interest charged last period: $" + (chargeInput.value || "0") + " (implied rate " + rate + "% p.a.)"
         : rateMode === "solve"
@@ -2263,7 +2369,7 @@ if (loanType === "io") {
     }
   });
 
-  [priceInput, depositInput, rateInput, futureRateInput, termInput, extraInput, offsetInput, freqInput, calcSplitCheckbox].forEach(
+  [priceInput, depositInput, loanAmountInput, rateInput, futureRateInput, termInput, extraInput, offsetInput, freqInput, calcSplitCheckbox].forEach(
     (el) => {
       el.addEventListener("change", persistMortgageState);
       if (el !== calcSplitCheckbox) {
@@ -2374,6 +2480,8 @@ if (loanType === "io") {
     const loanPayload = {
       price: priceInput.value || "",
       deposit: depositInput.value || "",
+      loanAmount: loanAmountInput.value || "",
+      loanEntryMode,
       rate: rateInput.value || "",
       charge: chargeInput.value || "",
       rateMode,
@@ -2569,6 +2677,12 @@ if (loanType === "io") {
 
       priceInput.value = payload.price || "";
       depositInput.value = payload.deposit || "";
+      loanAmountInput.value = payload.loanAmount || "";
+      if (payload.loanEntryMode === "pricedeposit" || payload.loanEntryMode === "loanamount") {
+        setLoanEntryMode(payload.loanEntryMode);
+      } else {
+        setLoanEntryMode("pricedeposit");
+      }
       rateInput.value = payload.rate || "";
       chargeInput.value = payload.charge || "";
       futureRateInput.value = payload.futureRate || "";
