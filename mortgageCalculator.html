@@ -1505,6 +1505,9 @@
       rateModeNoteEl.textContent =
         "Uses your entered rate and real statement charge to work out what offset balance would produce that charge. The offset field below becomes read-only in this mode.";
     }
+    if (rateMode === "solve" && typeof updateSolveOffsetPreview === "function") {
+      updateSolveOffsetPreview();
+    }
   }
 
   // Loan type toggle (P&I vs Interest Only)
@@ -1522,7 +1525,10 @@ document.querySelectorAll("#loanTypeToggle .type-option")
     btn.addEventListener("click", () => {
       setRateMode(btn.dataset.mode);
       persistMortgageState();
-      calculate();
+      // NOTE: deliberately not auto-calculating here. "Amount charged" mode
+      // derives an implied rate, and "solve" mode derives an offset — both
+      // are meaningful updates that should only happen when the person
+      // presses Calculate, not just from browsing between toggle options.
     });
   });
 
@@ -1721,6 +1727,7 @@ depositModeToggle.addEventListener("click", () => {
 
   updateDepositUI();
   persistMortgageState();
+  if (typeof updateSolveOffsetPreview === "function") updateSolveOffsetPreview();
 });
 
 function setLoanEntryMode(mode) {
@@ -1776,7 +1783,10 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
 
     setLoanEntryMode(mode);
     persistMortgageState();
-    calculate();
+    if (typeof updateSolveOffsetPreview === "function") updateSolveOffsetPreview();
+    // NOTE: deliberately not auto-calculating here either — see the note
+    // on the rate mode toggle above; switching modes should never silently
+    // mutate other fields via calculate()'s side effects.
   });
 });
 
@@ -1865,7 +1875,6 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
         return;
       }
       rate = (chargedAmount / interestPrincipal) * paymentsPerYear * 100;
-      rateInput.value = rate.toFixed(2);
       impliedRateNoteEl.textContent =
         "Implied rate: " + rate.toFixed(2) + "% p.a., based on " +
         formatCurrency(chargedAmount) + " charged on " + formatCurrency(interestPrincipal) + "." +
@@ -2283,6 +2292,72 @@ if (loanType === "io") {
     coverageTagEl.classList.toggle("bad", ratio > 0.75);
   }
 
+  // Live preview of the solved offset in "Rate + charge → offset" mode.
+  // Unlike calculate(), this only needs principal + rate + charge (not
+  // term/frequency), so it can update as soon as those three are filled
+  // in, without requiring the rest of the form or a Calculate press.
+  // It only ever writes into offsetInput, which is already a derived,
+  // read-only field in this mode — never the rate or loan-amount fields.
+  function updateSolveOffsetPreview() {
+    if (rateMode !== "solve") return;
+
+    const solveOffsetValueEl = document.getElementById("solveOffsetValue");
+    const solveOffsetNoteEl = document.getElementById("solveOffsetNote");
+
+    let principal;
+    if (loanEntryMode === "loanamount") {
+      principal = numVal(loanAmountInput);
+    } else {
+      const price = numVal(priceInput);
+      const depositRaw = numVal(depositInput);
+      const deposit =
+        depositMode === "percent"
+          ? price > 0 && depositRaw > 0
+            ? (depositRaw / 100) * price
+            : 0
+          : depositRaw;
+      principal = price - deposit;
+    }
+
+    const rate = parseFloat(rateInput.value || "0");
+    const chargedAmount = numVal(chargeInput);
+    const freq = freqInput.value;
+    const paymentsPerYear = freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
+
+    if (!(principal > 0) || !(rate > 0) || !(chargedAmount > 0)) {
+      solveOffsetValueEl.textContent = "—";
+      solveOffsetNoteEl.textContent =
+        "Enter your loan amount, interest rate, and the interest actually charged to see the implied offset.";
+      return;
+    }
+
+    const r = rate / 100 / paymentsPerYear;
+    const solvedOffsetRaw = principal - chargedAmount / r;
+    let solvedOffset = solvedOffsetRaw;
+
+    if (solvedOffsetRaw < 0) {
+      solveOffsetNoteEl.textContent =
+        "That charge is higher than a $0-offset loan at this rate would produce. Check your rate and charge figures — showing $0.";
+      solvedOffset = 0;
+    } else if (solvedOffsetRaw >= principal) {
+      solveOffsetNoteEl.textContent =
+        "That charge is too low to be explained even by fully offsetting the loan. Check your rate and charge figures — showing the full loan balance.";
+      solvedOffset = principal;
+    } else {
+      solveOffsetNoteEl.textContent =
+        "This is the offset balance that would explain " + formatCurrency(chargedAmount) +
+        " charged at " + rate.toFixed(2) + "% p.a. on a " + formatCurrency(principal) + " loan.";
+    }
+
+    offsetInput.value = formatMoneyString(solvedOffset.toFixed(2));
+    solveOffsetValueEl.textContent = formatCurrency(solvedOffset);
+  }
+
+  [rateInput, chargeInput, priceInput, depositInput, loanAmountInput].forEach((el) => {
+    el.addEventListener("input", updateSolveOffsetPreview);
+  });
+  freqInput.addEventListener("change", updateSolveOffsetPreview);
+
   function updateFutureRateView() {
     const futureBlockEl = document.getElementById("resultBlockFuture");
     const futureRate = parseFloat(futureRateInput.value || "0");
@@ -2514,7 +2589,7 @@ if (loanType === "io") {
     const price = priceInput.value || "—";
     const deposit = depositInput.value || "0";
     const depositLabel = depositMode === "percent" ? "% of price" : "$";
-    const rate = rateInput.value || "—";
+    const rate = rateMode === "charge" ? (lastRate ? lastRate.toFixed(2) : "—") : (rateInput.value || "—");
     const futureRate = futureRateInput.value;
     const term = termInput.value || "—";
     const freq = freqInput.value;
