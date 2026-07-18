@@ -803,6 +803,83 @@
       opacity: 0.85;
       margin-bottom: 2px;
     }
+
+    /* Collapsible result blocks & advanced options */
+    .collapsible-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .collapsible-head .field-label {
+      margin-bottom: 0;
+    }
+
+    .collapsible-summary {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .chev {
+      color: var(--muted);
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+
+    .collapsible-open > .collapsible-head .chev {
+      transform: rotate(180deg);
+    }
+
+    .collapsible-body {
+      display: none;
+      margin-top: 6px;
+    }
+
+    .collapsible-open > .collapsible-body {
+      display: block;
+    }
+
+    .advanced-toggle-row {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 2px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.12);
+      margin-top: 4px;
+    }
+
+    #advancedSection {
+      grid-column: 1 / -1;
+      display: none;
+    }
+
+    #advancedSection.open {
+      display: block;
+    }
+
+    #advancedSection .inputs-grid {
+      margin-top: 0;
+    }
+
+    .results-placeholder {
+      color: var(--muted);
+      font-size: 12.5px;
+      padding: 14px 4px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -911,7 +988,7 @@
                 </div>
             </div>
 
-            <div class="field-group">
+            <div class="field-group" id="rateModeFieldGroup">
                 <div class="field-label">I know my...
                     <button type="button" class="hint-btn" data-hint="rateModeNote">i</button>
                 </div>
@@ -958,14 +1035,6 @@
                 </div>
             </div>
 
-            <div class="field-group">
-                <div class="field-label">Future rate (optional)</div>
-                <div class="field-inline">
-                    <input id="futureRateInput" type="number" min="0" step="0.01" placeholder="" />
-                    <span style="font-size:12px;color:var(--muted);">%</span>
-                </div>
-            </div>
-
             <div style="margin-top:10px;">
                 <div class="field-label">Loan type</div>
                 <div class="type-toggle" id="loanTypeToggle">
@@ -996,27 +1065,6 @@
                 </select>
             </div>
 
-            <div class="field-group">
-                <div class="field-label">Extra repayment (optional)</div>
-                <div class="field-inline">
-                    <span style="font-size:12px;color:var(--muted);">$</span>
-                    <input id="extraInput" type="number" min="0" step="1" placeholder="" />
-                </div>
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">Offset account balance (optional)
-                    <button type="button" class="hint-btn" data-hint="offsetStaticNote">i</button>
-                </div>
-                <div class="field-inline">
-                    <span style="font-size:12px;color:var(--muted);">$</span>
-                    <input id="offsetInput" type="number" min="0" step="1" placeholder="" />
-                </div>
-                <div class="note hint" id="offsetStaticNote">
-                    Money sitting in a linked offset account. Interest is calculated only on your loan balance minus this amount. In "Amount charged" mode, this adjusts the implied rate rather than the payment — see note below the charge field.
-                </div>
-            </div>
-
             <!-- Split for calculator / affordability -->
             <div class="field-group">
                 <label class="field-inline" for="calcSplitCheckbox" style="cursor:pointer;padding:4px 0;">
@@ -1040,6 +1088,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="advanced-toggle-row" id="advancedToggle">
+                <span class="chev" id="advancedChev">▾</span>
+                <span id="advancedToggleLabel">Advanced options (extra repayments, offset, future rate)</span>
+            </div>
+
+            <div id="advancedSection">
+              <div class="inputs-grid">
+                <div class="field-group">
+                    <div class="field-label">Extra repayment (optional)</div>
+                    <div class="field-inline">
+                        <span style="font-size:12px;color:var(--muted);">$</span>
+                        <input id="extraInput" type="number" min="0" step="1" placeholder="" />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">Offset account balance (optional)
+                        <button type="button" class="hint-btn" data-hint="offsetStaticNote">i</button>
+                    </div>
+                    <div class="field-inline">
+                        <span style="font-size:12px;color:var(--muted);">$</span>
+                        <input id="offsetInput" type="number" min="0" step="1" placeholder="" />
+                    </div>
+                    <div class="note hint" id="offsetStaticNote">
+                        Money sitting in a linked offset account. Interest is calculated only on your loan balance minus this amount. In "Amount charged" mode, this adjusts the implied rate rather than the payment — see note below the charge field.
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">Future rate (optional)</div>
+                    <div class="field-inline">
+                        <input id="futureRateInput" type="number" min="0" step="0.01" placeholder="" />
+                        <span style="font-size:12px;color:var(--muted);">%</span>
+                    </div>
+                </div>
+              </div>
+            </div>
         </div>
 
         <div class="error-text" id="inputError"></div>
@@ -1050,26 +1136,30 @@
         </button>
 
         <div class="action-row">
-          <button class="secondary-btn" id="addToPlannerBtn">
-            Save / update mortgage in planner
-          </button>
-
-          <button class="secondary-btn" id="toggleSavedLoansBtn">
-            Show saved mortgages
-          </button>
-
-          <button class="secondary-btn danger-outline" id="deleteMortgageBtn">
-            Delete selected mortgage
+          <button class="secondary-btn" id="savedActionsToggle">
+            Saved mortgages ▾
           </button>
         </div>
 
-        <div class="hidden-box" id="savedLoansBox">
-          <div class="field-label">Mortgages saved into your planner from this tool</div>
-          <div id="savedLoansList" class="saved-loans-list">
-            <span>No mortgages found yet.</span>
+        <div class="hidden-box" id="savedActionsBox">
+          <div class="action-row" style="margin-top:0;">
+            <button class="secondary-btn" id="addToPlannerBtn">
+              Save / update mortgage in planner
+            </button>
+
+            <button class="secondary-btn danger-outline" id="deleteMortgageBtn">
+              Delete selected mortgage
+            </button>
           </div>
-          <div class="note">
-            Tap a line to select, edit with the calculator, then press “Save / update mortgage in planner”.
+
+          <div id="savedLoansBox" style="display:block;margin-top:8px;">
+            <div class="field-label">Mortgages saved into your planner from this tool</div>
+            <div id="savedLoansList" class="saved-loans-list">
+              <span>No mortgages found yet.</span>
+            </div>
+            <div class="note">
+              Tap a line to select, edit with the calculator, then press “Save / update mortgage in planner”.
+            </div>
           </div>
         </div>
 
@@ -1092,6 +1182,11 @@
                       </div>
         </div>
 
+        <div class="results-placeholder" id="resultsPlaceholder">
+          Enter your loan details and press Calculate to see results.
+        </div>
+
+        <div id="resultsContent" style="display:none;">
         <div class="result-hero">
           <span class="result-hero-label" id="resultShareHeroLabel">Your share</span>
           <span class="result-hero-value" id="resultYourShare">—</span>
@@ -1108,31 +1203,6 @@
         <div class="note" id="copySummaryStatus"></div>
 
         <div class="results-stack">
-          <div class="result-block">
-            <div class="field-label">Total interest over life of loan</div>
-            <div class="mini-row">
-              <span class="mini-label">Current rate</span>
-              <span class="mini-value" id="resultInterestBase">—</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">With extra repayments</span>
-              <span class="mini-value" id="resultInterestExtra">—</span>
-            </div>
-            <div class="note" id="offsetNote" style="display:none;"></div>
-          </div>
-
-          <div class="result-block">
-            <div class="field-label">Estimated time saved with extra</div>
-            <div class="mini-row">
-              <span class="mini-label">Base term</span>
-              <span class="mini-value" id="resultTermBase">—</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-label">With extra</span>
-              <span class="mini-value" id="resultTermExtra">—</span>
-            </div>
-          </div>
-
           <div class="result-block">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
               <div class="field-label">Mortgage vs planner surplus
@@ -1164,7 +1234,11 @@
               <span class="mini-label">Coverage</span>
               <span id="coverageLabel" class="mini-value surplus">Run a calculation</span>
             </div>
-            <div class="note" id="surplusAdjustmentNote" style="display:none;"></div>
+            <div class="note" id="surplusAdjustmentNote" style="display:none;">
+              <span id="surplusAdjShort"></span>
+              <span class="toggle-link" id="surplusAdjWhy">why?</span>
+              <div class="hidden-box" id="surplusAdjFull"></div>
+            </div>
             <div class="progress-shell" style="margin-top:6px;">
               <div class="progress-fill" id="coverageBar"></div>
             </div>
@@ -1174,10 +1248,50 @@
             </div>
           </div>
 
-          <div class="result-block">
-            <div class="field-label">
-              Future rate comparison (if you fill the future rate box)
+          <div class="result-block" id="resultBlockInterest">
+            <div class="collapsible-head" data-collapse="resultBlockInterest">
+              <div class="field-label">Total interest</div>
+              <span class="collapsible-summary" id="interestSummary">—</span>
+              <span class="chev">▾</span>
             </div>
+            <div class="collapsible-body">
+              <div class="mini-row">
+                <span class="mini-label">Current rate</span>
+                <span class="mini-value" id="resultInterestBase">—</span>
+              </div>
+              <div class="mini-row" id="interestExtraRow">
+                <span class="mini-label">With extra repayments</span>
+                <span class="mini-value" id="resultInterestExtra">—</span>
+              </div>
+              <div class="note" id="offsetNote" style="display:none;"></div>
+            </div>
+          </div>
+
+          <div class="result-block" id="resultBlockTerm">
+            <div class="collapsible-head" data-collapse="resultBlockTerm">
+              <div class="field-label">Time saved with extra</div>
+              <span class="collapsible-summary" id="termSummary">—</span>
+              <span class="chev">▾</span>
+            </div>
+            <div class="collapsible-body">
+              <div class="mini-row">
+                <span class="mini-label">Base term</span>
+                <span class="mini-value" id="resultTermBase">—</span>
+              </div>
+              <div class="mini-row">
+                <span class="mini-label">With extra</span>
+                <span class="mini-value" id="resultTermExtra">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-block" id="resultBlockFuture">
+            <div class="collapsible-head" data-collapse="resultBlockFuture">
+              <div class="field-label">Future rate comparison</div>
+              <span class="collapsible-summary" id="futureSummary">—</span>
+              <span class="chev">▾</span>
+            </div>
+            <div class="collapsible-body">
             <div class="hidden-box" id="futureBox">
               <div class="mini-row">
                 <span class="mini-label">Repayment at future rate (whole loan)</span>
@@ -1197,7 +1311,8 @@
               </div>
             </div>
             <div class="note" id="futureNote">
-              Enter a future interest rate to see how repayments and total interest could change.
+              Enter a future interest rate (in Advanced options) to see how repayments and total interest could change.
+            </div>
             </div>
           </div>
 
@@ -1206,7 +1321,7 @@
             <div class="hidden-box" id="detailsBox">
               <strong>How this calculator works</strong>
               <ul>
-                <li>Loan amount = property price minus your deposit.</li>
+                <li>Loan amount = property price minus your deposit (or your entered loan balance).</li>
                 <li>Repayments use a standard amortising loan formula for Principal &amp; Interest, based on your rate, term, and chosen frequency. Interest Only repayments are calculated as simple interest on the balance each period instead.</li>
                 <li>Extra repayments are added on top of the base repayment and then used to simulate an earlier payoff.</li>
                 <li>“Your mortgage share” uses your entered split percentage (50/50 by default, adjustable) if the split box is ticked.</li>
@@ -1215,6 +1330,7 @@
               </ul>
             </div>
           </div>
+        </div>
         </div>
       </section>
     </div>
@@ -1311,7 +1427,6 @@
   const detailsToggle = document.getElementById("detailsToggle");
   const detailsBox = document.getElementById("detailsBox");
 
-  const toggleSavedLoansBtn = document.getElementById("toggleSavedLoansBtn");
   const deleteMortgageBtn = document.getElementById("deleteMortgageBtn");
   const savedLoansBox = document.getElementById("savedLoansBox");
   const savedLoansList = document.getElementById("savedLoansList");
@@ -1341,7 +1456,6 @@
   let rateMode = "rate"; // "rate" | "charge"
 
 
-  let savedLoansVisible = false;
   let selectedLoanId = null;
   let depositMode = "amount"; // "amount" or "percent"
   let loanEntryMode = "pricedeposit"; // "pricedeposit" or "loanamount"
@@ -1539,6 +1653,16 @@ function setLoanEntryMode(mode) {
   priceFieldGroup.style.display = isLoanAmount ? "none" : "";
   depositFieldGroup.style.display = isLoanAmount ? "none" : "";
   loanAmountFieldGroup.style.display = isLoanAmount ? "" : "none";
+
+  // Statement-based rate modes ("Amount charged", "Rate + charge → offset")
+  // only make sense once you actually have statements — hide them for buyers.
+  const rateModeFieldGroup = document.getElementById("rateModeFieldGroup");
+  if (rateModeFieldGroup) {
+    rateModeFieldGroup.style.display = isLoanAmount ? "" : "none";
+  }
+  if (!isLoanAmount && rateMode !== "rate") {
+    setRateMode("rate");
+  }
 }
 
 loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
@@ -1856,6 +1980,21 @@ if (loanType === "io") {
     resultTermBaseEl.textContent = formatTermYears(baseYears);
     resultTermExtraEl.textContent = formatTermYears(extraYears);
 
+    // Reveal the results panel now there's something to show
+    document.getElementById("resultsPlaceholder").style.display = "none";
+    document.getElementById("resultsContent").style.display = "block";
+
+    // Collapsed-row summaries
+    document.getElementById("interestSummary").textContent =
+      formatCurrency(extra > 0 ? totalInterestExtra : totalInterestBase);
+    document.getElementById("termSummary").textContent =
+      formatTermYears(extraYears);
+
+    // Hide comparison rows that carry no information when extra = 0
+    const hasExtra = extra > 0;
+    document.getElementById("interestExtraRow").style.display = hasExtra ? "" : "none";
+    document.getElementById("resultBlockTerm").style.display = hasExtra ? "" : "none";
+
     lastFreq = freq;
     lastWholePaymentPerFreq = paymentWithExtra;
     lastPaymentPerFreq = effectivePayment;
@@ -1940,6 +2079,10 @@ if (loanType === "io") {
 
   inputError.textContent = "";
 
+  // Return the results panel to its empty state
+  document.getElementById("resultsContent").style.display = "none";
+  document.getElementById("resultsPlaceholder").style.display = "";
+
   // NEW: refresh saved-loans list so no item is visually selected
   renderSavedLoansList();
 
@@ -1993,10 +2136,13 @@ if (loanType === "io") {
     const adjustmentNoteEl = document.getElementById("surplusAdjustmentNote");
     if (lockedLoanWeeklyContribution > 0 && adjustmentNoteEl) {
       adjustmentNoteEl.style.display = "block";
-      adjustmentNoteEl.textContent =
-        "This loan is already saved in your budget as a Need, so its saved payment (" +
+      document.getElementById("surplusAdjShort").textContent =
+        "Saved payment (" +
         formatCurrency(fromWeekly(lockedLoanWeeklyContribution, viewMode)) +
-        ") has been added back to the surplus below before comparing — otherwise it'd be counted twice. " +
+        ") added back to surplus to avoid double-counting. ";
+      document.getElementById("surplusAdjFull").textContent =
+        "This loan is already saved in your budget as a Need, so its saved payment " +
+        "has been added back to the surplus before comparing — otherwise it'd be counted twice. " +
         "This baseline is fixed for this session; it refreshes when you reload the page or reselect the loan.";
     } else if (adjustmentNoteEl) {
       adjustmentNoteEl.style.display = "none";
@@ -2059,17 +2205,20 @@ if (loanType === "io") {
   }
 
   function updateFutureRateView() {
+    const futureBlockEl = document.getElementById("resultBlockFuture");
     const futureRate = parseFloat(futureRateInput.value || "0");
     if (!isFinite(futureRate) || futureRate <= 0 || lastInterestPrincipal <= 0 || lastTermYears <= 0) {
+      futureBlockEl.style.display = "none";
       futureBox.style.display = "none";
       futurePaymentEl.textContent = "—";
       futureInterestEl.textContent = "—";
       futureChangeEl.textContent = "—";
       document.getElementById("futureShareRow").style.display = "none";
       futureNoteEl.textContent =
-        "Enter a future interest rate to see how repayments and total interest could change.";
+        "Enter a future interest rate (in Advanced options) to see how repayments and total interest could change.";
       return;
     }
+    futureBlockEl.style.display = "";
 
     const paymentsPerYear =
       lastFreq === "weekly" ? 52 : lastFreq === "fortnightly" ? 26 : 12;
@@ -2118,6 +2267,8 @@ if (loanType === "io") {
     }
 
     const sign = diff >= 0 ? "+" : "–";
+    document.getElementById("futureSummary").textContent =
+      futureRate.toFixed(2) + "%: " + sign + formatCurrency(Math.abs(diff));
     futureChangeEl.textContent =
       sign + formatCurrency(Math.abs(diff)) + " per " +
       (lastFreq === "weekly"
@@ -2203,6 +2354,10 @@ if (loanType === "io") {
       }
 
       updateDepositUI();
+
+      // Re-apply entry-mode visibility now that rateMode has been restored
+      // (buying mode hides statement-based rate modes).
+      setLoanEntryMode(loanEntryMode);
 
       [...viewToggle.querySelectorAll(".type-option")].forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.view === viewMode);
@@ -2695,6 +2850,8 @@ if (loanType === "io") {
       updateSplitBoxVisibility();
       if (payload.loanType === "pi" || payload.loanType === "io") setLoanType(payload.loanType);
       if (["rate","charge","solve"].includes(payload.rateMode)) setRateMode(payload.rateMode);
+      setLoanEntryMode(loanEntryMode);
+      syncAdvancedFromState();
     }
 
     inputError.textContent =
@@ -2703,13 +2860,13 @@ if (loanType === "io") {
   }
 
 
-  toggleSavedLoansBtn.addEventListener("click", () => {
-    savedLoansVisible = !savedLoansVisible;
-    savedLoansBox.style.display = savedLoansVisible ? "block" : "none";
-    toggleSavedLoansBtn.textContent = savedLoansVisible
-      ? "Hide saved mortgages"
-      : "Show saved mortgages";
-    if (savedLoansVisible) {
+  const savedActionsToggle = document.getElementById("savedActionsToggle");
+  const savedActionsBox = document.getElementById("savedActionsBox");
+  savedActionsToggle.addEventListener("click", () => {
+    const open = savedActionsBox.style.display === "block";
+    savedActionsBox.style.display = open ? "none" : "block";
+    savedActionsToggle.textContent = open ? "Saved mortgages ▾" : "Saved mortgages ▴";
+    if (!open) {
       renderSavedLoansList();
     }
   });
@@ -2797,10 +2954,66 @@ if (loanType === "io") {
     }
   }
 
+  // ---- Progressive disclosure wiring ----
+
+  // Collapsible result blocks (Total interest / Time saved / Future rate)
+  document.querySelectorAll(".collapsible-head").forEach((head) => {
+    head.addEventListener("click", (e) => {
+      // Don't toggle when tapping interactive children (e.g. hint buttons)
+      if (e.target.closest("button, input, select, a")) return;
+      head.parentElement.classList.toggle("collapsible-open");
+    });
+  });
+
+  // Advanced options accordion — remembers open/closed across visits.
+  const advancedToggle = document.getElementById("advancedToggle");
+  const advancedSection = document.getElementById("advancedSection");
+  const ADVANCED_OPEN_KEY = "nvw_mortgage_advanced_open";
+
+  function setAdvancedOpen(open, persist) {
+    advancedSection.classList.toggle("open", open);
+    document.getElementById("advancedChev").style.transform = open
+      ? "rotate(180deg)"
+      : "";
+    if (persist) {
+      try { localStorage.setItem(ADVANCED_OPEN_KEY, open ? "1" : "0"); } catch (e) {}
+    }
+  }
+
+  advancedToggle.addEventListener("click", () => {
+    setAdvancedOpen(!advancedSection.classList.contains("open"), true);
+  });
+
+  // Open advanced automatically if any advanced field is in use,
+  // otherwise honour the remembered preference (default closed).
+  function syncAdvancedFromState() {
+    const inUse =
+      parseFloat(extraInput.value || "0") > 0 ||
+      parseFloat(offsetInput.value || "0") > 0 ||
+      !!futureRateInput.value ||
+      rateMode !== "rate";
+    let remembered = false;
+    try { remembered = localStorage.getItem(ADVANCED_OPEN_KEY) === "1"; } catch (e) {}
+    setAdvancedOpen(inUse || remembered, false);
+  }
+
+  // "why?" expander on the double-counting note
+  const surplusAdjWhy = document.getElementById("surplusAdjWhy");
+  const surplusAdjFull = document.getElementById("surplusAdjFull");
+  surplusAdjWhy.addEventListener("click", () => {
+    const open = surplusAdjFull.style.display === "block";
+    surplusAdjFull.style.display = open ? "none" : "block";
+    surplusAdjWhy.textContent = open ? "why?" : "hide";
+  });
+
+  // Ensure entry-mode visibility (incl. hiding statement modes for buyers)
+  setLoanEntryMode(loanEntryMode);
+
   // Init
   updateDepositUI();
   loadPlannerSurplus();
   restoreMortgageState();
+  syncAdvancedFromState();
   autoSelectMostRecentLoan();
   snapshotLoanContribution();
   updateAffordability();
