@@ -955,7 +955,7 @@
                 <div class="field-label">Property price</div>
                 <div class="field-inline">
                     <span style="font-size:12px;color:var(--muted);">$</span>
-                    <input id="priceInput" type="number" min="0" step="1000" placeholder="" />
+                    <input id="priceInput" type="text" inputmode="decimal" placeholder="" />
                 </div>
             </div>
 
@@ -965,7 +965,7 @@
                 </div>
                 <div class="field-inline">
                     <span style="font-size:12px;color:var(--muted);">$</span>
-                    <input id="depositInput" type="number" min="0" step="1000" placeholder="" />
+                    <input id="depositInput" type="text" inputmode="decimal" placeholder="" />
                     <button type="button"
                             id="depositModeToggle"
                             style="font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);background:rgba(0,0,0,0.4);color:var(--muted);cursor:pointer;white-space:nowrap;">
@@ -981,7 +981,7 @@
                 <div class="field-label">Loan amount (outstanding balance)</div>
                 <div class="field-inline">
                     <span style="font-size:12px;color:var(--muted);">$</span>
-                    <input id="loanAmountInput" type="number" min="0" step="1000" placeholder="" />
+                    <input id="loanAmountInput" type="text" inputmode="decimal" placeholder="" />
                 </div>
                 <div class="note hint">
                     Already have the loan? Enter the current balance directly — no need to re-enter property price or deposit.
@@ -1020,7 +1020,7 @@
                 <div class="field-label" id="chargeFieldLabel">Interest charged last period ($)</div>
                 <div class="field-inline">
                     <span style="font-size:12px;color:var(--muted);">$</span>
-                    <input id="chargeInput" type="number" min="0" step="0.01" placeholder="" />
+                    <input id="chargeInput" type="text" inputmode="decimal" placeholder="" />
                 </div>
                 <div class="note" id="impliedRateNote">
                     Enter the interest amount shown on your statement for one period (matching the repayment frequency below).
@@ -1100,7 +1100,7 @@
                     <div class="field-label">Extra repayment (optional)</div>
                     <div class="field-inline">
                         <span style="font-size:12px;color:var(--muted);">$</span>
-                        <input id="extraInput" type="number" min="0" step="1" placeholder="" />
+                        <input id="extraInput" type="text" inputmode="decimal" placeholder="" />
                     </div>
                 </div>
 
@@ -1110,7 +1110,7 @@
                     </div>
                     <div class="field-inline">
                         <span style="font-size:12px;color:var(--muted);">$</span>
-                        <input id="offsetInput" type="number" min="0" step="1" placeholder="" />
+                        <input id="offsetInput" type="text" inputmode="decimal" placeholder="" />
                     </div>
                     <div class="note hint" id="offsetStaticNote">
                         Money sitting in a linked offset account. Interest is calculated only on your loan balance minus this amount. In "Amount charged" mode, this adjusts the implied rate rather than the payment — see note below the charge field.
@@ -1537,6 +1537,85 @@ document.querySelectorAll("#loanTypeToggle .type-option")
     });
   }
 
+  // ---- Live thousand-separator formatting for dollar-amount inputs ----
+  // These inputs are type="text" (not type="number") so they can display
+  // commas. numVal() strips commas back out for every calculation.
+  function stripCommas(v) {
+    return (v || "").toString().replace(/,/g, "");
+  }
+
+  function numVal(el) {
+    return parseFloat(stripCommas(el.value)) || 0;
+  }
+
+  // Format a plain numeric string/number into a comma-grouped string,
+  // e.g. formatMoneyString(70000) -> "70,000". Used for programmatic
+  // assignments (e.g. after solving/prefilling a field).
+  function formatMoneyString(value, maxDecimals) {
+    const str = stripCommas(value);
+    if (str === "" || str === "-") return str;
+    const [intPartRaw, decPartRaw] = str.split(".");
+    let intPart = (intPartRaw || "").replace(/^0+(?=\d)/, "");
+    const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (decPartRaw === undefined) return withCommas;
+    const dec = maxDecimals != null ? decPartRaw.slice(0, maxDecimals) : decPartRaw;
+    return withCommas + "." + dec;
+  }
+
+  // Live-format as the user types, preserving cursor position relative
+  // to the digits typed (not the commas, which shift around).
+  function liveFormatCurrencyInput(el) {
+    const cursor = el.selectionStart == null ? el.value.length : el.selectionStart;
+    const digitsBeforeCursor = (el.value.slice(0, cursor).match(/[\d.]/g) || []).length;
+
+    let cleaned = el.value.replace(/[^\d.]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    if (firstDot !== -1) {
+      cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+    }
+    let [intPart, decPart] = cleaned.split(".");
+    intPart = (intPart || "").replace(/^0+(?=\d)/, "");
+    if (decPart !== undefined) decPart = decPart.slice(0, 2);
+
+    const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const formatted = decPart !== undefined ? withCommas + "." + decPart : withCommas;
+
+    el.value = formatted;
+
+    // Restore cursor position by counting digits/decimal-point again
+    let count = 0, pos = formatted.length;
+    for (let i = 0; i < formatted.length; i++) {
+      if (/[\d.]/.test(formatted[i])) count++;
+      if (count === digitsBeforeCursor) { pos = i + 1; break; }
+    }
+    if (digitsBeforeCursor === 0) pos = 0;
+    try { el.setSelectionRange(pos, pos); } catch (e) {}
+  }
+
+  function attachThousandsFormatting(el) {
+    el.addEventListener("input", () => liveFormatCurrencyInput(el));
+  }
+
+  // Re-apply comma formatting to all dollar fields — used after restoring
+  // saved/older values that may predate this formatting (or were typed
+  // without triggering the live 'input' handler, e.g. programmatic loads).
+  function reformatMoneyFields() {
+    [priceInput, loanAmountInput, chargeInput, offsetInput, extraInput].forEach((el) => {
+      if (el.value) el.value = formatMoneyString(el.value);
+    });
+    if (depositMode === "amount" && depositInput.value) {
+      depositInput.value = formatMoneyString(depositInput.value);
+    }
+  }
+
+  [priceInput, loanAmountInput, chargeInput, offsetInput, extraInput].forEach(
+    attachThousandsFormatting
+  );
+  // Deposit only gets comma formatting in $ mode — % mode shouldn't add commas.
+  depositInput.addEventListener("input", () => {
+    if (depositMode === "amount") liveFormatCurrencyInput(depositInput);
+  });
+
   function fromWeekly(amount, freq) {
     if (freq === "fortnightly") return amount * 2;
     if (freq === "monthly") return (amount * 52) / 12;
@@ -1617,8 +1696,8 @@ function updateDepositUI() {
 }
 
 depositModeToggle.addEventListener("click", () => {
-  const price = parseFloat(priceInput.value || "0");
-  let dep = parseFloat(depositInput.value || "0");
+  const price = numVal(priceInput);
+  let dep = numVal(depositInput);
 
   if (depositMode === "amount") {
     // Going from dollars → percent
@@ -1637,7 +1716,7 @@ depositModeToggle.addEventListener("click", () => {
       dep = 0;
     }
     depositMode = "amount";
-    depositInput.value = dep.toFixed(0); // or toFixed(2) if you want cents
+    depositInput.value = formatMoneyString(dep.toFixed(0)); // or toFixed(2) if you want cents
   }
 
   updateDepositUI();
@@ -1673,8 +1752,8 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
     if (mode === "loanamount") {
       // Switching from price+deposit -> loan amount: prefill with the
       // currently implied principal so nothing is lost.
-      const price = parseFloat(priceInput.value || "0");
-      let depositRaw = parseFloat(depositInput.value || "0");
+      const price = numVal(priceInput);
+      let depositRaw = numVal(depositInput);
       let deposit;
       if (depositMode === "percent") {
         deposit = price > 0 && depositRaw > 0 ? (depositRaw / 100) * price : 0;
@@ -1683,14 +1762,14 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
       }
       const impliedPrincipal = price - deposit;
       if (isFinite(impliedPrincipal) && impliedPrincipal > 0 && !loanAmountInput.value) {
-        loanAmountInput.value = impliedPrincipal.toFixed(0);
+        loanAmountInput.value = formatMoneyString(impliedPrincipal.toFixed(0));
       }
     } else {
       // Switching from loan amount -> price+deposit: prefill price with
       // the loan amount and zero the deposit, only if price is empty.
-      const amt = parseFloat(loanAmountInput.value || "0");
+      const amt = numVal(loanAmountInput);
       if (isFinite(amt) && amt > 0 && !priceInput.value) {
-        priceInput.value = amt.toFixed(0);
+        priceInput.value = formatMoneyString(amt.toFixed(0));
         depositInput.value = "0";
       }
     }
@@ -1705,23 +1784,23 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
   function calculate() {
     const termYears = parseFloat(termInput.value || "0");
     const freq = freqInput.value;
-    const extra = parseFloat(extraInput.value || "0");
-    let offsetBalance = parseFloat(offsetInput.value || "0");
+    const extra = numVal(extraInput);
+    let offsetBalance = numVal(offsetInput);
     const paymentsPerYear =
       freq === "weekly" ? 52 : freq === "fortnightly" ? 26 : 12;
 
     let principal;
 
     if (loanEntryMode === "loanamount") {
-      principal = parseFloat(loanAmountInput.value || "0");
+      principal = numVal(loanAmountInput);
       if (!isFinite(principal) || principal <= 0) {
         inputError.textContent = "Enter your loan amount above 0.";
         loanAmountInput.focus();
         return;
       }
     } else {
-      const price = parseFloat(priceInput.value || "0");
-      let depositRaw = parseFloat(depositInput.value || "0");
+      const price = numVal(priceInput);
+      let depositRaw = numVal(depositInput);
       let deposit;
       if (depositMode === "percent") {
         if (price > 0 && depositRaw > 0) {
@@ -1774,7 +1853,7 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
     // from a real statement amount.
     let rate;
     if (rateMode === "charge") {
-      const chargedAmount = parseFloat(chargeInput.value || "0");
+      const chargedAmount = numVal(chargeInput);
       if (!isFinite(chargedAmount) || chargedAmount <= 0) {
         inputError.textContent = "Enter the interest amount charged last period.";
         chargeInput.focus();
@@ -1800,7 +1879,7 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
         rateInput.focus();
         return;
       }
-      const chargedAmount = parseFloat(chargeInput.value || "0");
+      const chargedAmount = numVal(chargeInput);
       if (!isFinite(chargedAmount) || chargedAmount <= 0) {
         inputError.textContent = "Enter the interest amount actually charged last period.";
         chargeInput.focus();
@@ -1831,7 +1910,7 @@ loanEntryModeToggle.querySelectorAll(".type-option").forEach((btn) => {
 
       offsetBalance = solvedOffset;
       interestPrincipal = Math.max(principal - offsetBalance, 0);
-      offsetInput.value = solvedOffset.toFixed(2);
+      offsetInput.value = formatMoneyString(solvedOffset.toFixed(2));
       solveOffsetValueEl.textContent = formatCurrency(solvedOffset);
       useSolvedOffsetBtnEl.onclick = () => {
         setRateMode("rate");
@@ -2354,6 +2433,7 @@ if (loanType === "io") {
       }
 
       updateDepositUI();
+      reformatMoneyFields();
 
       // Re-apply entry-mode visibility now that rateMode has been restored
       // (buying mode hides statement-based rate modes).
@@ -2852,6 +2932,7 @@ if (loanType === "io") {
       if (["rate","charge","solve"].includes(payload.rateMode)) setRateMode(payload.rateMode);
       setLoanEntryMode(loanEntryMode);
       syncAdvancedFromState();
+      reformatMoneyFields();
     }
 
     inputError.textContent =
@@ -2988,8 +3069,8 @@ if (loanType === "io") {
   // otherwise honour the remembered preference (default closed).
   function syncAdvancedFromState() {
     const inUse =
-      parseFloat(extraInput.value || "0") > 0 ||
-      parseFloat(offsetInput.value || "0") > 0 ||
+      numVal(extraInput) > 0 ||
+      numVal(offsetInput) > 0 ||
       !!futureRateInput.value ||
       rateMode !== "rate";
     let remembered = false;
