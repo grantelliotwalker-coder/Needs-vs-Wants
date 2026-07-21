@@ -46,6 +46,18 @@
       flex-direction: column;
     }
 
+    /* Desktop: use the whole screen, matching the main planner and
+       mortgage calculator. */
+    @media (min-width: 1200px) {
+      .app-shell {
+        max-width: 1900px;
+      }
+
+      .app-main {
+        padding: 12px 24px 24px;
+      }
+    }
+
     .app-header {
       padding: 10px 14px 6px;
       display: flex;
@@ -264,12 +276,6 @@
       .app-grid {
         grid-template-columns: minmax(0, 1fr);
       }
-
-      input[type="text"],
-      input[type="number"],
-      select {
-        font-size: 16px;
-      }
     }
 
     .inputs-grid {
@@ -296,6 +302,11 @@
       align-items: center;
     }
 
+    /* Base font-size set to 16px directly (not just inside a mobile media
+       query) — iOS Safari auto-zooms on focus for any input under 16px.
+       Keeping this as the single source of truth avoids a previous bug
+       class where a later, unconditional rule silently overrode a
+       mobile-only 16px fix due to CSS cascade order. */
     input[type="text"],
     input[type="number"],
     select {
@@ -305,8 +316,13 @@
       border: 1px solid rgba(255, 255, 255, 0.18);
       padding: 7px 10px;
       color: var(--text);
-      font-size: 13px;
+      font-size: 16px;
       outline: none;
+      touch-action: manipulation;
+    }
+
+    button {
+      touch-action: manipulation;
     }
 
     input[type="text"]:focus,
@@ -490,21 +506,6 @@
             Use simple percentages to estimate net income for one or more jobs or sources.
           </div>
         </div>
-
-        <div class="panel-totals">
-          <div class="panel-totals-row">
-            <label>Currency</label>
-            <select id="currencyLabel" style="width:auto;">
-              <option value="AUD" selected>AUD</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="GBP">GBP</option>
-              <option value="NZD">NZD</option>
-              <option value="CAD">CAD</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <div class="inputs-grid">
@@ -686,7 +687,6 @@ const allowanceInput = document.getElementById("allowanceInput");
   const taxRateInput = document.getElementById("taxRateInput");
   const deductRateInput = document.getElementById("deductRateInput");
   const netFreqOutputInput = document.getElementById("netFreqOutputInput");
-  const currencyLabelSelect = document.getElementById("currencyLabel");
   const inputError = document.getElementById("inputError");
   const addIncomeBtn = document.getElementById("addIncomeBtn");
 
@@ -701,21 +701,15 @@ const allowanceInput = document.getElementById("allowanceInput");
 
   let incomes = [];
   let editingIndex = null;
-  let analyserCurrency = "AUD";
 
-  function formatCurrency(amount, currencyCode) {
+  function formatCurrency(amount) {
     if (!isFinite(amount)) return "—";
-    const code = currencyCode === "Other" ? "AUD" : (currencyCode || "AUD");
-    try {
-      return amount.toLocaleString("en-AU", {
-        style: "currency",
-        currency: code,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    } catch (e) {
-      return "$" + amount.toFixed(2);
-    }
+    return amount.toLocaleString("en-AU", {
+      style: "currency",
+      currency: "AUD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
 
   function toWeekly(amount, freq) {
@@ -736,7 +730,6 @@ const allowanceInput = document.getElementById("allowanceInput");
     const state = {
       incomes,
       netFrequency: netFreqOutputInput.value || "monthly",
-      currency: analyserCurrency,
       currentInputs: {
         label: labelInput.value || "",
         salary: salaryInput.value || "",
@@ -782,11 +775,6 @@ grossFreq: grossFreqInput.value || "monthly",
         netFreqOutputInput.value = state.netFrequency;
       }
 
-      if (typeof state.currency === "string") {
-        analyserCurrency = state.currency;
-        currencyLabelSelect.value = state.currency;
-      }
-
       if (state.currentInputs && typeof state.currentInputs === "object") {
         const ci = state.currentInputs;
         if (typeof ci.label === "string") labelInput.value = ci.label;
@@ -816,7 +804,7 @@ grossFreq: grossFreqInput.value || "monthly",
       const amount = parseFloat(parsed.amount || "0") || 0;
       const freq = parsed.frequency || "fortnightly";
 
-      plannerIncomeAmountEl.textContent = formatCurrency(amount, analyserCurrency);
+      plannerIncomeAmountEl.textContent = formatCurrency(amount);
       plannerIncomeFreqEl.textContent =
         freq === "weekly"
           ? "Weekly"
@@ -865,13 +853,7 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
   if (forDisplay) {
     const breakdownEl = document.getElementById("breakdownLines");
     if (breakdownEl) {
-      const fmt = (n) =>
-        n.toLocaleString("en-AU", {
-          style: "currency",
-          currency: analyserCurrency === "Other" ? "AUD" : analyserCurrency,
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
+      const fmt = formatCurrency;
 
       const freqLabel =
         grossFreq === "weekly"
@@ -963,7 +945,7 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
           ? "monthly"
           : "yearly";
       subEl.textContent =
-  formatCurrency(gross, analyserCurrency) +
+  formatCurrency(gross) +
   " /" +
   freqText +
   " · tax " +
@@ -978,7 +960,7 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
 
       const netEl = document.createElement("div");
       netEl.className = "income-pill-net";
-      netEl.textContent = formatCurrency(netAmount, analyserCurrency);
+      netEl.textContent = formatCurrency(netAmount);
       pill.appendChild(netEl);
 
             if (editingIndex === index) {
@@ -1004,7 +986,7 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
       incomeListEl.appendChild(pill);
     });
 
-    summaryNetTotalEl.textContent = formatCurrency(totalNet, analyserCurrency);
+    summaryNetTotalEl.textContent = formatCurrency(totalNet);
   }
 
   addIncomeBtn.addEventListener("click", () => {
@@ -1080,13 +1062,6 @@ function calculateNetForIncome(salary, allowance, taxRate, deductRate, grossFreq
   netFreqOutputInput.addEventListener("change", () => {
     persistState();
     render();
-  });
-
-  currencyLabelSelect.addEventListener("change", () => {
-    analyserCurrency = currencyLabelSelect.value || "AUD";
-    persistState();
-    render();
-    loadPlannerIncome();
   });
 
   [labelInput, salaryInput, allowanceInput, grossFreqInput, taxRateInput, deductRateInput].forEach(
