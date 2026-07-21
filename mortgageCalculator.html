@@ -46,6 +46,17 @@
       flex-direction: column;
     }
 
+    /* Desktop: use the whole screen, matching the main planner. */
+    @media (min-width: 1200px) {
+      .app-shell {
+        max-width: 1900px;
+      }
+
+      .app-main {
+        padding: 12px 24px 24px;
+      }
+    }
+
     .app-header {
       padding: 10px 14px 6px;
       display: flex;
@@ -2250,7 +2261,7 @@ if (loanType === "io") {
       return;
     }
 
-    paymentDisplayEl.textContent = paymentView.toFixed(2);
+    paymentDisplayEl.textContent = formatCurrency(paymentView);
 
     if (surplusView <= 0) {
       coverageLabelEl.textContent = "Set a surplus in the main planner";
@@ -2266,7 +2277,7 @@ if (loanType === "io") {
 
     const remaining = surplusView - paymentView;
     const ratio = paymentView / surplusView;
-    afterPaymentEl.textContent = remaining <= 0 ? "0" : remaining.toFixed(2);
+    afterPaymentEl.textContent = remaining <= 0 ? "0" : formatCurrency(remaining);
 
     let label;
     if (ratio <= 0.25) {
@@ -2635,8 +2646,8 @@ if (loanType === "io") {
       "Loan type: " + loanTypeLabel,
       "Loan term: " + term + " years",
       "Repayment frequency: " + freqLabel,
-      extra && parseFloat(extra) > 0 ? "Extra repayment: $" + extra + " per " + freqLabel.toLowerCase() : null,
-      offsetVal && parseFloat(offsetVal) > 0
+      extra && parseFloat(stripCommas(extra)) > 0 ? "Extra repayment: $" + extra + " per " + freqLabel.toLowerCase() : null,
+      offsetVal && parseFloat(stripCommas(offsetVal)) > 0
         ? "Offset account balance: $" + offsetVal + (rateMode === "solve" ? " (solved for)" : "")
         : null,
       calcSplitCheckbox.checked
