@@ -5,10 +5,17 @@
     <title>Budget Needs vs Wants Calculator | Simple Spending Planner</title>
     <meta name="theme-color" content="#050816" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description"
           content="Free budget Needs vs Wants calculator. Enter your income and expenses, separate essential needs from optional wants, and see your surplus instantly." />
 
-    <style>
+    <link rel="stylesheet" href="assets/css/base.css">
+  <style>
         :root {
             --bg: #050816;
             --bg-elevated: #0b1020;
@@ -61,38 +68,13 @@
             --pill-want: #ffc078;
         }
 
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-        }
-
-        body {
-            background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
         /* Default (Blue or no skin): no inner gradient */
-        .app-shell {
-            max-width: 960px;
-            margin: 0 auto;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
 
         /* Any skin that is NOT blue: enable inner gradient */
         html[data-skin="purple"] .app-shell,
         html[data-skin="pink"] .app-shell {
             background: radial-gradient( circle at top, rgba(255, 255, 255, 0.06), var(--bg-soft) );
         }
-
 
         @media (min-width: 1200px) {
             .app-shell {
@@ -102,44 +84,6 @@
             .app-main {
                 padding: 12px 24px 24px;
             }
-        }
-
-        .app-header {
-            padding: 10px 14px 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            backdrop-filter: blur(12px);
-        }
-
-        .top-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .brand {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .brand-title {
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--muted);
-        }
-
-        .brand-tagline {
-            font-size: 12px;
-            color: var(--muted);
         }
 
         @media (min-width: 1200px) {
@@ -169,22 +113,9 @@
             white-space: nowrap;
         }
 
-        .pill-button-icon {
-            width: 16px;
-            height: 16px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            background: rgba(0, 0, 0, 0.7);
-        }
-
         #skinToggleBtn .pill-button-icon {
             background: radial-gradient(circle at center, #000 60%, var(--accent) 61%);
         }
-
-
 
         .pill-button.donate {
             border-color: rgba(255, 255, 255, 0.32);
@@ -269,22 +200,6 @@
             gap: 8px;
             align-items: center;
             padding-bottom: 4px;
-        }
-
-        .summary-card {
-            background: rgba(5, 8, 22, 0.9);
-            border-radius: 10px;
-            padding: 8px 10px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            font-size: 11px;
-        }
-
-        .summary-card-title {
-            color: var(--muted);
-            font-size: 11px;
         }
 
         /* --- Surplus hero: the one number people open the app for --- */
@@ -445,14 +360,6 @@
             align-items: baseline;
         }
 
-        .mini-label {
-            color: var(--muted);
-        }
-
-        .mini-value {
-            font-weight: 600;
-        }
-
             .mini-value.accent {
                 color: var(--accent);
             }
@@ -490,29 +397,6 @@
             justify-content: space-between;
             margin-bottom: 6px;
             gap: 8px;
-        }
-
-        .panel-title {
-            font-size: 15px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .panel-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 999px;
-            background: var(--accent-soft);
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .panel-subtitle {
-            font-size: 11px;
-            color: var(--muted);
         }
 
         .panel-totals {
@@ -595,7 +479,6 @@
                 width: 100%;
                 box-sizing: border-box;
             }
-
 
         .pill {
             display: flex;
@@ -964,9 +847,24 @@
             }
         }
 
-
-
-
+    
+        /* Starter + 50/30/20 */
+        .starter-panel[hidden], .split-panel[hidden] { display: none !important; }
+        .starter-panel { border-style: dashed; }
+        .starter-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .starter-text { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+        .starter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .starter-btn { border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); color: var(--text); text-decoration: none; }
+        .starter-btn.primary { background: var(--accent); border-color: var(--accent); color: #02040a; }
+        .split-row { margin: 10px 0; }
+        .split-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+        .split-head b { font-weight: 600; }
+        .split-head span { color: var(--muted); }
+        .split-track { position: relative; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: visible; }
+        .split-fill { height: 100%; border-radius: 999px; max-width: 100%; transition: width .3s ease; }
+        .split-target { position: absolute; top: -3px; width: 2px; height: 16px; background: var(--text); opacity: .7; border-radius: 1px; }
+        .split-tip { font-size: 12px; color: var(--muted); margin-top: 8px; }
     </style>
 
 
@@ -1124,6 +1022,14 @@
 
 
         <main class="app-main">
+            <section class="panel starter-panel" id="starterPanel" hidden>
+                <div class="starter-title">New here? Start with a typical Aussie budget</div>
+                <div class="starter-text">We'll fill in common needs and wants with example amounts. Tap any item to change it, switch it off, or delete it.</div>
+                <div class="starter-actions">
+                    <button class="starter-btn primary" id="loadExampleBtn" type="button">Load example budget</button>
+                    <a class="starter-btn" href="taxCalculator.html">Work out my take-home pay</a>
+                </div>
+            </section>
             <section class="panel" id="needsPanel">
                 <div class="panel-header">
                     <div>
@@ -1198,6 +1104,16 @@
                     </div>
                 </div>
                 <div class="items-area" id="wantsItems"></div>
+            </section>
+            <section class="panel split-panel" id="splitPanel" hidden>
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">50/30/20 check <span class="panel-badge">Guide</span></div>
+                        <div class="panel-subtitle">A common rule of thumb: 50% of take-home pay on needs, 30% on wants, 20% saved.</div>
+                    </div>
+                </div>
+                <div id="splitRows"></div>
+                <div class="split-tip" id="splitTip"></div>
             </section>
         </main>
     </div>
@@ -1930,10 +1846,80 @@ currentSurplus = surplusDisplay;
     render();
     
   </script>
+<script src="assets/js/calc.js"></script>
+<script>
+  // ---- Starter budget + 50/30/20 check -------------------------------------
+  (function () {
+    const EXAMPLE = [
+      ["need", "Rent", 550, "weekly"],
+      ["need", "Groceries", 180, "weekly"],
+      ["need", "Power & gas", 180, "monthly"],
+      ["need", "Phone & net", 120, "monthly"],
+      ["need", "Transport", 60, "weekly"],
+      ["need", "Car costs", 1800, "yearly"],
+      ["need", "Health cover", 150, "monthly"],
+      ["want", "Streaming", 35, "monthly"],
+      ["want", "Eating out", 80, "weekly"],
+      ["want", "Gym", 20, "weekly"],
+      ["want", "Shopping", 200, "monthly"],
+    ];
+    const starter = document.getElementById("starterPanel");
+    const split = document.getElementById("splitPanel");
+    const rowsEl = document.getElementById("splitRows");
+    const tipEl = document.getElementById("splitTip");
+
+    document.getElementById("loadExampleBtn").addEventListener("click", () => {
+      EXAMPLE.forEach(([type, label, amount, frequency]) =>
+        items.push({ id: nextId++, type, label, amount, frequency, enabled: true, color: "default" }));
+      if (!(parseFloat(incomeAmountEl.value) > 0)) {
+        incomeAmountEl.value = NVW.fromWeekly(1200, summaryFrequency).toFixed(0);
+      }
+      render();
+      persist();
+    });
+
+    function bar(label, actual, target, color, weeklyAmt, targetWeekly) {
+      const pct = Math.max(0, actual * 100);
+      return `<div class="split-row">
+        <div class="split-head"><b>${label} · ${pct.toFixed(0)}%</b>
+          <span>${formatCurrency(NVW.fromWeekly(weeklyAmt, summaryFrequency))} of ${formatCurrency(NVW.fromWeekly(targetWeekly, summaryFrequency))} guide</span></div>
+        <div class="split-track"><div class="split-fill" style="width:${Math.min(pct, 100)}%;background:${color}"></div>
+          <div class="split-target" style="left:calc(${target * 100}% - 1px)"></div></div></div>`;
+    }
+
+    function extras() {
+      const active = items.filter((i) => i.enabled);
+      starter.hidden = items.length > 0;
+      let needsW = 0, wantsW = 0;
+      active.forEach((i) => { const w = NVW.toWeekly(i.amount, i.frequency); if (i.type === "need") needsW += w; else wantsW += w; });
+      const incomeW = NVW.toWeekly(parseFloat(incomeAmountEl.value) || 0, summaryFrequency);
+      split.hidden = !(incomeW > 0 && active.length > 0);
+      if (split.hidden) return;
+      const r = NVW.rule503020(incomeW, needsW, wantsW);
+      const savedW = incomeW - needsW - wantsW;
+      rowsEl.innerHTML =
+        bar("Needs", r.actual.needs, 0.5, "var(--pill-need)", needsW, r.targetWeekly.needs) +
+        bar("Wants", r.actual.wants, 0.3, "var(--pill-want)", wantsW, r.targetWeekly.wants) +
+        bar("Left to save", r.actual.savings, 0.2, "var(--success)", Math.max(savedW, 0), r.targetWeekly.savings);
+      let tip;
+      if (savedW < 0) tip = "You're spending more than you earn. Start with the wants — switch some off to see the difference.";
+      else if (r.actual.needs > 0.5) tip = "Needs are above 50%. That's common with high rent — focus on keeping wants in check so you can still save.";
+      else if (r.actual.savings >= 0.2) tip = "You're saving 20% or more. Nice — set a goal for it in Savings Goals.";
+      else tip = "Trimming wants by " + formatCurrency(NVW.fromWeekly(r.targetWeekly.savings - savedW, summaryFrequency)) + " would get you to 20% saved.";
+      tipEl.textContent = tip;
+    }
+
+    const baseRender = render;
+    render = function () { baseRender(); extras(); };
+    incomeAmountEl.addEventListener("input", extras);
+    extras();
+  })();
+</script>
   <script src="skin-modal.js?v=4"></script>
   <script src="modal-info.js?v=2"></script>
 <script>
   injectInfoModal();
 </script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>

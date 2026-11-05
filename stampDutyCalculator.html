@@ -2,10 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Upfront Property Costs – Budget Needs vs Wants</title>
+  <title>Stamp Duty &amp; Upfront Costs – Budget Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="Simple global upfront property cost helper. Estimate transfer or stamp tax as a % of price, add other costs, and see how your deposit stacks up." />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#050816">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-48.png">
+  <meta name="description" content="Australian stamp duty calculator for every state and territory, with first home buyer concessions. See your total upfront cash needed to buy." />
 
+  <link rel="stylesheet" href="assets/css/base.css">
   <style>
     :root {
       --bg: #050816;
@@ -18,68 +27,6 @@
       --danger: #ff4d6a;
       --success: #32d788;
       --disabled: #555c72;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-shell {
-      max-width: 960px;
-      margin: 0 auto;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-header {
-      padding: 10px 14px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(12px);
-    }
-
-    .top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .brand-title {
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .brand-tagline {
-      font-size: 12px;
-      color: var(--muted);
     }
 
     .header-actions {
@@ -103,17 +50,6 @@
       cursor: pointer;
       text-decoration: none;
       white-space: nowrap;
-    }
-
-    .pill-button-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      background: rgba(0, 0, 0, 0.7);
     }
 
     .pill-button.donate {
@@ -166,29 +102,6 @@
       justify-content: space-between;
       margin-bottom: 4px;
       gap: 8px;
-    }
-
-    .panel-title {
-      font-size: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .panel-subtitle {
-      font-size: 11px;
-      color: var(--muted);
     }
 
     .app-grid {
@@ -298,35 +211,11 @@
       padding-bottom: 4px;
     }
 
-    .summary-card {
-      background: rgba(5, 8, 22, 0.9);
-      border-radius: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .summary-card-title {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
     .mini-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       font-size: 11px;
-    }
-
-    .mini-label {
-      color: var(--muted);
-    }
-
-    .mini-value {
-      font-weight: 600;
     }
 
     .mini-value.surplus {
@@ -379,6 +268,9 @@
       cursor: pointer;
       text-decoration: underline;
     }
+      .manual-only { display: none; }
+    body.manual .manual-only { display: block; }
+    body.manual .auto-only { display: none; }
   </style>
 </head>
 <body>
@@ -386,9 +278,9 @@
   <header class="app-header">
     <div class="top-row">
       <div class="brand">
-        <div class="brand-title">Upfront Property Costs</div>
+        <div class="brand-title">Stamp Duty</div>
         <div class="brand-tagline">
-          Rough transfer / stamp tax plus other upfront costs, for any country.
+          Stamp duty for every Australian state, plus the cash you need upfront.
         </div>
       </div>
 
@@ -423,15 +315,55 @@
         <div>
           <div class="panel-title">
             Purchase details
-            <span class="panel-badge">Global maths only</span>
+            <span class="panel-badge">2026–27 rates</span>
           </div>
           <div class="panel-subtitle">
-            Enter a rough transfer / stamp tax rate and other upfront costs for your local system.
+            Pick your state and we'll work out stamp duty, including first home buyer and owner-occupier concessions.
           </div>
         </div>
       </div>
 
       <div class="inputs-grid">
+        <div class="field-group">
+          <div class="field-label">State or territory</div>
+          <select id="stateInput">
+            <option value="NSW">NSW</option>
+            <option value="VIC">VIC</option>
+            <option value="QLD">QLD</option>
+            <option value="WA">WA</option>
+            <option value="SA">SA</option>
+            <option value="TAS">TAS</option>
+            <option value="ACT">ACT</option>
+            <option value="NT">NT</option>
+            <option value="OTHER">Somewhere else (enter a % rate)</option>
+          </select>
+        </div>
+
+        <div class="field-group auto-only">
+          <div class="field-label">Will you live in it?</div>
+          <select id="occupierInput">
+            <option value="home" selected>Yes, it's my home</option>
+            <option value="investment">No, it's an investment</option>
+          </select>
+        </div>
+
+        <div class="field-group auto-only">
+          <div class="field-label">First home buyer?</div>
+          <select id="fhbInput">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+
+        <div class="field-group auto-only">
+          <div class="field-label">What are you buying?</div>
+          <select id="typeInput">
+            <option value="established" selected>Established home</option>
+            <option value="new">New home / off the plan</option>
+            <option value="land">Vacant land to build on</option>
+          </select>
+        </div>
+
         <div class="field-group">
           <div class="field-label">Purchase price</div>
           <div class="field-inline">
@@ -440,7 +372,7 @@
           </div>
         </div>
 
-        <div class="field-group">
+        <div class="field-group manual-only">
           <div class="field-label">Transfer / stamp tax rate (approx %)</div>
           <div class="field-inline">
             <input id="taxRateInput" type="number" min="0" step="0.01" placeholder="" />
@@ -451,7 +383,7 @@
           </div>
         </div>
 
-        <div class="field-group">
+        <div class="field-group manual-only">
           <div class="field-label">Estimated discount on that tax (optional)</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
@@ -463,7 +395,7 @@
         </div>
 
         <div class="field-group">
-          <div class="field-label">Deposit available</div>
+          <div class="field-label">Savings available (deposit + costs)</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
             <input id="depositInput" type="number" min="0" step="1000" placeholder="" />
@@ -492,7 +424,7 @@
         <div class="field-group">
           <div class="field-label">Comparison horizon (years)</div>
           <div class="field-inline">
-            <input id="horizonInput" type="number" min="1" max="40" step="1" placeholder="" />
+            <input id="horizonInput" type="number" min="1" max="40" step="1" placeholder="10" />
             <span style="font-size:12px;color:var(--muted);">years</span>
           </div>
         </div>
@@ -506,7 +438,7 @@
       </button>
 
       <div class="note">
-        Very rough global helper only. Does not know your local bands or exemptions; numbers are just the maths you enter.
+        <span id="footNote">A guide only, using each revenue office's published 2026–27 schedule. Eligibility rules apply to every concession — confirm with your conveyancer before you sign.</span>
       </div>
     </section>
 
@@ -514,28 +446,29 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <div class="panel-title">Transfer tax vs annual charge</div>
+            <div class="panel-title">Stamp duty</div>
             <div class="panel-subtitle">
-              One-off transfer / stamp tax compared to an ongoing annual property charge.
+              What you pay, any concessions applied, and an optional comparison with an annual property charge.
             </div>
           </div>
         </div>
 
         <div class="summary-row">
           <div class="summary-card">
-            <div class="summary-card-title">Transfer / stamp tax</div>
+            <div class="summary-card-title" id="dutyCardTitle">Stamp duty</div>
             <div class="mini-row">
-              <span class="mini-label">Estimated tax before discount</span>
+              <span class="mini-label" id="dutyBaseLabel">Standard duty</span>
               <span id="dutyBase" class="mini-value">—</span>
             </div>
             <div class="mini-row">
-              <span class="mini-label">Less discount (if any)</span>
+              <span class="mini-label" id="dutyDiscountLabel">Concession saving</span>
               <span id="dutyDiscount" class="mini-value">—</span>
             </div>
             <div class="mini-row">
-              <span class="mini-label">Estimated payable now</span>
+              <span class="mini-label">You pay</span>
               <span id="dutyAmount" class="mini-value">—</span>
             </div>
+            <div class="note" id="concessionNote"></div>
           </div>
 
           <div class="summary-card">
@@ -559,9 +492,10 @@
         <div class="hidden-box" id="detailsBox">
           <strong>How this calculator works</strong>
           <ul>
-            <li>Transfer / stamp tax is approximated as purchase price × your % rate, minus any flat discount you enter.</li>
+            <li>For Australian states, duty uses each revenue office's published 2026–27 schedule, then applies owner-occupier and first home buyer concessions you're likely eligible for.</li>
+            <li>"Somewhere else" uses purchase price × your % rate, minus any flat discount you enter.</li>
             <li>The annual charge is a simple % of the same price, multiplied by the number of years you choose.</li>
-            <li>No local thresholds, special schemes, or complex bands are built in; this is a generic maths tool only.</li>
+            <li>Not included: foreign purchaser surcharges, registration fees, pensioner and off-the-plan concessions, and grants like the First Home Owner Grant.</li>
           </ul>
         </div>
       </section>
@@ -579,11 +513,11 @@
         <div class="summary-card">
           <div class="summary-card-title">Cash summary</div>
           <div class="mini-row">
-            <span class="mini-label">Deposit</span>
+            <span class="mini-label">Savings</span>
             <span id="sumDeposit" class="mini-value">—</span>
           </div>
           <div class="mini-row">
-            <span class="mini-label">Transfer / stamp tax</span>
+            <span class="mini-label">Stamp duty</span>
             <span id="sumDuty" class="mini-value">—</span>
           </div>
           <div class="mini-row">
@@ -591,17 +525,17 @@
             <span id="sumOther" class="mini-value">—</span>
           </div>
           <div class="mini-row">
-            <span class="mini-label">Total cash required now</span>
+            <span class="mini-label">Duty + other costs</span>
             <span id="sumTotal" class="mini-value">—</span>
           </div>
           <div class="mini-row">
-            <span class="mini-label">Short / extra cash</span>
+            <span class="mini-label">Left for the deposit itself</span>
             <span id="sumGap" class="mini-value surplus">—</span>
           </div>
         </div>
 
         <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span class="note">Positive number means you have cash left after upfront costs.</span>
+          <span class="note">Your savings minus duty and costs: this is what's actually left to put down as a deposit.</span>
           <span id="gapBadge" class="badge-pill">—</span>
         </div>
       </section>
@@ -609,170 +543,130 @@
   </main>
 </div>
 
+<script src="assets/js/calc.js"></script>
+<script src="assets/js/store.js"></script>
 <script>
-  const priceInput = document.getElementById("priceInput");
-  const taxRateInput = document.getElementById("taxRateInput");
-  const taxDiscountInput = document.getElementById("taxDiscountInput");
-  const depositInput = document.getElementById("depositInput");
-  const otherCostsInput = document.getElementById("otherCostsInput");
-  const annualRateInput = document.getElementById("annualRateInput");
-  const horizonInput = document.getElementById("horizonInput");
-  const inputError = document.getElementById("inputError");
-  const calcBtn = document.getElementById("calcBtn");
+  const $ = (id) => document.getElementById(id);
+  const stateInput = $("stateInput"), occupierInput = $("occupierInput"), fhbInput = $("fhbInput"), typeInput = $("typeInput");
+  const priceInput = $("priceInput"), taxRateInput = $("taxRateInput"), taxDiscountInput = $("taxDiscountInput"),
+        depositInput = $("depositInput"), otherCostsInput = $("otherCostsInput"), annualRateInput = $("annualRateInput"),
+        horizonInput = $("horizonInput"), inputError = $("inputError"), calcBtn = $("calcBtn");
+  const detailsToggle = $("detailsToggle"), detailsBox = $("detailsBox");
+  const ALL = [stateInput, occupierInput, fhbInput, typeInput, priceInput, taxRateInput, taxDiscountInput,
+               depositInput, otherCostsInput, annualRateInput, horizonInput];
+  let calculated = false;
 
-  const dutyBaseEl = document.getElementById("dutyBase");
-  const dutyDiscountEl = document.getElementById("dutyDiscount");
-  const dutyAmountEl = document.getElementById("dutyAmount");
-  const annualTaxEl = document.getElementById("annualTax");
-  const horizonTaxEl = document.getElementById("horizonTax");
-  const compareTagEl = document.getElementById("compareTag");
+  const money = (n) => isFinite(n) ? (n < 0 ? "−$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-AU") : "—";
+  const num = (el) => parseFloat(String(el.value || "0").replace(/,/g, ""));
 
-  const sumDepositEl = document.getElementById("sumDeposit");
-  const sumDutyEl = document.getElementById("sumDuty");
-  const sumOtherEl = document.getElementById("sumOther");
-  const sumTotalEl = document.getElementById("sumTotal");
-  const sumGapEl = document.getElementById("sumGap");
-  const gapBadgeEl = document.getElementById("gapBadge");
+  function syncMode() {
+    document.body.classList.toggle("manual", stateInput.value === "OTHER");
+  }
 
-  const detailsToggle = document.getElementById("detailsToggle");
-  const detailsBox = document.getElementById("detailsBox");
-
-  function formatCurrency(amount) {
-    if (!isFinite(amount)) return "—";
-    return amount.toLocaleString(undefined, {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
+  function saveState() {
+    const st = {};
+    ALL.forEach((el) => (st[el.id] = el.value));
+    NVWStore.set(NVWStore.KEYS.duty, st);
+  }
+  function restoreState() {
+    const st = NVWStore.get(NVWStore.KEYS.duty);
+    if (st) {
+      ALL.forEach((el) => { if (st[el.id] != null) el.value = st[el.id]; });
+      return !!st.priceInput;
+    }
+    // First visit: borrow the price and deposit from the mortgage calculator if there is one.
+    const m = NVWStore.get(NVWStore.KEYS.mortgage);
+    if (m && m.price) {
+      priceInput.value = String(m.price).replace(/,/g, "");
+      if (m.deposit && m.depositMode !== "percent") depositInput.value = String(m.deposit).replace(/,/g, "");
+      return true;
+    }
+    return false;
   }
 
   function calculate() {
-    const price = parseFloat(priceInput.value || "0");
-    const taxRate = parseFloat(taxRateInput.value || "0");
-    const taxDiscount = parseFloat(taxDiscountInput.value || "0");
-    const deposit = parseFloat(depositInput.value || "0");
-    const otherCosts = parseFloat(otherCostsInput.value || "0");
-    const annualRate = parseFloat(annualRateInput.value || "0");
-    const horizonYears = parseFloat(horizonInput.value || "0");
+    const price = num(priceInput), deposit = num(depositInput), otherCosts = num(otherCostsInput);
+    const annualRate = num(annualRateInput), horizonYears = parseFloat(horizonInput.value || "10");
+    const manual = stateInput.value === "OTHER";
 
-    if (!isFinite(price) || price <= 0) {
-      inputError.textContent = "Enter a purchase price above 0.";
-      priceInput.focus();
-      return;
-    }
-    if (!isFinite(taxRate) || taxRate < 0) {
-      inputError.textContent = "Tax rate cannot be negative.";
-      taxRateInput.focus();
-      return;
-    }
-    if (!isFinite(taxDiscount) || taxDiscount < 0) {
-      inputError.textContent = "Discount cannot be negative.";
-      taxDiscountInput.focus();
-      return;
-    }
-    if (!isFinite(deposit) || deposit < 0) {
-      inputError.textContent = "Deposit cannot be negative.";
-      depositInput.focus();
-      return;
-    }
-    if (!isFinite(otherCosts) || otherCosts < 0) {
-      inputError.textContent = "Other costs cannot be negative.";
-      otherCostsInput.focus();
-      return;
-    }
-    if (!isFinite(annualRate) || annualRate < 0) {
-      inputError.textContent = "Annual charge rate cannot be negative.";
-      annualRateInput.focus();
-      return;
-    }
-    if (!isFinite(horizonYears) || horizonYears <= 0) {
-      inputError.textContent = "Enter a comparison horizon above 0 years.";
-      horizonInput.focus();
-      return;
-    }
-
+    if (!isFinite(price) || price <= 0) { inputError.textContent = "Enter a purchase price above 0."; priceInput.focus(); return; }
+    if ([deposit, otherCosts, annualRate].some((n) => !isFinite(n) || n < 0)) { inputError.textContent = "Amounts can't be negative."; return; }
     inputError.textContent = "";
 
-    const dutyBase = price * (taxRate / 100);
-    const dutyDiscount = Math.min(taxDiscount, Math.max(dutyBase, 0));
-    const duty = Math.max(dutyBase - dutyDiscount, 0);
-
-    dutyBaseEl.textContent = formatCurrency(dutyBase);
-    dutyDiscountEl.textContent = "-" + formatCurrency(dutyDiscount);
-    dutyAmountEl.textContent = formatCurrency(duty);
-
-    let annualTax = 0;
-    let horizonTax = 0;
-
-    if (annualRate > 0) {
-      annualTax = price * (annualRate / 100);
-      horizonTax = annualTax * horizonYears;
-
-      annualTaxEl.textContent = formatCurrency(annualTax);
-      horizonTaxEl.textContent = formatCurrency(horizonTax);
-
-      if (horizonTax < duty) {
-        compareTagEl.textContent = "Annual charge smaller over " + horizonYears + " years";
-        compareTagEl.classList.remove("deficit");
-        compareTagEl.classList.add("surplus");
-      } else if (horizonTax > duty) {
-        compareTagEl.textContent = "One-off tax smaller over " + horizonYears + " years";
-        compareTagEl.classList.remove("surplus");
-        compareTagEl.classList.add("deficit");
-      } else {
-        compareTagEl.textContent = "Roughly similar over " + horizonYears + " years";
-        compareTagEl.classList.remove("surplus", "deficit");
-      }
+    let standard, duty, concession = "", notes = [];
+    if (manual) {
+      const rate = num(taxRateInput), disc = num(taxDiscountInput);
+      if (!isFinite(rate) || rate < 0) { inputError.textContent = "Enter a tax rate of 0% or more."; taxRateInput.focus(); return; }
+      standard = price * rate / 100;
+      duty = Math.max(standard - Math.min(disc || 0, standard), 0);
+      if (disc > 0) concession = "Your discount";
     } else {
-      annualTaxEl.textContent = "—";
-      horizonTaxEl.textContent = "—";
-      compareTagEl.textContent = "Enter an annual % to compare";
-      compareTagEl.classList.remove("surplus", "deficit");
+      const r = NVW.stampDuty({
+        state: stateInput.value, value: price,
+        ownerOccupier: occupierInput.value === "home",
+        firstHome: fhbInput.value === "yes",
+        propertyType: typeInput.value,
+      });
+      standard = r.standard; duty = r.duty; concession = r.concession; notes = r.notes;
+      const st = NVW.STATES[stateInput.value];
+      notes.push("Source: " + st.office + ".");
     }
 
-    sumDepositEl.textContent = formatCurrency(deposit);
-    sumDutyEl.textContent = formatCurrency(duty);
-    sumOtherEl.textContent = formatCurrency(otherCosts);
+    $("dutyCardTitle").textContent = manual ? "Transfer / stamp tax" : "Stamp duty · " + stateInput.value;
+    $("dutyBase").textContent = money(standard);
+    $("dutyDiscount").textContent = standard - duty > 0 ? "−" + money(standard - duty) : "$0";
+    $("dutyDiscountLabel").textContent = concession || "Concession saving";
+    $("dutyAmount").textContent = money(duty);
+    $("concessionNote").textContent = notes.join(" ");
 
-    const totalRequired = duty + otherCosts;
-    const gap = deposit - totalRequired;
+    const annual = price * annualRate / 100, overHorizon = annual * horizonYears, tag = $("compareTag");
+    if (annualRate > 0 && horizonYears > 0) {
+      $("annualTax").textContent = money(annual);
+      $("horizonTax").textContent = money(overHorizon);
+      const smaller = overHorizon < duty ? "Annual charge" : overHorizon > duty ? "One-off duty" : "Roughly equal";
+      tag.textContent = smaller + (smaller === "Roughly equal" ? "" : " smaller") + " over " + horizonYears + " years";
+      tag.classList.toggle("surplus", overHorizon < duty);
+      tag.classList.toggle("deficit", overHorizon > duty);
+    } else {
+      $("annualTax").textContent = "—"; $("horizonTax").textContent = "—";
+      tag.textContent = "Enter an annual % to compare"; tag.classList.remove("surplus", "deficit");
+    }
 
-    sumTotalEl.textContent = formatCurrency(totalRequired);
-    sumGapEl.textContent = formatCurrency(gap);
-
+    const upfront = duty + otherCosts, gap = deposit - upfront;
+    $("sumDeposit").textContent = money(deposit);
+    $("sumDuty").textContent = money(duty);
+    $("sumOther").textContent = money(otherCosts);
+    $("sumTotal").textContent = money(upfront);
+    const gapEl = $("sumGap"), badge = $("gapBadge");
+    gapEl.textContent = money(gap);
+    gapEl.classList.toggle("surplus", gap >= 0); gapEl.classList.toggle("deficit", gap < 0);
     if (gap >= 0) {
-      sumGapEl.classList.remove("deficit");
-      sumGapEl.classList.add("surplus");
-      gapBadgeEl.textContent = "You have roughly enough for upfronts";
-      gapBadgeEl.classList.remove("bad");
-      gapBadgeEl.classList.add("good");
+      const lvr = price > 0 ? (1 - gap / price) * 100 : 0;
+      badge.textContent = money(gap) + " deposit = " + (gap / price * 100).toFixed(1) + "% of price" + (lvr > 80 ? " (LMI likely)" : "");
+      badge.classList.add("good"); badge.classList.remove("bad");
     } else {
-      sumGapEl.classList.remove("surplus");
-      sumGapEl.classList.add("deficit");
-      gapBadgeEl.textContent = "Short on upfront cash";
-      gapBadgeEl.classList.remove("good");
-      gapBadgeEl.classList.add("bad");
+      badge.textContent = "Short " + money(-gap) + " for upfront costs";
+      badge.classList.add("bad"); badge.classList.remove("good");
     }
+    calculated = true;
+    saveState();
   }
 
   calcBtn.addEventListener("click", calculate);
-
-  [priceInput, taxRateInput, taxDiscountInput, depositInput, otherCostsInput, annualRateInput, horizonInput].forEach(
-    (el) => {
-      el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") calculate();
-      });
-    }
-  );
-
+  ALL.forEach((el) => {
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); });
+    el.addEventListener("change", () => { syncMode(); if (calculated) calculate(); else saveState(); });
+  });
   detailsToggle.addEventListener("click", () => {
     const open = detailsBox.style.display === "block";
     detailsBox.style.display = open ? "none" : "block";
-    detailsToggle.textContent = open
-      ? "Show calculation notes"
-      : "Hide calculation notes";
+    detailsToggle.textContent = open ? "Show calculation notes" : "Hide calculation notes";
   });
+
+  const hadData = restoreState();
+  syncMode();
+  if (hadData) calculate();
 </script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,8 @@
+{
+  "name": "budget-needs-vs-wants",
+  "private": true,
+  "description": "Budget Needs vs Wants — static site at budgetneedsvswants.com",
+  "scripts": {
+    "test": "node --test"
+  }
+}

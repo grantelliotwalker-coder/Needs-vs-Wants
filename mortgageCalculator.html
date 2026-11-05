@@ -4,8 +4,17 @@
   <meta charset="UTF-8" />
   <title>Mortgage Calculator – Budget Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#050816">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-48.png">
   <meta name="description" content="Mortgage calculator tool for the Budget Needs vs Wants planner. Estimate repayments, total interest, and compare to your budget surplus." />
 
+  <link rel="stylesheet" href="assets/css/base.css">
   <style>
     :root {
       --bg: #050816;
@@ -22,30 +31,6 @@
       --disabled: #555c72;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-shell {
-      max-width: 960px;
-      margin: 0 auto;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
     /* Desktop: use the whole screen, matching the main planner. */
     @media (min-width: 1200px) {
       .app-shell {
@@ -55,44 +40,6 @@
       .app-main {
         padding: 12px 24px 24px;
       }
-    }
-
-    .app-header {
-      padding: 10px 14px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(12px);
-    }
-
-    .top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .brand-title {
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .brand-tagline {
-      font-size: 12px;
-      color: var(--muted);
     }
 
     .header-actions {
@@ -117,17 +64,6 @@
       cursor: pointer;
       text-decoration: none;
       white-space: nowrap;
-    }
-
-    .pill-button-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      background: rgba(0, 0, 0, 0.7);
     }
 
     .pill-button.donate {
@@ -183,29 +119,6 @@
       justify-content: space-between;
       margin-bottom: 4px;
       gap: 8px;
-    }
-
-    .panel-title {
-      font-size: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .panel-subtitle {
-      font-size: 11px;
-      color: var(--muted);
     }
 
     .panel-totals {
@@ -285,35 +198,11 @@
       padding-bottom: 4px;
     }
 
-    .summary-card {
-      background: rgba(5, 8, 22, 0.9);
-      border-radius: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .summary-card-title {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
     .mini-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       font-size: 11px;
-    }
-
-    .mini-label {
-      color: var(--muted);
-    }
-
-    .mini-value {
-      font-weight: 600;
     }
 
     .mini-value.surplus {
@@ -1376,6 +1265,7 @@
   </div>
 </div>
 
+<script src="assets/js/calc.js"></script>
 <script>
   const STORAGE_KEY_INCOME = "budgetNeedsWantsIncome";
   const STORAGE_KEY_ITEMS = "budgetNeedsWantsItems";
@@ -1957,9 +1847,11 @@ if (loanType === "io") {
   const r = rate / 100 / paymentsPerYear;
   basePayment = interestPrincipal * r;
 } else {
-  // Principal & Interest — approximated on the offset-reduced balance.
+  // Principal & Interest — banks set the repayment on the full loan balance.
+  // An offset doesn't lower the repayment; it reduces the interest charged, so
+  // more of each repayment goes to principal and the loan finishes sooner.
   basePayment = annuityPayment(
-    interestPrincipal,
+    principal,
     rate,
     termYears,
     paymentsPerYear
@@ -2010,47 +1902,36 @@ if (loanType === "io") {
     const n = termYears * paymentsPerYear;
     const r = rate / 100 / paymentsPerYear;
 
-    let totalInterestBase;
-    if (r === 0) {
-      totalInterestBase = 0;
-    } else if (loanType === "io") {
+    const offsetForSim = Math.max(principal - interestPrincipal, 0);
+    let totalInterestBase, periodsBase, periodsExtra, totalInterestExtra;
+    if (loanType === "io") {
       // Interest Only: principal is never repaid via these payments,
       // so every dollar paid over the term is interest.
-      totalInterestBase = basePayment * n;
+      periodsBase = n;
+      totalInterestBase = r === 0 ? 0 : basePayment * n;
+      if (paymentWithExtra <= basePayment || r === 0) {
+        periodsExtra = n;
+        totalInterestExtra = totalInterestBase;
+      } else {
+        const sim = NVW.amortise({ principal, annualRatePct: rate, perYear: paymentsPerYear, payment: paymentWithExtra, offset: offsetForSim, maxPeriods: n });
+        periodsExtra = sim.paidOff ? sim.periods : n;
+        totalInterestExtra = sim.totalInterest;
+      }
     } else {
-      totalInterestBase = basePayment * n - interestPrincipal;
-    }
-
-    let remaining = interestPrincipal;
-    let periodsExtra = 0;
-    if (r === 0) {
-      periodsExtra = paymentWithExtra > 0 ? Math.ceil(principal / paymentWithExtra) : n;
-    } else if (paymentWithExtra <= basePayment) {
-      periodsExtra = n;
-    } else {
-      while (remaining > 0 && periodsExtra < n * 2) {
-        const interest = remaining * r;
-        const principalPaid = paymentWithExtra - interest;
-        if (principalPaid <= 0) {
-          periodsExtra = n;
-          break;
-        }
-        remaining -= principalPaid;
-        periodsExtra++;
+      const base = NVW.amortise({ principal, annualRatePct: rate, perYear: paymentsPerYear, payment: basePayment, offset: offsetForSim });
+      periodsBase = base.paidOff ? base.periods : n;
+      totalInterestBase = base.paidOff ? base.totalInterest : basePayment * n - principal;
+      if (paymentWithExtra > basePayment) {
+        const ex = NVW.amortise({ principal, annualRatePct: rate, perYear: paymentsPerYear, payment: paymentWithExtra, offset: offsetForSim });
+        periodsExtra = ex.paidOff ? ex.periods : n;
+        totalInterestExtra = ex.totalInterest;
+      } else {
+        periodsExtra = periodsBase;
+        totalInterestExtra = totalInterestBase;
       }
     }
 
-    const totalPaidExtra = paymentWithExtra * periodsExtra;
-    const noExtraPrincipalPaydown =
-      loanType === "io" && paymentWithExtra <= basePayment;
-    const totalInterestExtra =
-      r === 0
-        ? 0
-        : noExtraPrincipalPaydown
-        ? totalPaidExtra
-        : Math.max(totalPaidExtra - interestPrincipal, 0);
-
-    const baseYears = n / paymentsPerYear;
+    const baseYears = periodsBase / paymentsPerYear;
     const extraYears = periodsExtra / paymentsPerYear;
 
     resultInterestBaseEl.textContent = formatCurrency(totalInterestBase);
@@ -2060,10 +1941,12 @@ if (loanType === "io") {
     if (offsetBalance > 0) {
       offsetNoteEl.style.display = "block";
       offsetNoteEl.textContent =
-        "Offset applied: interest calculated on " +
+        "Offset applied: interest is charged on " +
         formatCurrency(interestPrincipal) +
         " (loan balance " + formatCurrency(principal) +
-        " minus " + formatCurrency(offsetBalance) + " offset).";
+        " minus " + formatCurrency(offsetBalance) + " offset). Your repayment stays the same, so the loan is paid off in " +
+        formatTermYears(baseYears) + " instead of " + formatTermYears(n / paymentsPerYear) + "." +
+        " (Assumes the offset balance stays the same.)";
     } else {
       offsetNoteEl.style.display = "none";
       offsetNoteEl.textContent = "";
@@ -2093,7 +1976,7 @@ if (loanType === "io") {
     // Hide comparison rows that carry no information when extra = 0
     const hasExtra = extra > 0;
     document.getElementById("interestExtraRow").style.display = hasExtra ? "" : "none";
-    document.getElementById("resultBlockTerm").style.display = hasExtra ? "" : "none";
+    document.getElementById("resultBlockTerm").style.display = hasExtra || offsetBalance > 0 ? "" : "none";
 
     lastFreq = freq;
     lastWholePaymentPerFreq = paymentWithExtra;
@@ -2413,21 +2296,25 @@ if (loanType === "io") {
         const r = ratePct / 100 / paymentsPerYear;
         return lastInterestPrincipal * r;
       }
-      return annuityPayment(lastInterestPrincipal, ratePct, lastTermYears, paymentsPerYear);
+      return annuityPayment(lastPrincipal, ratePct, lastTermYears, paymentsPerYear);
     }
 
-    function totalInterestFor(payment) {
+    function totalInterestFor(payment, ratePct) {
       if (lastLoanType === "io") {
         return payment * n;
       }
-      return payment * n - lastInterestPrincipal;
+      const sim = NVW.amortise({
+        principal: lastPrincipal, annualRatePct: ratePct, perYear: paymentsPerYear,
+        payment, offset: Math.max(lastPrincipal - lastInterestPrincipal, 0),
+      });
+      return sim.paidOff ? sim.totalInterest : payment * n - lastPrincipal;
     }
 
     const currentPayment = paymentFor(lastRate);
-    const currentInterest = totalInterestFor(currentPayment);
+    const currentInterest = totalInterestFor(currentPayment, lastRate);
 
     const futurePayment = paymentFor(futureRate);
-    const futureInterest = totalInterestFor(futurePayment);
+    const futureInterest = totalInterestFor(futurePayment, futureRate);
 
     futurePaymentEl.textContent = formatCurrency(futurePayment);
     futureInterestEl.textContent = formatCurrency(futureInterest);
@@ -3204,5 +3091,6 @@ if (loanType === "io") {
   snapshotLoanContribution();
   updateAffordability();
 </script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>

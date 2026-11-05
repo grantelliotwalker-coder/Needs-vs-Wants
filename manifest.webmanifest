@@ -1,0 +1,20 @@
+{
+  "name": "Budget Needs vs Wants",
+  "short_name": "Budget",
+  "description": "Split your spending into needs and wants, see your surplus, and plan with Australian tax, mortgage and stamp duty tools.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050816",
+  "theme_color": "#050816",
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Tax calculator", "url": "/taxCalculator.html" },
+    { "name": "Mortgage calculator", "url": "/mortgageCalculator.html" },
+    { "name": "Stamp duty", "url": "/stampDutyCalculator.html" }
+  ]
+}

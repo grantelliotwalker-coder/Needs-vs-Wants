@@ -5,8 +5,17 @@
   <meta charset="UTF-8" />
   <title>Tax Calculator – Budget Needs vs Wants</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#050816">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-48.png">
   <meta name="description" content="Tax calculator tool for the Budget Needs vs Wants planner. Rough Australian-style tax estimate with net pay by frequency." />
 
+  <link rel="stylesheet" href="assets/css/base.css">
   <style>
     :root {
       --bg: #050816;
@@ -19,68 +28,6 @@
       --danger: #ff4d6a;
       --success: #32d788;
       --disabled: #555c72;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at top, #101633 0, #050816 40%, #02040a 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-shell {
-      max-width: 960px;
-      margin: 0 auto;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-header {
-      padding: 10px 14px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(12px);
-    }
-
-    .top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .brand-title {
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .brand-tagline {
-      font-size: 12px;
-      color: var(--muted);
     }
 
     .header-actions {
@@ -104,17 +51,6 @@
       cursor: pointer;
       text-decoration: none;
       white-space: nowrap;
-    }
-
-    .pill-button-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      background: rgba(0, 0, 0, 0.7);
     }
 
     .pill-button.donate {
@@ -167,29 +103,6 @@
       justify-content: space-between;
       margin-bottom: 4px;
       gap: 8px;
-    }
-
-    .panel-title {
-      font-size: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .panel-subtitle {
-      font-size: 11px;
-      color: var(--muted);
     }
 
     .app-grid {
@@ -299,35 +212,11 @@
       padding-bottom: 4px;
     }
 
-    .summary-card {
-      background: rgba(5, 8, 22, 0.9);
-      border-radius: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .summary-card-title {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
     .mini-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       font-size: 11px;
-    }
-
-    .mini-label {
-      color: var(--muted);
-    }
-
-    .mini-value {
-      font-weight: 600;
     }
 
     .mini-value.surplus {
@@ -398,7 +287,7 @@
       <div class="brand">
         <div class="brand-title">Tax Calculator</div>
         <div class="brand-tagline">
-          Rough Australian-style income tax and net pay by pay cycle.
+          Australian income tax, Medicare and HELP, with take-home pay by pay cycle.
         </div>
       </div>
 
@@ -433,17 +322,22 @@
         <div>
           <div class="panel-title">
             Income details
-            <span class="panel-badge">Very rough guide</span>
+            <span class="panel-badge">ATO rates</span>
           </div>
           <div class="panel-subtitle">
-            Uses a simplified Australian resident tax scale only. No Medicare levy, offsets, or HECS/HELP.
+            Uses the ATO resident and foreign resident rates, the Low Income Tax Offset, the Medicare levy (single, no dependants) and HELP repayments.
           </div>
         </div>
       </div>
 
       <div class="inputs-grid">
         <div class="field-group">
-          <div class="field-label">Income amount</div>
+          <div class="field-label">Financial year</div>
+          <select id="yearInput"></select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Income amount (before tax)</div>
           <div class="field-inline">
             <span style="font-size:12px;color:var(--muted);">$</span>
             <input id="incomeInput" type="number" min="0" step="0.01" placeholder="85000" />
@@ -464,7 +358,7 @@
           <div class="field-label">Resident for tax purposes</div>
           <select id="residentInput">
             <option value="resident" selected>Yes (resident)</option>
-            <option value="nonresident">No (non-resident rough)</option>
+            <option value="nonresident">No (foreign resident)</option>
           </select>
         </div>
 
@@ -479,10 +373,18 @@
         <div class="field-group">
           <div class="field-label">Super rate (if included)</div>
           <div class="field-inline">
-            <input id="superRateInput" type="number" min="0" step="0.1" placeholder="11" />
+            <input id="superRateInput" type="number" min="0" step="0.1" placeholder="12" />
             <span style="font-size:12px;color:var(--muted);">%</span>
           </div>
         </div>
+      </div>
+
+      <div class="field-group" style="margin-top:8px;">
+          <div class="field-label">HELP / HECS debt?</div>
+          <select id="helpInput">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes, include compulsory repayments</option>
+          </select>
       </div>
 
       <div class="error-text" id="inputError"></div>
@@ -493,7 +395,7 @@
       </button>
 
       <div class="note">
-        Educational only. For real numbers, always cross-check with the ATO calculators or an accountant.
+        A guide only. Your actual withholding depends on your employer, deductions and other income — check the ATO's calculators or a registered tax agent for your real figures.
       </div>
     </section>
 
@@ -503,7 +405,7 @@
           <div>
             <div class="panel-title">Summary</div>
             <div class="panel-subtitle">
-              See rough annual tax, average tax rate, and net pay by pay cycle.
+              Annual tax, average rate and take-home pay by pay cycle.
             </div>
           </div>
         </div>
@@ -516,8 +418,16 @@
               <span id="taxableIncome" class="mini-value">—</span>
             </div>
             <div class="mini-row">
-              <span class="mini-label">Approx tax</span>
+              <span class="mini-label">Income tax (after offsets)</span>
               <span id="annualTax" class="mini-value">—</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Medicare levy</span>
+              <span id="annualMedicare" class="mini-value">—</span>
+            </div>
+            <div class="mini-row" id="helpRow" style="display:none;">
+              <span class="mini-label">HELP repayment</span>
+              <span id="annualHelp" class="mini-value">—</span>
             </div>
             <div class="mini-row">
               <span class="mini-label">Net after tax</span>
@@ -549,6 +459,12 @@
             </div>
           </div>
         </div>
+
+        <button class="calculate-btn" id="sendToPlannerBtn" style="display:none;margin-top:10px;">
+          <span class="icon">→</span>
+          Use this take-home pay in my planner
+        </button>
+        <div class="note" id="sendNote"></div>
       </section>
 
       <section class="panel">
@@ -556,7 +472,7 @@
           <div>
             <div class="panel-title">Tax bands</div>
             <div class="panel-subtitle">
-              Very rough breakdown of how much is taxed in each band.
+              How much of your income falls in each tax bracket.
             </div>
           </div>
         </div>
@@ -578,111 +494,67 @@
         </table>
 
         <div class="note">
-          Bands are approximate and assume resident Australian 2024–25 style brackets, simplified and without offsets.
+          <span id="bandsNote">Brackets for the selected financial year. Medicare levy uses the single low-income threshold; family thresholds and the Medicare levy surcharge aren't included.</span>
         </div>
       </section>
     </div>
   </main>
 </div>
 
+<script src="assets/js/calc.js"></script>
+<script src="assets/js/store.js"></script>
 <script>
-  const incomeInput = document.getElementById("incomeInput");
-  const incomeFreqInput = document.getElementById("incomeFreqInput");
-  const residentInput = document.getElementById("residentInput");
-  const superInput = document.getElementById("superInput");
-  const superRateInput = document.getElementById("superRateInput");
-  const inputError = document.getElementById("inputError");
-  const calcBtn = document.getElementById("calcBtn");
+  const $ = (id) => document.getElementById(id);
+  const yearInput = $("yearInput"), incomeInput = $("incomeInput"), incomeFreqInput = $("incomeFreqInput"),
+        residentInput = $("residentInput"), superInput = $("superInput"), superRateInput = $("superRateInput"),
+        helpInput = $("helpInput"), inputError = $("inputError"), calcBtn = $("calcBtn"),
+        bandsBody = $("bandsBody"), sendBtn = $("sendToPlannerBtn"), sendNote = $("sendNote");
+  const STATE_KEY = "budgetTaxCalcState";
+  let last = null;
 
-  const taxableIncomeEl = document.getElementById("taxableIncome");
-  const annualTaxEl = document.getElementById("annualTax");
-  const annualNetEl = document.getElementById("annualNet");
-  const avgRateEl = document.getElementById("avgRate");
-  const netWeeklyEl = document.getElementById("netWeekly");
-  const netFortnightlyEl = document.getElementById("netFortnightly");
-  const netMonthlyEl = document.getElementById("netMonthly");
-  const netTagEl = document.getElementById("netTag");
-  const bandsBody = document.getElementById("bandsBody");
+  Object.entries(NVW.TAX_YEARS).forEach(([key, y]) => {
+    const o = document.createElement("option");
+    o.value = key; o.textContent = y.label;
+    if (key === NVW.DEFAULT_TAX_YEAR) o.selected = true;
+    yearInput.appendChild(o);
+  });
 
-  function formatCurrency(amount) {
-    if (!isFinite(amount)) return "—";
-    return "$" + amount.toFixed(2).replace(/\.00$/, "");
+  const money0 = (n) => isFinite(n) ? "$" + Math.round(n).toLocaleString("en-AU") : "—";
+  const money2 = (n) => isFinite(n) ? "$" + n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+  const pct = (n) => isFinite(n) ? (n * 100).toFixed(1) + "%" : "—";
+  const PER_YEAR = { yearly: 1, monthly: 12, fortnightly: 26, weekly: 52 };
+
+  function saveState() {
+    NVWStore.set(STATE_KEY, {
+      year: yearInput.value, income: incomeInput.value, freq: incomeFreqInput.value,
+      resident: residentInput.value, superMode: superInput.value, superRate: superRateInput.value, help: helpInput.value,
+    });
+  }
+  function restoreState() {
+    const st = NVWStore.get(STATE_KEY);
+    if (!st) return false;
+    if (st.year && NVW.TAX_YEARS[st.year]) yearInput.value = st.year;
+    incomeInput.value = st.income || "";
+    incomeFreqInput.value = st.freq || "yearly";
+    residentInput.value = st.resident || "resident";
+    superInput.value = st.superMode || "excl";
+    superRateInput.value = st.superRate || "";
+    helpInput.value = st.help || "no";
+    return !!st.income;
   }
 
-  function formatCurrency0(amount) {
-    if (!isFinite(amount)) return "—";
-    return "$" + amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-
-  function formatPercent(amount) {
-    if (!isFinite(amount)) return "—";
-    return amount.toFixed(1) + "%";
-  }
-
-  // Very rough resident tax bands (approx, not official)
-  const residentBands = [
-    { threshold: 0, rate: 0 },
-    { threshold: 18200, rate: 0.19 },
-    { threshold: 45000, rate: 0.325 },
-    { threshold: 135000, rate: 0.37 },
-    { threshold: 190000, rate: 0.45 }
-  ];
-
-  // Simple non-resident style bands (rough)
-  const nonResidentBands = [
-    { threshold: 0, rate: 0.32 },
-    { threshold: 135000, rate: 0.37 },
-    { threshold: 190000, rate: 0.45 }
-  ];
-
-  function computeTaxBands(taxable, residentStatus) {
-    const bands = residentStatus === "resident" ? residentBands : nonResidentBands;
-    const rows = [];
-    let remaining = taxable;
-    let totalTax = 0;
-
-    for (let i = 0; i < bands.length; i++) {
-      const band = bands[i];
-      const nextThreshold = i + 1 < bands.length ? bands[i + 1].threshold : Infinity;
-      const lower = band.threshold;
-      const upper = Math.min(nextThreshold, taxable);
-      if (upper <= lower) continue;
-
-      const incomeInBand = Math.max(Math.min(remaining, upper - lower), 0);
-      if (incomeInBand <= 0) continue;
-
-      const taxInBand = incomeInBand * band.rate;
-      totalTax += taxInBand;
-      remaining -= incomeInBand;
-
-      const label =
-        (band.rate * 100).toFixed(1) +
-        "% between " +
-        formatCurrency0(lower) +
-        " and " +
-        (nextThreshold === Infinity ? "∞" : formatCurrency0(nextThreshold));
-
-      rows.push({
-        label,
-        rate: band.rate,
-        incomeInBand,
-        taxInBand
-      });
-
-      if (remaining <= 0) break;
-    }
-
-    return { rows, totalTax };
+  function row(cells, muted) {
+    const tr = document.createElement("tr");
+    cells.forEach((c) => { const td = document.createElement("td"); td.textContent = c; tr.appendChild(td); });
+    if (muted) tr.style.color = "var(--muted)";
+    bandsBody.appendChild(tr);
   }
 
   function calculate() {
-    const incomeRaw = parseFloat(incomeInput.value || "0");
-    const freq = incomeFreqInput.value;
-    const residentStatus = residentInput.value;
+    const raw = parseFloat(incomeInput.value || "0");
     const superMode = superInput.value;
-    const superRate = parseFloat(superRateInput.value || "0");
-
-    if (!isFinite(incomeRaw) || incomeRaw <= 0) {
+    const superRate = parseFloat(superRateInput.value || String(NVW.SUPER_GUARANTEE));
+    if (!isFinite(raw) || raw <= 0) {
       inputError.textContent = "Enter an income amount above 0.";
       incomeInput.focus();
       return;
@@ -692,103 +564,68 @@
       superRateInput.focus();
       return;
     }
-
     inputError.textContent = "";
 
-    let annualGross;
-    if (freq === "yearly") {
-      annualGross = incomeRaw;
-    } else if (freq === "monthly") {
-      annualGross = incomeRaw * 12;
-    } else if (freq === "fortnightly") {
-      annualGross = incomeRaw * 26;
-    } else {
-      annualGross = incomeRaw * 52;
-    }
+    let annual = raw * PER_YEAR[incomeFreqInput.value];
+    if (superMode === "incl") annual = annual / (1 + superRate / 100);
 
-    let taxable = annualGross;
-    let impliedSalary = annualGross;
+    const r = NVW.incomeTax({
+      income: annual, year: yearInput.value,
+      resident: residentInput.value === "resident", help: helpInput.value === "yes",
+    });
+    last = r;
 
-    if (superMode === "incl" && superRate > 0) {
-      impliedSalary = annualGross / (1 + superRate / 100);
-      taxable = impliedSalary;
-    }
+    $("taxableIncome").textContent = money0(r.taxable);
+    $("annualTax").textContent = money0(r.incomeTax);
+    $("annualMedicare").textContent = money0(r.medicare);
+    $("helpRow").style.display = helpInput.value === "yes" ? "" : "none";
+    $("annualHelp").textContent = money0(r.help);
+    $("annualNet").textContent = money0(r.net);
+    $("avgRate").textContent = pct(r.averageRate);
+    $("netWeekly").textContent = money2(r.net / 52);
+    $("netFortnightly").textContent = money2(r.net / 26);
+    $("netMonthly").textContent = money2(r.net / 12);
 
-    const { rows, totalTax } = computeTaxBands(taxable, residentStatus);
-    const netAnnual = taxable - totalTax;
-
-    taxableIncomeEl.textContent = formatCurrency0(taxable);
-    annualTaxEl.textContent = formatCurrency0(totalTax);
-    annualNetEl.textContent = formatCurrency0(netAnnual);
-
-    const avgRate = taxable > 0 ? (totalTax / taxable) * 100 : 0;
-    avgRateEl.textContent = formatPercent(avgRate);
-
-    const netWeekly = netAnnual / 52;
-    const netFortnightly = netAnnual / 26;
-    const netMonthly = netAnnual / 12;
-
-    netWeeklyEl.textContent = formatCurrency(netWeekly);
-    netFortnightlyEl.textContent = formatCurrency(netFortnightly);
-    netMonthlyEl.textContent = formatCurrency(netMonthly);
-
-    if (avgRate < 15) {
-      netTagEl.textContent = "Lower average tax rate";
-      netTagEl.classList.remove("deficit");
-      netTagEl.classList.add("surplus");
-    } else if (avgRate < 25) {
-      netTagEl.textContent = "Moderate average tax rate";
-      netTagEl.classList.remove("deficit");
-      netTagEl.classList.add("surplus");
-    } else {
-      netTagEl.textContent = "Higher average tax rate";
-      netTagEl.classList.remove("surplus");
-      netTagEl.classList.add("deficit");
-    }
+    const tag = $("netTag");
+    const avg = r.averageRate * 100;
+    tag.textContent = avg < 15 ? "Lower average tax rate" : avg < 25 ? "Moderate average tax rate" : "Higher average tax rate";
+    tag.classList.toggle("deficit", avg >= 25);
+    tag.classList.toggle("surplus", avg < 25);
 
     bandsBody.innerHTML = "";
-    if (!rows.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.style.textAlign = "center";
-      td.style.color = "var(--muted)";
-      td.style.padding = "6px";
-      td.textContent = "No taxable income in these bands.";
-      tr.appendChild(td);
-      bandsBody.appendChild(tr);
-    } else {
-      rows.forEach((row) => {
-        const tr = document.createElement("tr");
+    r.rows.forEach((b) => {
+      const label = b.rate === 0 ? "Tax-free threshold" :
+        money0(b.from) + (b.to === Infinity ? "+" : " – " + money0(b.to));
+      row([label, pct(b.rate), money0(b.income), money0(b.tax)]);
+    });
+    if (r.lito > 0) row(["Low Income Tax Offset", "", "", "−" + money0(r.lito)], true);
+    if (r.medicare > 0) row(["Medicare levy", "2%", "", money0(r.medicare)], true);
+    if (r.help > 0) row(["HELP repayment", "", "", money0(r.help)], true);
+    $("bandsNote").textContent = (r.estimated ? "2027–28 income tax rates are legislated; Medicare and HELP thresholds aren't published yet, so 2026–27 thresholds are used. " : "") +
+      "Medicare levy uses the single low-income threshold; family thresholds and the Medicare levy surcharge aren't included.";
 
-        const bandTd = document.createElement("td");
-        bandTd.textContent = row.label;
-
-        const rateTd = document.createElement("td");
-        rateTd.textContent = formatPercent(row.rate * 100);
-
-        const incomeTd = document.createElement("td");
-        incomeTd.textContent = formatCurrency0(row.incomeInBand);
-
-        const taxTd = document.createElement("td");
-        taxTd.textContent = formatCurrency0(row.taxInBand);
-
-        tr.appendChild(bandTd);
-        tr.appendChild(rateTd);
-        tr.appendChild(incomeTd);
-        tr.appendChild(taxTd);
-        bandsBody.appendChild(tr);
-      });
-    }
+    sendBtn.style.display = "";
+    sendNote.textContent = "";
+    saveState();
   }
 
-  calcBtn.addEventListener("click", calculate);
-
-  [incomeInput, superRateInput].forEach((el) => {
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") calculate();
-    });
+  sendBtn.addEventListener("click", () => {
+    if (!last) return;
+    const current = NVWStore.getIncome();
+    const freq = current.frequency || "fortnightly";
+    const amount = Math.round(NVW.fromWeekly(last.net / 52, freq) * 100) / 100;
+    NVWStore.setIncome({ amount, frequency: freq });
+    sendNote.innerHTML = "Saved: your planner income is now " + money2(amount) + " per " +
+      ({ weekly: "week", fortnightly: "fortnight", monthly: "month", yearly: "year" })[freq] +
+      ". <a href=\"index.html\" style=\"color:var(--accent)\">Open planner →</a>";
   });
+
+  calcBtn.addEventListener("click", calculate);
+  [incomeInput, superRateInput].forEach((el) => el.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); }));
+  [yearInput, residentInput, helpInput, superInput, incomeFreqInput].forEach((el) => el.addEventListener("change", () => { if (last) calculate(); else saveState(); }));
+
+  if (restoreState()) calculate();
 </script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>
